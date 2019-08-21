@@ -6,10 +6,6 @@ quick start: `make x64` `./main`
 
 The main motivation is to run tests that, when passed, increase confidence that lifting is accurate.
 
-* run tests to increase confidence in lifting accuracy
-* just an idea: convert routines between architectures
-* just an idea: obfuscation
-
 ## How does it work?
 
 * LLIL operations become function calls, like LLIL\_REG becomes REG(), LLIL\_PUSH becomes PUSH()
@@ -22,17 +18,12 @@ The main motivation is to run tests that, when passed, increase confidence that 
 
 So how do you actually do it?
 
-1. compile tests.cpp into tests.o with the architecture want to lift
+1. compile tests.cpp into tests.o with the architecture you want to lift
 2. extract the llil into tests\_il.cpp using ildump2cpp.py
-3. compile tests\_il.cpp with runtime.cpp and main\_x64.cpp (or your corresponding architecture)
+3. compile tests\_il.cpp with runtime.cpp and main.cpp to main
+4. `./main`
 
-See Makefile for all of this.
-
-## What makes this difficult?
-
-* PUSH() needs to reach into binja's knowledge and find what the stack pointer is, how much it should be decremented
-* ADD() can take different types, and return different types
-* REG() and SET\_REG() need architecture-specific knowledge, eg setting "eax" should affect "rax" too
+Using make: `make x64` or `make arm` then `./main`
 
 ## What else?
 

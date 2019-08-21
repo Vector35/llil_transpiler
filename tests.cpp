@@ -70,7 +70,14 @@ int gcd(int a, int b)
 	return result;
 }
 
-// TODO: recursive gcd
+int gcd_recursive(int a, int b)
+{
+	if(a == 0) return b;
+	if(b == 0) return a;
+	if(a == b) return a;
+	if(a > b) return gcd_recursive(a - b, b);
+	return gcd_recursive(a, b - a);
+}
 
 int switch_doubler(int a)
 {

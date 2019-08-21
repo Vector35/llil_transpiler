@@ -20,6 +20,7 @@ void multiply_loop();
 void exp();
 void expmod();
 void gcd();
+void gcd_recursive();
 void switch_doubler();
 void factorial();
 
@@ -185,5 +186,18 @@ int main(int ac, char **av)
 	check(result, 40320, "factorial(8)");
 
 	result = vm_call(factorial, 11);
-	check(result, 39916800, "factorial(11)");		
+	check(result, 39916800, "factorial(11)");
+
+	/* recursive version: greatest common divisor */
+	result = vm_call(gcd_recursive, 5,15);
+	check(result, 5, "gcd_recursive(5,15)");
+
+	result = vm_call(gcd_recursive, 16,24);
+	check(result, 8, "gcd_recursive(16,24)");	
+
+	result = vm_call(gcd_recursive, 51,77);
+	check(result, 1, "gcd_recursive(51,77)");
+
+	result = vm_call(gcd_recursive, 51,119);
+	check(result, 17, "gcd_recursive(51,119)");	
 }

@@ -15,43 +15,6 @@ using namespace std;
 extern string stackRegName;
 extern map<string,struct RegisterInfo> regInfos;
 
-/* IL registers can be:
-	the ISA's reg type, eg; as returned by LLIL_REG
-	a float, eg: as returned by LLIL_FDIV
-	a double, eg: as returned by LLIL_DIVU_DP
-*/
-//class TypedValue {
-//	public:
-//	TypedValue(REGTYPE x) { a=x; type=0; }
-//	TypedValue(SREGTYPE x) { b=x; type=1; }
-//	TypedValue(float x) { b=x; type=2; }
-//	TypedValue(double x) { b=x; type=3; }
-//	TypedValue& operator=(const TypedValue &rhs)
-//	{
-//	    if (this == &rhs)
-//	        return *this;
-//	 
-//	    this->type = rhs.type;
-//	    this->a = rhs.a;
-//	    this->b = rhs.b;
-//	    this->c = rhs.c;
-//	    this->d = rhs.d;
-//	 
-//	    return *this;
-//	}
-//	REGTYPE value_regtype() { return this->a; }
-//	SREGTYPE value_sregtype() { return this->b; }
-//	float value_float() { return this->c; }
-//	double value_double() { return this->d; }
-//
-//	private:
-//	REGTYPE a;
-//	SREGTYPE b;
-//	double c;
-//	float d;
-//	int type;
-//};
-
 /* VM components */
 map<REGTYPE,REGTYPE> vm_mem;
 map<string,REGTYPE> vm_regs;
