@@ -73,7 +73,7 @@ static REGTYPE reg_core_get_value(string regName)
 	/* full width */
 	if(ri.full_width_reg == regName) {
 		result = vm_regs[regName];
-		debug("%s(): %s is full-width, value=" FMT_REG "\n", __func__, regName.c_str(), result);
+		//debug("%s(): %s is full-width, value=" FMT_REG "\n", __func__, regName.c_str(), result);
 	}
 	/* sub register */
 	else {
@@ -81,8 +81,8 @@ static REGTYPE reg_core_get_value(string regName)
 		int shift = 8*ri.offset;
 		REGTYPE mask = ((REGTYPE)1 << 8*(ri.size))-1;
 		result = (fwr & mask) >> shift;
-		debug("%s(): %s is subreg, (" FMT_REG " & " FMT_REG ")>>%d == " FMT_REG "\n",
-			__func__, regName.c_str(), fwr, mask, shift, result);
+		//debug("%s(): %s is subreg, (" FMT_REG " & " FMT_REG ")>>%d == " FMT_REG "\n",
+		//	__func__, regName.c_str(), fwr, mask, shift, result);
 	}
 
 	return result;
@@ -151,7 +151,7 @@ void NOP(void)
 void SET_REG(string dest, SREGTYPE src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG %s=" FMT_REG "\n", dest.c_str(), src);
+	debug("SET_REG         %s = " FMT_REG "\n", dest.c_str(), src);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
@@ -161,7 +161,7 @@ void SET_REG_SPLIT(string hi, string lo, REGTYPE src_val)
 	REGTYPE dst_val_lo = (REGTYPE) (src_val & REGMASKLOHALF);
 	reg_set_value(hi, dst_val_hi);
 	reg_set_value(lo, dst_val_lo);
-	debug("SET_REG_SPLIT " FMT_REG " -> %s=" FMT_REG " %s=" FMT_REG "\n",
+	debug("SET_REG_SPLIT   " FMT_REG " -> %s = " FMT_REG ", %s = " FMT_REG "\n",
 		src_val, hi.c_str(), dst_val_hi, lo.c_str(), dst_val_lo);
 }
 
@@ -173,7 +173,7 @@ REGTYPE REG_SPLIT(string hi, string lo)
 	REGTYPE src_lo = reg_get_value(lo);
 	REGTYPE result = (src_hi << (REGWIDTH/2)) | (src_lo & REGMASKLOHALF);
 
-	debug("SET_REG_SPLIT " FMT_REG " join " FMT_REG " -> " FMT_REG "\n",
+	debug("REG_SPLIT       " FMT_REG " join " FMT_REG " -> " FMT_REG "\n",
 		src_hi, src_lo, result);
 
 	return result;
@@ -185,21 +185,21 @@ REGTYPE REG_SPLIT(string hi, string lo)
 void SET_FLAG(string left, bool right)
 {
 	vm_flags[left] = right;
-	debug("SET_FLAG %s = %d\n", left.c_str(), right);
+	debug("SET_FLAG        %s = %d\n", left.c_str(), right);
 }
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
 REGTYPE LOAD(REGTYPE expr)
 {
 	REGTYPE result = vm_mem[expr];
-	debug("LOAD " FMT_REG " = mem[" FMT_REG "]\n", result, expr);
+	debug("LOAD            " FMT_REG " = mem[" FMT_REG "]\n", result, expr);
 	return vm_mem[expr];
 }
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
 void STORE(REGTYPE dest, REGTYPE src)
 {
-	debug("STORE mem[" FMT_REG "] = " FMT_REG "\n", dest, src);
+	debug("STORE           mem[" FMT_REG "] = " FMT_REG "\n", dest, src);
 	vm_mem[dest] = src;
 }
 
@@ -211,7 +211,7 @@ void PUSH(REGTYPE src)
 	/* store on stack */
 	REGTYPE ea = vm_regs[stackRegName];
 	vm_mem[ea] = src;
-	debug("PUSH mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
+	debug("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
 }
 
 /* LowLevelILOperation.LLIL_POP: [] */
@@ -222,7 +222,7 @@ REGTYPE POP(void)
 	REGTYPE val = vm_mem[ea];
 	/* decrement stack pointer */
 	vm_regs[stackRegName] += sizeof(REGTYPE);
-	debug("POP " FMT_REG " from mem[" FMT_REG "]\n", val, ea);
+	debug("POP             " FMT_REG " from mem[" FMT_REG "]\n", val, ea);
 	return val;
 }
 
@@ -230,7 +230,7 @@ REGTYPE POP(void)
 REGTYPE REG(string src)
 {
 	REGTYPE result = reg_get_value(src);
-	debug("REG(\"%s\") returns " FMT_REG "\n", src.c_str(), result);
+	debug("REG             %s = " FMT_REG "\n", src.c_str(), result);
 	return result;
 }
 
@@ -251,7 +251,7 @@ SREGTYPE EXTERN_PTR(SREGTYPE constant, SREGTYPE offset)
 bool FLAG(string src)
 {
 	bool result = vm_flags[src];
-	debug("FLAG %d=vm_flags[%s]\n", result, src.c_str());
+	debug("FLAG            " "%d = vm_flags[%s]\n", result, src.c_str());
 	return result;
 }
 
@@ -260,7 +260,7 @@ bool FLAG(string src)
 SREGTYPE ADD(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left + right;
-	debug("ADD " FMT_SREG " = " FMT_SREG " + " FMT_SREG "\n", result, left, right);
+	debug("ADD             " FMT_REG " = " FMT_REG " + " FMT_REG "\n", result, left, right);
 	return result;	
 }
 
@@ -269,7 +269,7 @@ SREGTYPE ADD(SREGTYPE left, SREGTYPE right)
 SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left - right;
-	debug("SUB " FMT_SREG " = " FMT_SREG " - " FMT_SREG "\n", result, left, right);
+	debug("SUB             " FMT_SREG " = " FMT_SREG " - " FMT_SREG "\n", result, left, right);
 	return result;	
 }
 
@@ -279,7 +279,7 @@ SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 REGTYPE AND(REGTYPE left, REGTYPE right)
 {
 	REGTYPE result = left & right;
-	debug("AND " FMT_REG " = " FMT_REG " & " FMT_REG "\n", result, left, right);
+	debug("AND             " FMT_REG " = " FMT_REG " & " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -289,7 +289,7 @@ REGTYPE AND(REGTYPE left, REGTYPE right)
 REGTYPE LSL(REGTYPE left, REGTYPE right)
 {
 	REGTYPE result = left << right;
-	debug("LSL " FMT_REG " = " FMT_REG " << " FMT_REG "\n", result, left, right);
+	debug("LSL             " FMT_REG " = " FMT_REG " << " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -300,7 +300,7 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right)
 {
 	/* recall: ARITHMETIC shift preseves sign bit - hope the compiler generates correct code :) */
 	SREGTYPE result = left >> right;
-	debug("ASR " FMT_REG " = " FMT_REG " >> " FMT_REG "\n", result, left, right);
+	debug("ASR             " FMT_REG " = " FMT_REG " >> " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -311,7 +311,7 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right)
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left * right;
-	debug("MUL " FMT_REG " = " FMT_REG " * " FMT_REG "\n", result, left, right);
+	debug("MUL             " FMT_REG " = " FMT_REG " * " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -326,7 +326,7 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left/right;
-	debug("DIVS_DP " FMT_SREG " = " FMT_SREG " / " FMT_SREG "\n", result, left, right);
+	debug("DIVS_DP         " FMT_SREG " = " FMT_SREG " / " FMT_SREG "\n", result, left, right);
 	return result;
 }
 
@@ -334,7 +334,7 @@ SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE right)
 REGTYPE MODU(REGTYPE left, REGTYPE right)
 {
 	REGTYPE result = left % right;
-	debug("MODU " FMT_REG " = " FMT_REG " %% " FMT_REG "\n", result, left, right);
+	debug("MODU            " FMT_REG " = " FMT_REG " %% " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -343,7 +343,7 @@ REGTYPE MODU(REGTYPE left, REGTYPE right)
 REGTYPE MODU_DP(REGTYPE left, REGTYPE right)
 {
 	REGTYPE result = left % right;
-	debug("MODU_DP " FMT_REG " = " FMT_REG " %% " FMT_REG "\n", result, left, right);
+	debug("MODU_DP         " FMT_REG " = " FMT_REG " %% " FMT_REG "\n", result, left, right);
 	return result;
 }
 
@@ -351,7 +351,7 @@ REGTYPE MODU_DP(REGTYPE left, REGTYPE right)
 SREGTYPE MODS(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left % right;
-	debug("MODS " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, left, right);
+	debug("MODS            " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, left, right);
 	return result;
 }
 
@@ -360,7 +360,7 @@ SREGTYPE MODS(SREGTYPE left, SREGTYPE right)
 SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left % right;
-	debug("MODS_DP " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, left, right);
+	debug("MODS_DP         " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, left, right);
 	return result;
 }
 
@@ -369,7 +369,7 @@ SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right)
 REGTYPE NOT(REGTYPE left)
 {
 	REGTYPE result = ~left;
-	debug("NOT " FMT_REG " = ~" FMT_REG "\n", result, left);
+	debug("NOT             " FMT_REG " = ~" FMT_REG "\n", result, left);
 	return result;
 }
 
@@ -377,7 +377,7 @@ REGTYPE NOT(REGTYPE left)
 SREGTYPE SX(SREGTYPE_HALF src)
 {
 	SREGTYPE result = src;
-	debug("SX " FMT_REG_HALF " -> " FMT_REG "\n", src, result);
+	debug("SX              " FMT_REG_HALF " -> " FMT_REG "\n", src, result);
 	return (SREGTYPE)src;
 }
 
@@ -388,15 +388,22 @@ SREGTYPE SX(SREGTYPE_HALF src)
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest)
 {
-	debug("CALL 0x%llX\n", dest);
+	/* dummy push of return address */
+	vm_regs[stackRegName] -= sizeof(REGTYPE);
+	vm_mem[vm_regs[stackRegName]] = 0xCA11BACC;
+	debug("CALL            " FMT_REG "\n", dest);
 }
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
 /* LowLevelILOperation.LLIL_TAILCALL: [("dest", "expr")] */
+
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */
 void RET(REGTYPE dest)
 {
-	return;
+	/* IL semantics of RET are _not_ necessarily to pop and jump (but can be)
+		an x86 style ret will be RET(POP())
+		an arm style ret might be RET(REG("lr")) */
+	debug("RET             " FMT_REG "\n", dest);
 }
 
 /* LowLevelILOperation.LLIL_NORET: [] */
@@ -442,7 +449,13 @@ bool CMP_SGE(SREGTYPE left, SREGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
+
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGT(SREGTYPE left, SREGTYPE right)
+{
+	return left > right;
+}
+
 /* LowLevelILOperation.LLIL_CMP_UGT: [("left", "expr"), ("right", "expr")] */
 bool CMP_UGT(REGTYPE left, REGTYPE right)
 {

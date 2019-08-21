@@ -108,6 +108,18 @@ int vm_switch_doubler(int a)
 	return vm_regs["rax"];
 }
 
+void factorial(void);
+int vm_factorial(int a)
+{
+	vm_reset();
+	/* sysv: integer args in rdi, rsi, rdx, rcx, r8, r9... */
+	vm_regs["rdi"] = a;
+	/* jump into VM */
+	factorial();
+	/* sysv: return value in rax */
+	return vm_regs["rax"];
+}
+
 void check(int actual, int expected, const char *msg)
 {
 	if(actual == expected) {
@@ -199,5 +211,18 @@ int main(int ac, char **av)
 	check(result, -1, "switch_doubler(999)");
 
 	result = vm_switch_doubler(9);
-	check(result, 18, "switch_doubler(9)");	
+	check(result, 18, "switch_doubler(9)");
+
+	/* recursion */
+	result = vm_factorial(0);
+	check(result, 1, "factorial(0)");
+
+	result = vm_factorial(5);
+	check(result, 120, "factorial(5)");	
+
+	result = vm_factorial(8);
+	check(result, 40320, "factorial(8)");
+
+	result = vm_factorial(11);
+	check(result, 39916800, "factorial(11)");		
 }

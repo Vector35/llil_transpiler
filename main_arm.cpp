@@ -109,6 +109,18 @@ int vm_switch_doubler(int a)
 	return vm_regs["r0"];
 }
 
+void factorial(void);
+int vm_factorial(int a)
+{
+	vm_reset();
+	/* apcs: args in r0, r1, r2, r3...*/
+	vm_regs["r0"] = a;
+	/* jump into VM */
+	factorial();
+	/* apcs: return value in r0 */
+	return vm_regs["r0"];
+}
+
 void check(int actual, int expected, const char *msg)
 {
 	if(actual == expected) {
@@ -200,5 +212,18 @@ int main(int ac, char **av)
 	check(result, -1, "switch_doubler(999)");
 
 	result = vm_switch_doubler(9);
-	check(result, 18, "switch_doubler(9)");	
+	check(result, 18, "switch_doubler(9)");
+
+	/* recursion */
+	result = vm_factorial(0);
+	check(result, 1, "factorial(0)");
+
+	result = vm_factorial(5);
+	check(result, 120, "factorial(5)");	
+
+	result = vm_factorial(8);
+	check(result, 40320, "factorial(8)");
+
+	result = vm_factorial(11);
+	check(result, 39916800, "factorial(11)");		
 }

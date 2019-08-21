@@ -101,6 +101,10 @@ def traverse_IL(il, depth=0):
             else:
                 raise Exception('unable to handle JUMP: %s' % str(il))
         elif il.operation == LowLevelILOperation.LLIL_CALL:
+            print('CALL(', end='');
+            traverse_IL(il.operands[0], depth+1);
+            print('); ', end='')
+
             handled = False
             oper = il.operands[0]
             addr = None
@@ -112,11 +116,11 @@ def traverse_IL(il, depth=0):
             if addr:
                 #print('got addr: 0x%X\n' % addr)
                 sym = bv.get_symbol_at(addr)
-                dvar = bv.get_data_var_at(addr)
-                if sym and sym.name == '__aeabi_idivmod':
-                    print('// %s' % str(il))
+                if sym and sym.full_name:
+                    print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
                     #print('\tSET_REG("r0", MODU(REG("r0"), REG("r1")))', end='')
-                    print('\t__aeabi_idivmod()', end='')
+                    noparens = sym.full_name.split('(',1)[0]
+                    print('\t%s()' % noparens, end='')
                     handled = True
 
             if not handled:
@@ -181,7 +185,9 @@ if __name__ == '__main__':
     # arg2: architecture 'x64', 'arm'
     if sys.argv[2:]:
         arch = sys.argv[2]
-
+    
+    print('// %s' % shellout(['file', fpath])[0])
+    
     bv = binaryninja.BinaryViewType.get_view_of_file(fpath)
     bv.add_analysis_completion_event(analysis_complete)
     bv.reanalyze()
@@ -190,7 +196,6 @@ if __name__ == '__main__':
     #    pass
     #print('// analysis done...')
 
-    print('// %s' % shellout(['file', fpath])[0])
     print('#include <stdint.h>')
     print('')
     print('#include <string>')
