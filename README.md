@@ -25,6 +25,13 @@ So how do you actually do it?
 
 Using make: `make x64` or `make arm` then `./main`
 
+## How can I test my own architecture?
+
+1. atop runtime.h, do an `#ifdef ARCH_XXX` and inside define your arch's register types, etc.
+2. in main.cpp, do an `#ifdef ARCH_XXX` and inside define `vm_init_stack()`, `vm_set_arg0()`, etc.
+3. in the Makefile, create a new target that calls your arch's compiler to produce tests.o and passes -DARCH\_XXX
+4. run `./main`
+
 ## What else?
 
 You could compile a routine in one architecture, transpile it's LLIL to C++, then compile the result to a new architecture.
