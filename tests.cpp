@@ -6,16 +6,18 @@ int multiply(int a, int b)
 int multiply_loop(int a, int b)
 {
 	int result = 0;
+	int neg = 1;
+
+	if(b < 0) {
+		b = -b;
+		neg = -neg;
+	}
 
 	for(int i=0; i<b; ++i) {
 		result = result + a;
 	}
 
-	if(b < 0) {
-		result = result * -1;
-	}
-
-	return result;
+	return neg * result;
 }
 
 int exp(int base, int e)

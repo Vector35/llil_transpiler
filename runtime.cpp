@@ -189,11 +189,18 @@ void SET_FLAG(string left, bool right)
 }
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
-REGTYPE LOAD(REGTYPE expr)
+uint32_t LOAD4(REGTYPE expr)
 {
-	REGTYPE result = vm_mem[expr];
-	debug("LOAD            " FMT_REG " = mem[" FMT_REG "]\n", result, expr);
-	return vm_mem[expr];
+	uint32_t result = vm_mem[expr];
+	debug("LOAD4           0x%X = mem[" FMT_REG "]\n", result, expr);
+	return result;
+}
+
+uint64_t LOAD8(REGTYPE expr)
+{
+	uint64_t result = vm_mem[expr];
+	debug("LOAD8           0x%llX = mem[" FMT_REG "]\n", result, expr);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
@@ -414,52 +421,68 @@ void RET(REGTYPE dest)
 /* LowLevelILOperation.LLIL_CMP_E: [("left", "expr"), ("right", "expr")] */
 bool CMP_E(REGTYPE left, REGTYPE right)
 {
-	return left == right;
+	bool result = left == right;
+	debug("CMP_E           %d = " FMT_REG " == " FMT_REG "\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_NE: [("left", "expr"), ("right", "expr")] */
 bool CMP_NE(REGTYPE left, REGTYPE right)
 {
-	return left != right;
+	bool result = left != right;
+	debug("CMP_NE          %d = " FMT_REG " != " FMT_REG "\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_SLT: [("left", "expr"), ("right", "expr")] */
-bool CMP_SLT(SREGTYPE left, SREGTYPE right)
+bool CMP_SLT4(int32_t left, int32_t right)
 {
-	return left < right;
+	bool result = left < right;
+	debug("CMP_SLT         %d = %d < %d\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SLE(SREGTYPE left, SREGTYPE right)
+bool CMP_SLE4(int32_t left, int32_t right)
 {
-	return left <= right;
+	bool result = left <= right;
+	debug("CMP_SLE         %d = %d <= %d\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_ULE: [("left", "expr"), ("right", "expr")] */
 bool CMP_ULE(REGTYPE left, REGTYPE right)
 {
-	return left <= right;
+	bool result = left <= right;
+	debug("CMP_ULE         %d = " FMT_REG " <= " FMT_REG "\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_SGE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGE(SREGTYPE left, SREGTYPE right)
+bool CMP_SGE4(int32_t left, int32_t right)
 {
-	return left >= right;
+	bool result = left >= right;
+	debug("CMP_SGE         %d = %d >= %d\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGT(SREGTYPE left, SREGTYPE right)
+bool CMP_SGT4(int32_t left, int32_t right)
 {
-	return left > right;
+	bool result = left > right;
+	debug("CMP_SGT         %d = %d > %d\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_CMP_UGT: [("left", "expr"), ("right", "expr")] */
 bool CMP_UGT(REGTYPE left, REGTYPE right)
 {
-	return left > right;
+	bool result = left > right;
+	debug("CMP_UGT         %d = " FMT_REG " > " FMT_REG "\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_TEST_BIT: [("left", "expr"), ("right", "expr")] */

@@ -28,6 +28,8 @@ def shellout(cmd):
     process.wait()
     return (stdout, stderr)
 
+
+
 def traverse_IL(il, depth=0):
     global bv
     global init_mem_lines
@@ -47,6 +49,16 @@ def traverse_IL(il, depth=0):
         traverse = True
         if il.operation == LowLevelILOperation.LLIL_GOTO:
             print('goto loc_%d' % il.operands[0], end='')
+        elif il.operation == LowLevelILOperation.LLIL_LOAD:
+            print('LOAD%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(')', end='')
+        elif opname.startswith('CMP_S'):
+            print('%s%d(' % (opname, il.size), end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_RET:
             print('RET(', end='')
             traverse_IL(il.operands[0], depth+1)
