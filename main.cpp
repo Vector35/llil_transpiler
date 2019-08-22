@@ -14,15 +14,16 @@ extern map<string,REGTYPE> vm_regs;
 extern map<string,double> vm_regs_double;
 
 /* functions from generated tests_il.o we'll be using */
+void _life_universe_everything();
 void initialize_memory();
-void multiply();
-void multiply_loop();
-void exp();
-void expmod();
-void gcd();
-void gcd_recursive();
-void switch_doubler();
-void factorial();
+void _multiply();
+void _multiply_loop();
+void _exp_dummy();
+void _expmod();
+void _gcd();
+void _gcd_recursive();
+void _switch_doubler();
+void _factorial();
 
 /* architecture-specific VM utilities to init stack, set args, return values */
 #ifdef ARCH_X64
@@ -39,6 +40,22 @@ void vm_set_arg0(int a) { vm_regs["r0"] = a; }
 void vm_set_arg1(int a) { vm_regs["r1"] = a; }
 void vm_set_arg2(int a) { vm_regs["r2"] = a; }
 int vm_get_retval() { return vm_regs["r0"]; }
+
+#endif
+
+/* most compilers in the "object" phase haven't applied _cdecl mangling and
+prepended the leading underscore, but clang on MacOS outputs a macho object
+and they're there */
+#ifdef LEADING_UNDERSCORE
+#define life_universe_everything _life_universe_everything
+#define multiply _multiply
+#define multiply_loop _multiply_loop
+#define exp_dummy _exp_dummy
+#define expmod _expmod
+#define gcd _gcd
+#define gcd_recursive _gcd_recursive
+#define switch_doubler _switch_doubler
+#define factorial _factorial
 #endif
 
 /* architecture-independent VM utilities */
@@ -52,6 +69,13 @@ void vm_reset()
 }
 
 typedef void (*VMFUNC)(void);
+
+/* call a 1-arg function in the VM */
+int vm_call(VMFUNC pfunc) {
+	vm_reset();
+	pfunc();
+	return vm_get_retval();
+}
 
 /* call a 1-arg function in the VM */
 int vm_call(VMFUNC pfunc, int a)
@@ -72,7 +96,7 @@ int vm_call(VMFUNC pfunc, int a, int b)
 	return vm_get_retval();
 }
 
-/* call a 2-arg function in the VM */
+/* call a 3-arg function in the VM */
 int vm_call(VMFUNC pfunc, int a, int b, int c)
 {
 	vm_reset();
@@ -96,6 +120,9 @@ void check(int actual, int expected, const char *msg)
 int main(int ac, char **av)
 {
 	int result;
+	
+	result = vm_call(life_universe_everything);
+	check(result, 42, "life_universe_everything()");
 
 	/* multiply: easy case with MUL instruction */
 	result = vm_call(multiply, 4,7);
@@ -124,16 +151,16 @@ int main(int ac, char **av)
 	check(result, 56088, "multiply_loop(123,456)");
 
 	/* exponentiate */
-	result = vm_call(exp, 4,7);
+	result = vm_call(exp_dummy, 4,7);
 	check(result, 16384, "exp(4,7)");
 
-	result = vm_call(exp, 2,16);
+	result = vm_call(exp_dummy, 2,16);
 	check(result, 65536, "exp(2,16)");
 
-	result = vm_call(exp, 3,17);
+	result = vm_call(exp_dummy, 3,17);
 	check(result, 129140163, "exp(3,17)");
 
-	result = vm_call(exp, 17,3);
+	result = vm_call(exp_dummy, 17,3);
 	check(result, 4913, "exp(17,3)");
 
 	/* exponentiate with a modulus */

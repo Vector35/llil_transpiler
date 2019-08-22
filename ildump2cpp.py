@@ -28,8 +28,6 @@ def shellout(cmd):
     process.wait()
     return (stdout, stderr)
 
-
-
 def traverse_IL(il, depth=0):
     global bv
     global init_mem_lines
@@ -181,12 +179,6 @@ def usage():
     print('\t' + '\n\t'.join(map(str, list(binaryninja.Platform))))
     sys.exit(-1)
 
-analysis_complete_flag = False
-def analysis_complete():
-    global analysis_complete_flag
-    print('DONE!')
-    analysis_complete_flag = True
-
 if __name__ == '__main__':
     # arg1: path to object file from which to extract IL
     if sys.argv[1:]:
@@ -201,12 +193,7 @@ if __name__ == '__main__':
     print('// %s' % shellout(['file', fpath])[0])
     
     bv = binaryninja.BinaryViewType.get_view_of_file(fpath)
-    bv.add_analysis_completion_event(analysis_complete)
-    bv.reanalyze()
-    #print('// waiting on analysis...')
-    #while not analysis_complete_flag:
-    #    pass
-    #print('// analysis done...')
+    bv.update_analysis_and_wait()
 
     print('#include <stdint.h>')
     print('')

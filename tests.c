@@ -1,3 +1,8 @@
+int life_universe_everything()
+{
+	return 42;
+}
+
 int multiply(int a, int b)
 {
 	return a * b;
@@ -5,6 +10,7 @@ int multiply(int a, int b)
 
 int multiply_loop(int a, int b)
 {
+	int i;
 	int result = 0;
 	int neg = 1;
 
@@ -13,18 +19,20 @@ int multiply_loop(int a, int b)
 		neg = -neg;
 	}
 
-	for(int i=0; i<b; ++i) {
+	for(i=0; i<b; ++i) {
 		result = result + a;
 	}
 
 	return neg * result;
 }
 
-int exp(int base, int e)
+/* "_dummy" because exp() is built-in in some compilers */
+int exp_dummy(int base, int e)
 {
+	int i;
 	int result = 1;
 
-	for(int i=0; i<e; ++i)
+	for(i=0; i<e; ++i)
 		result = result * base;
 
 	return result;
@@ -108,3 +116,4 @@ int factorial(int n)
 	else
 		return n * factorial(n-1);
 }
+
