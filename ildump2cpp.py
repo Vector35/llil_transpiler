@@ -123,8 +123,8 @@ def traverse_IL(il, depth=0):
             elif oper.operation == LowLevelILOperation.LLIL_CONST_PTR:
                 addr = oper.constant
 
-            if addr:
-                #print('got addr: 0x%X\n' % addr)
+            if addr != None:
+                #print('// got addr: 0x%X\n' % addr)
                 sym = bv.get_symbol_at(addr)
                 if sym and sym.full_name:
                     print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
@@ -187,6 +187,7 @@ if __name__ == '__main__':
         usage()
 
     # arg2: architecture 'x64', 'arm'
+    arch = ''
     if sys.argv[2:]:
         arch = sys.argv[2]
     

@@ -13,3 +13,10 @@ arm:
 	$(HOME)/android-ndk-r15c/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-gcc -march=armv7-a -O0 -c tests.c -o tests.o
 	ildump2cpp.py tests.o arm > tests_il.cpp
 	g++ -g -O0 --std=c++11 -DARCH_ARM tests_il.cpp main.cpp runtime.cpp -o main
+
+z80:
+	sdcc -mz80 -c tests.c
+	rel2elf.py tests.rel
+	ildump2cpp.py tests.rel.elf z80 > tests_il.cpp
+	g++ -g -O0 --std=c++11 tests_il.cpp main.cpp runtime.cpp -o main
+
