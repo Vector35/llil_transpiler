@@ -39,76 +39,99 @@ def align(fp, to=4, pad=b'\x00'):
         fp.write(pad)
 
 #------------------------------------------------------------------------------
-# read .rel file
+# read .map file for symbols
 #------------------------------------------------------------------------------
-fpath = sys.argv[1]
-assert fpath.endswith('.rel')
 
-code_area = None
-rel_syms = []
+fpath_map = sys.argv[2]
+assert fpath_map.endswith('.map')
 
-with open(fpath) as fp:
+with open(fpath_map) as fp:
+    lines = fp.readlines()
+
+(_CODE_ADDR, _CODE_SZ) = (None, None)
+(i_code, i_header) = (None, None)
+for (i, line) in enumerate(lines):
+    if line.startswith('_CODE'):
+        i_code = i
+        m = re.match(r'^_CODE\s+([A-F0-9]{8})\s+([A-F0-9]{8})', line) 
+        (_CODE_ADDR, _CODE_SZ) = map(lambda x: int(x, 16), m.group(1,2))
+    if line.startswith('_HEADER0'):
+        i_header = i
+        break
+assert i_code and i_header and i_code < i_header
+
+syms = []
+for line in lines[i_code:i_header]:
+    m = re.search(r'([A-F0-9]{8})\s+(_\w+)', line)
+    if m:
+        syms.append((m.group(2), int(m.group(1), 16)))
+
+assert syms
+print('_CODE [%08X, %08X)' % (_CODE_ADDR, _CODE_ADDR+_CODE_SZ))
+print('_CODE symbols from')
+for (name, addr) in syms:
+    print('%08X: %s' % (addr, name))
+
+#------------------------------------------------------------------------------
+# read .ihx file
+#------------------------------------------------------------------------------
+
+fpath_ihx = sys.argv[1]
+assert fpath_ihx.endswith('.ihx')
+
+code_area = [b'\x00'] * (_CODE_ADDR + _CODE_SZ)
+
+with open(fpath_ihx) as fp:
     for line in fp.readlines():
-        # AREA line -> create a section
-        match = re.match(r'A _CODE size (.*) flags (.*) addr (.*)', line)
-        if match:
-            (size, flags, addr) = (int(x, 16) for x in match.group(1, 2, 3))
-            assert flags == 0
-            assert addr == 0
-            print('detected _CODE area [%04X, %04X)' % (addr, addr + size))
-            code_area = [b'\x00'] * size
-            continue
-    
-        # WRITE line -> write bytes to section
-        match = re.match(r'^T (.. ..) (.*)', line)
-        if match:
-            (addr, data) = match.group(1, 2)
-            # eg: "04 00" -> 0x0004
-            addr = int(addr[3:5] + addr[0:2], 16)
-            # eg: "AA BB CC DD" -> b'\xAA\xBB\xCC\xDD'
-            print('writing %04X: %s' % (addr, data))
-            for (offset, byte) in enumerate(data.split(' ')):
-                code_area[addr + offset] = pack('B', int(byte,16))
-            continue 
-    
-        # SYMBOL line -> store
-        match = re.match(r'^S (.+) Def(.*)', line)
-        if match:
-            (name, addr) = match.group(1, 2)
-            if not name in ['.__.ABS.', '.  .ABS']:
-                addr = int(addr, 16)
-                print('saving symbol %s @ %X' % (name, addr))
-                rel_syms.append((name, addr))
+
+        m = re.match(r'^:(..)(....)00(.*)(..)', line)
+        if m:
+            (count, addr, data, csum) = m.group(1,2,3,4)
+            count = int(count,16)
+            assert count == len(data)/2
+            addr = int(addr,16)
+            if not (addr >= _CODE_ADDR and addr < (_CODE_ADDR + _CODE_SZ)):
                 continue
+            print('%08X: ' % addr, end='')
+            for i in range(count):
+                byte_str = data[2*i]+data[2*i+1]
+                print('%s ' % byte_str, end='')
+                code_area[addr + i] = pack('B', int(byte_str, 16))
+            print('')
+            continue
+
+        m = re.match(r'^:00000001FF', line)
+        if m:
+            break
+
+        raise Exception('got unexpected IHX line: %s' % line)
 
 assert code_area
-assert rel_syms
+#print(code_area)
 
 #------------------------------------------------------------------------------
 # write ELF
 #------------------------------------------------------------------------------
 
 # process symbols, build string table
-rel_syms = sorted(rel_syms, key=lambda name_addr: name_addr[1])
+syms = sorted(syms, key=lambda name_addr: name_addr[1])
 func2size = {}
 func2stroffs = {}
 strtab  = b'\x00'
-for i in range(len(rel_syms)):
-    (name, addr) = rel_syms[i]
+for i in range(len(syms)):
+    (name, addr) = syms[i]
 
-    if i == len(rel_syms)-1:
+    if i == len(syms)-1:
         func2size[name] = len(code_area) - addr
     else:
-        func2size[name] = rel_syms[i+1][1] - addr
+        func2size[name] = syms[i+1][1] - addr
 
     func2stroffs[name] = len(strtab)
     strtab = strtab + name.encode('utf-8') + b'\x00'
 
     print('%04X: %s size %X' % (addr, name, func2size[name]))
 
-fpath = fpath + '.elf'
-print('writing %s' % fpath)
-fp = open(fpath, 'wb')
+fp = open('tests.elf', 'wb')
 
 # elf32_hdr (placeholder, we'll come back to fill in offsets)
 print('elf32_hdr @ %X' % fp.tell())
@@ -133,7 +156,7 @@ sz_shstrtab = fp.tell() - o_shstrtab
 align(fp)
 o_symtab = fp.tell()
 print('placing .symtab @ %X' % o_symtab)
-for (name, addr) in rel_syms:
+for (name, addr) in syms:
     st_name = func2stroffs[name]
     st_value = addr
     st_size = func2size[name]
