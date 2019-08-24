@@ -16,7 +16,7 @@ arm:
 
 z80:
 	sdcc -mz80 -DARCH_Z80 -c tests.c
-	rel2elf.py tests.rel
-	ildump2cpp.py tests.rel.elf z80 > tests_il.cpp
+	sdcc2elf.py tests.ihx tests.map
+	ildump2cpp.py tests.elf z80 > tests_il.cpp
 	g++ -g -O0 --std=c++11 -DARCH_Z80 -DARCH_16BIT -DLEADING_UNDERSCORE tests_il.cpp main.cpp runtime.cpp -o main
 

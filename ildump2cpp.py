@@ -216,6 +216,13 @@ if __name__ == '__main__':
     print('extern map<REGTYPE,REGTYPE> vm_mem;')
     print('')
 
+	# function prototypes
+    for func in bv.functions:
+        prototype = ''.join(map(lambda x: x.text, func.type_tokens))
+        func_name = re.match(r'^.* (.*)\(.*\)$', prototype).group(1)
+        print('void %s(void);' % func_name)
+	print('')
+
     # loop over binaryninja.function.Function
     for func in bv.functions:
         #print('// function %s()' % func.name)
