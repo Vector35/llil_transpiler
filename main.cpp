@@ -13,39 +13,6 @@ extern map<REGTYPE,REGTYPE> vm_mem;
 extern map<string,REGTYPE> vm_regs;
 extern map<string,double> vm_regs_double;
 
-/* functions from generated tests_il.o we'll be using */
-void _life_universe_everything();
-void initialize_memory();
-void _multiply();
-void _multiply_loop();
-void _exp_dummy();
-void _expmod();
-void _gcd();
-void _gcd_recursive();
-void _switch_doubler();
-void _factorial();
-
-/* architecture-specific VM utilities to init stack, set args, return values */
-#ifdef ARCH_X64
-void vm_init_stack() { vm_regs["rsp"] = 0xC00000000000000; }
-void vm_set_arg0(int a) { vm_regs["rdi"] = a; }
-void vm_set_arg1(int a) { vm_regs["rsi"] = a; }
-void vm_set_arg2(int a) { vm_regs["rdx"] = a; }
-int vm_get_retval() { return vm_regs["rax"]; }
-#endif
-
-#ifdef ARCH_ARM
-void vm_init_stack() { vm_regs["sp"] = 0xC0000000; }
-void vm_set_arg0(int a) { vm_regs["r0"] = a; }
-void vm_set_arg1(int a) { vm_regs["r1"] = a; }
-void vm_set_arg2(int a) { vm_regs["r2"] = a; }
-int vm_get_retval() { return vm_regs["r0"]; }
-
-#endif
-
-/* most compilers in the "object" phase haven't applied _cdecl mangling and
-prepended the leading underscore, but clang on MacOS outputs a macho object
-and they're there */
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
 #define multiply _multiply
@@ -56,6 +23,46 @@ and they're there */
 #define gcd_recursive _gcd_recursive
 #define switch_doubler _switch_doubler
 #define factorial _factorial
+#endif
+
+/* functions from generated tests_il.o we'll be using */
+void life_universe_everything();
+void initialize_memory();
+void multiply();
+void multiply_loop();
+void exp_dummy();
+void expmod();
+void gcd();
+void gcd_recursive();
+void switch_doubler();
+void factorial();
+
+/* architecture-specific VM utilities to init stack, set args, return values */
+#ifdef ARCH_X64
+void vm_init_stack() { vm_regs["rsp"] = 0xC00000000000000; }
+void vm_set_arg0(int a) { vm_regs["rdi"] = a; }
+void vm_set_arg1(int a) { vm_regs["rsi"] = a; }
+void vm_set_arg2(int a) { vm_regs["rdx"] = a; }
+void vm_precall() { vm_regs["rsp"] -= 8; vm_mem[vm_regs["rsp"]] = 0x00C4113200C41132; }
+int vm_get_retval() { return vm_regs["rax"]; }
+#endif
+
+#ifdef ARCH_ARM
+void vm_init_stack() { vm_regs["sp"] = 0xC0000000; }
+void vm_set_arg0(int a) { vm_regs["r0"] = a; }
+void vm_set_arg1(int a) { vm_regs["r1"] = a; }
+void vm_set_arg2(int a) { vm_regs["r2"] = a; }
+void vm_precall() { vm_regs["sp"] -= 4; vm_mem[vm_regs["rsp"]] = 0x00C41132; }
+int vm_get_retval() { return vm_regs["r0"]; }
+#endif
+
+#ifdef ARCH_Z80
+void vm_init_stack() { vm_regs["SP"] = 0xC000; }
+void vm_set_arg0(int a) { vm_regs["SP"] -= 1; vm_mem[vm_regs["SP"]] = a; }
+void vm_set_arg1(int a) { vm_set_arg0(a); }
+void vm_set_arg2(int a) { vm_set_arg0(a); }
+void vm_precall() { vm_regs["sp"] -= 2; vm_mem[vm_regs["rsp"]] = 0x1132; }
+int vm_get_retval() { return vm_regs["HL"]; }
 #endif
 
 /* architecture-independent VM utilities */
@@ -73,6 +80,7 @@ typedef void (*VMFUNC)(void);
 /* call a 1-arg function in the VM */
 int vm_call(VMFUNC pfunc) {
 	vm_reset();
+	vm_precall();
 	pfunc();
 	return vm_get_retval();
 }
@@ -82,6 +90,7 @@ int vm_call(VMFUNC pfunc, int a)
 {
 	vm_reset();
 	vm_set_arg0(a);
+	vm_precall();
 	pfunc();
 	return vm_get_retval();
 }
@@ -92,6 +101,7 @@ int vm_call(VMFUNC pfunc, int a, int b)
 	vm_reset();
 	vm_set_arg0(a);
 	vm_set_arg1(b);
+	vm_precall();
 	pfunc();
 	return vm_get_retval();
 }
@@ -103,6 +113,7 @@ int vm_call(VMFUNC pfunc, int a, int b, int c)
 	vm_set_arg0(a);
 	vm_set_arg1(b);
 	vm_set_arg2(c);
+	vm_precall();
 	pfunc();
 	return vm_get_retval();
 }

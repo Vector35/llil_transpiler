@@ -354,18 +354,32 @@ SREGTYPE SX(SREGTYPE_HALF src)
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
+void JUMP(REGTYPE dest)
+{
+	printf("ERROR: JUMP to " FMT_REG " is out of LLIL land, something went wrong in transpilation\n", dest);
+	exit(-1);
+}
+
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest)
 {
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	vm_mem[vm_regs[stackRegName]] = 0xCA11BACC;
+	vm_mem[vm_regs[stackRegName]] = (REGTYPE)(0xCA11BACC & REGMASK);
 	debug("CALL            " FMT_REG "\n", dest);
 }
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
 /* LowLevelILOperation.LLIL_TAILCALL: [("dest", "expr")] */
+
+void TAILCALL(REGTYPE dest)
+{
+	/* dummy push of return address */
+	vm_regs[stackRegName] -= sizeof(REGTYPE);
+	vm_mem[vm_regs[stackRegName]] = (REGTYPE)(0xCA11BAC2 & REGMASK);
+	debug("TAILCALL        " FMT_REG "\n", dest);
+}
 
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */
 void RET(REGTYPE dest)
@@ -457,7 +471,13 @@ bool CMP_UGT(REGTYPE left, REGTYPE right)
 /* LowLevelILOperation.LLIL_BP: [] */
 /* LowLevelILOperation.LLIL_TRAP: [("vector", "int")] */
 /* LowLevelILOperation.LLIL_UNDEF: [] */
+
 /* LowLevelILOperation.LLIL_UNIMPL: [] */
+void UNIMPL()
+{
+	debug("UNIMPL");
+}
+
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FADD: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FSUB: [("left", "expr"), ("right", "expr")] */

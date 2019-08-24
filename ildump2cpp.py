@@ -45,7 +45,9 @@ def traverse_IL(il, depth=0):
             opname = opname[5:]
 
         traverse = True
-        if il.operation == LowLevelILOperation.LLIL_GOTO:
+        if il.operation == LowLevelILOperation.LLIL_UNIMPL:
+        	print('UNIMPL()', end='')
+        elif il.operation == LowLevelILOperation.LLIL_GOTO:
             print('goto loc_%d' % il.operands[0], end='')
         elif il.operation == LowLevelILOperation.LLIL_LOAD:
             print('LOAD%d(' % il.size, end='')
@@ -109,11 +111,13 @@ def traverse_IL(il, depth=0):
                   print('// %s' % str(il))
                   print('\treturn', end='')
             else:
-                raise Exception('unable to handle JUMP: %s' % str(il))
+            	print('JUMP(', end='')
+            	traverse_IL(il.operands[0], depth+1)
+            	print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_CALL:
-            print('CALL(', end='');
-            traverse_IL(il.operands[0], depth+1);
-            print('); ', end='')
+            print('CALL(', end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(');')
 
             handled = False
             oper = il.operands[0]
@@ -126,11 +130,15 @@ def traverse_IL(il, depth=0):
             if addr != None:
                 #print('// got addr: 0x%X\n' % addr)
                 sym = bv.get_symbol_at(addr)
+                	
                 if sym and sym.full_name:
                     print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
                     #print('\tSET_REG("r0", MODU(REG("r0"), REG("r1")))', end='')
                     noparens = sym.full_name.split('(',1)[0]
                     print('\t%s()' % noparens, end='')
+                    handled = True
+                else:
+                    print('\tsub_%X()' % addr, end='')
                     handled = True
 
             if not handled:
@@ -220,7 +228,7 @@ if __name__ == '__main__':
         
         il_addr = 0
         for block in func.low_level_il:
-            print('\tloc_%d:' % block.start);
+            print('\tloc_%d:' % block.start)
 
             # loop over binaryninja.basicblock.BasicBlock
             for insn in block:
@@ -255,13 +263,13 @@ if __name__ == '__main__':
 
     # emit register info (so runtime can know that (for example) writes to eax affect rax)
     # see definition of RegisterInfo in il_runtime.h
-    print('map<string,struct RegisterInfo> regInfos = {');
+    print('map<string,struct RegisterInfo> regInfos = {')
     for (regName,regInfo) in bv.arch.regs.items():
         print('\t{"%s", {%d, "%s", %d, %d, %d}}, /* %s */' % \
             (regName, int(regInfo.index), regInfo.full_width_reg, regInfo.offset, regInfo.size, regInfo.extend, repr(regInfo))
         )
     print('};')
-    print('');
+    print('')
 
     # emit stack register name
     print('string stackRegName = "%s";' % bv.arch.stack_pointer)

@@ -1,44 +1,43 @@
 
-#ifdef ARCH_X64
+#ifdef ARCH_64BIT
+	#define REGWIDTH 64
 	#define REGTYPE uint64_t /* register type */
 	#define SREGTYPE int64_t /* signed register type */
-	#define PREGTYPE (REGTYPE *) /* pointer to register type */
-
 	#define REGTYPE_HALF uint32_t /* half register type */
 	#define SREGTYPE_HALF int32_t
-	#define PREGTYPE_HALF (REGTYPE_HALF *)
-
-	#define REGWIDTH (sizeof(REGTYPE)*8)
-	#define REGMASKLOHALF (( (REGTYPE)1 << (REGWIDTH/2) )-1)	/* eg: 0x0000FFFF */
-	#define REGMASKHIHALF (REGMASKLOHALF<<(REGWIDTH/2)) /* eg: 0xFFFF0000 */
-
-	//#define FMT_REG "0x%X"
-	#define FMT_REG "0x%llX"
-	#define FMT_REG_HALF "0x%X"
-
-	#define FMT_SREG "%lld"
-	#define FMT_SREG_HALF "%d"
 #endif
 
-#ifdef ARCH_ARM
+#ifdef ARCH_32BIT
+	#define REGWIDTH 32
 	#define REGTYPE uint32_t /* register type */
 	#define SREGTYPE int32_t /* signed register type */
-	#define PREGTYPE (REGTYPE *) /* pointer to register type */
-
 	#define REGTYPE_HALF uint16_t /* half register type */
 	#define SREGTYPE_HALF int16_t
-	#define PREGTYPE_HALF (REGTYPE_HALF *)
+#endif
 
-	#define REGWIDTH (sizeof(REGTYPE)*8)
-	#define REGMASKLOHALF (( (REGTYPE)1 << (REGWIDTH/2) )-1)	/* eg: 0x00FF */
-	#define REGMASKHIHALF (REGMASKLOHALF<<(REGWIDTH/2)) /* eg: 0xFF00 */
+#ifdef ARCH_16BIT
+	#define REGWIDTH 16
+	#define REGTYPE uint16_t /* register type */
+	#define SREGTYPE int32_t /* signed register type */
+	#define REGTYPE_HALF uint8_t /* half register type */
+	#define SREGTYPE_HALF int8_t
+#endif
+	
+#define PREGTYPE (REGTYPE *) /* pointer to register type */
+#define REGMASK (~0) /* eg: 0xFFFF */
+#define REGMASKLOHALF (( (REGTYPE)1 << (REGWIDTH/2) )-1)	/* eg: 0x00FF */
+#define REGMASKHIHALF (REGMASKLOHALF<<(REGWIDTH/2)) /* eg: 0xFF00 */
+#define PREGTYPE_HALF (REGTYPE_HALF *)
 
-	//#define FMT_REG "0x%X"
+#if REGWIDTH == 64
+	#define FMT_REG "0x%llX"
+	#define FMT_REG_HALF "0x%X"
+#elif REGWIDTH == 32
 	#define FMT_REG "0x%X"
 	#define FMT_REG_HALF "0x%X"
-
-	#define FMT_SREG "%d"
-	#define FMT_SREG_HALF "%d"
+#elif REGWIDTH == 16
+	#define FMT_REG "0x%04X"
+	#define FMT_REG_HALF "0x%02X"
 #endif
 
 struct RegisterInfo {
@@ -160,12 +159,17 @@ SREGTYPE SX(SREGTYPE_HALF src);
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
+void JUMP(REGTYPE dest);
+
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest);
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
+
 /* LowLevelILOperation.LLIL_TAILCALL: [("dest", "expr")] */
+void TAILCALL(REGTYPE dest);
+
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */
 void RET(REGTYPE dest);
 
@@ -209,7 +213,10 @@ bool CMP_UGT(REGTYPE left, REGTYPE right);
 /* LowLevelILOperation.LLIL_BP: [] */
 /* LowLevelILOperation.LLIL_TRAP: [("vector", "int")] */
 /* LowLevelILOperation.LLIL_UNDEF: [] */
+
 /* LowLevelILOperation.LLIL_UNIMPL: [] */
+void UNIMPL(void);
+
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FADD: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FSUB: [("left", "expr"), ("right", "expr")] */

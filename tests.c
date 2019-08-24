@@ -1,3 +1,9 @@
+/* this consumes address 0, bypassing likely binja bug that skips over "false" st_value in Elf32_Sym */
+int dummy()
+{
+	return 0;
+}
+
 int life_universe_everything()
 {
 	return 42;
@@ -116,4 +122,11 @@ int factorial(int n)
 	else
 		return n * factorial(n-1);
 }
+
+#ifdef ARCH_Z80
+int main()
+{
+	return -1;
+}
+#endif
 
