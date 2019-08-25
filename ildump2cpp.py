@@ -46,7 +46,7 @@ def traverse_IL(il, depth=0):
 
         traverse = True
         if il.operation == LowLevelILOperation.LLIL_UNIMPL:
-        	print('UNIMPL()', end='')
+            print('UNIMPL()', end='')
         elif il.operation == LowLevelILOperation.LLIL_GOTO:
             print('goto loc_%d' % il.operands[0], end='')
         elif il.operation == LowLevelILOperation.LLIL_LOAD:
@@ -82,7 +82,7 @@ def traverse_IL(il, depth=0):
                     value = struct.unpack('<I', bv.read(addr, 4))[0]
                     line = 'vm_mem[0x%X] = 0x%X;' % (addr, value)
                     init_mem_lines.append(line)
-                 
+
             # TODO: this could be a pointer, eg "uin8_t *"
             #print('(%s)0x%X' % (sz2stdint[il.size], il.operands[0]), end='')
             print('0x%X' % (il.operands[0]), end='')
@@ -111,9 +111,9 @@ def traverse_IL(il, depth=0):
                   print('// %s' % str(il))
                   print('\treturn', end='')
             else:
-            	print('JUMP(', end='')
-            	traverse_IL(il.operands[0], depth+1)
-            	print(')', end='')
+                print('JUMP(', end='')
+                traverse_IL(il.operands[0], depth+1)
+                print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_CALL:
             print('CALL(', end='')
             traverse_IL(il.operands[0], depth+1)
@@ -130,7 +130,7 @@ def traverse_IL(il, depth=0):
             if addr != None:
                 #print('// got addr: 0x%X\n' % addr)
                 sym = bv.get_symbol_at(addr)
-                	
+
                 if sym and sym.full_name:
                     print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
                     #print('\tSET_REG("r0", MODU(REG("r0"), REG("r1")))', end='')
@@ -143,7 +143,7 @@ def traverse_IL(il, depth=0):
 
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
-                
+
         elif il.operation == LowLevelILOperation.LLIL_JUMP_TO:
             print('// %s' % str(il))
             print('\tswitch(', end='')
@@ -176,15 +176,13 @@ def traverse_IL(il, depth=0):
         print(';', end='')
 
 def usage():
-    print('usage: %s <filepath>' % sys.argv[0])
-    print('usage: %s <platform> <bytes>' % sys.argv[0])
+    print('usage: %s <filepath> [<arch>]' % sys.argv[0])
     print('')
     print('examples:')
-    print('    %s ./hello' % sys.argv[0])
-    print('    %s linux-armv7 14 d0 4d e2 01 20 a0 e1 00 30 a0 e1 00 c0 a0 e3' % sys.argv[0])
+    print('    %s tests.o' % sys.argv[0])
+    print('    %s tests.o arm' % sys.argv[0])
+    print('    %s tests.elf z80' % sys.argv[0])
     print('')
-    print('platforms:')
-    print('\t' + '\n\t'.join(map(str, list(binaryninja.Platform))))
     sys.exit(-1)
 
 if __name__ == '__main__':
@@ -198,9 +196,9 @@ if __name__ == '__main__':
     arch = ''
     if sys.argv[2:]:
         arch = sys.argv[2]
-    
+
     print('// %s' % shellout(['file', fpath])[0])
-    
+
     bv = binaryninja.BinaryViewType.get_view_of_file(fpath)
     bv.update_analysis_and_wait()
 
@@ -216,12 +214,12 @@ if __name__ == '__main__':
     print('extern map<REGTYPE,REGTYPE> vm_mem;')
     print('')
 
-	# function prototypes
+    # function prototypes
     for func in bv.functions:
         prototype = ''.join(map(lambda x: x.text, func.type_tokens))
         func_name = re.match(r'^.* (.*)\(.*\)$', prototype).group(1)
         print('void %s(void);' % func_name)
-	print('')
+    print('')
 
     # loop over binaryninja.function.Function
     for func in bv.functions:
@@ -232,7 +230,7 @@ if __name__ == '__main__':
         print('/* %s */' % prototype)
         print('void %s(void)' % funcName)
         print('{')
-        
+
         il_addr = 0
         for block in func.low_level_il:
             print('\tloc_%d:' % block.start)
@@ -244,13 +242,13 @@ if __name__ == '__main__':
                 traverse_IL(insn)
                 il_addr += 1
                 print('')
-                
+
             print('')
 
         print('}')
         print('')
 
-    # 
+    #
     print('void initialize_memory()')
     print('{')
     print('\t' + '\n\t'.join(init_mem_lines))

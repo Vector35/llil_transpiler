@@ -15,7 +15,7 @@ arm:
 	g++ -g -O0 --std=c++11 -DARCH_ARM -DARCH_32BIT tests_il.cpp main.cpp runtime.cpp -o main
 
 z80:
-	sdcc -mz80 -DARCH_Z80 -c tests.c
+	sdcc -mz80 -DARCH_Z80 tests.c
 	sdcc2elf.py tests.ihx tests.map
 	ildump2cpp.py tests.elf z80 > tests_il.cpp
 	g++ -g -O0 --std=c++11 -DARCH_Z80 -DARCH_16BIT -DLEADING_UNDERSCORE tests_il.cpp main.cpp runtime.cpp -o main

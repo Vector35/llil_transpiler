@@ -152,6 +152,20 @@ void SET_FLAG(string left, bool right)
 }
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
+uint8_t LOAD1(REGTYPE expr)
+{
+	uint32_t result = vm_mem[expr];
+	debug("LOAD1           0x%X = mem[" FMT_REG "]\n", result, expr);
+	return result;
+}
+
+uint16_t LOAD2(REGTYPE expr)
+{
+	uint16_t result = vm_mem[expr];
+	debug("LOAD2           0x%X = mem[" FMT_REG "]\n", result, expr);
+	return result;
+}
+
 uint32_t LOAD4(REGTYPE expr)
 {
 	uint32_t result = vm_mem[expr];
@@ -473,9 +487,16 @@ bool CMP_UGT(REGTYPE left, REGTYPE right)
 /* LowLevelILOperation.LLIL_UNDEF: [] */
 
 /* LowLevelILOperation.LLIL_UNIMPL: [] */
-void UNIMPL()
+REGTYPE UNIMPL()
 {
 	debug("UNIMPL");
+	return 0;
+}
+
+REGTYPE UNIMPL(REGTYPE)
+{
+	debug("UNIMPL");
+	return 0;
 }
 
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */

@@ -1,12 +1,11 @@
-/* this consumes address 0, bypassing likely binja bug that skips over "false" st_value in Elf32_Sym */
-int dummy()
-{
-	return 0;
-}
-
 int life_universe_everything()
 {
 	return 42;
+}
+
+int add(int a, int b)
+{
+	return a + b;
 }
 
 int multiply(int a, int b)

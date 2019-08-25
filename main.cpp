@@ -15,6 +15,7 @@ extern map<string,double> vm_regs_double;
 
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
+#define add _add
 #define multiply _multiply
 #define multiply_loop _multiply_loop
 #define exp_dummy _exp_dummy
@@ -28,6 +29,7 @@ extern map<string,double> vm_regs_double;
 /* functions from generated tests_il.o we'll be using */
 void life_universe_everything();
 void initialize_memory();
+void add();
 void multiply();
 void multiply_loop();
 void exp_dummy();
@@ -135,7 +137,20 @@ int main(int ac, char **av)
 	result = vm_call(life_universe_everything);
 	check(result, 42, "life_universe_everything()");
 
-	/* multiply: easy case with MUL instruction */
+	/* add */
+	result = vm_call(add, 4,7);
+	check(result, 11, "add(4,7)");
+
+	result = vm_call(add, -4,7);
+	check(result, 3, "add(-4,7)");
+
+	result = vm_call(add, -4,-7);
+	check(result, -11, "add(-4,-7)");
+
+	result = vm_call(add, 123,456);
+	check(result, 579, "add(123,456)");
+
+	/* multiply: easy case with MUL instruction, else kinda tough */
 	result = vm_call(multiply, 4,7);
 	check(result, 28, "multiply(4,7)");
 

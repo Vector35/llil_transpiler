@@ -64,6 +64,8 @@ void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
 void SET_FLAG(string left, bool right);
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
+uint8_t LOAD1(REGTYPE expr);
+uint16_t LOAD2(REGTYPE expr);
 uint32_t LOAD4(REGTYPE expr);
 uint64_t LOAD8(REGTYPE expr);
 
@@ -215,7 +217,8 @@ bool CMP_UGT(REGTYPE left, REGTYPE right);
 /* LowLevelILOperation.LLIL_UNDEF: [] */
 
 /* LowLevelILOperation.LLIL_UNIMPL: [] */
-void UNIMPL(void);
+REGTYPE UNIMPL(void);
+REGTYPE UNIMPL(REGTYPE);
 
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FADD: [("left", "expr"), ("right", "expr")] */
