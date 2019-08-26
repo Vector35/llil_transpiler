@@ -337,7 +337,21 @@ REGTYPE AND(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_OR: [("left", "expr"), ("right", "expr")] */
+REGTYPE OR(REGTYPE left, REGTYPE right)
+{
+	REGTYPE result = left | right;
+	debug("OR              " FMT_REG " = " FMT_REG " | " FMT_REG "\n", result, left, right);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_XOR: [("left", "expr"), ("right", "expr")] */
+REGTYPE XOR(REGTYPE left, REGTYPE right)
+{
+	REGTYPE result = left ^ right;
+	debug("XOR             " FMT_REG " = " FMT_REG " ^ " FMT_REG "\n", result, left, right);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_LSL: [("left", "expr"), ("right", "expr")] */
 REGTYPE LSL(REGTYPE left, REGTYPE right)
 {
@@ -359,6 +373,25 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right)
 
 /* LowLevelILOperation.LLIL_ROL: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_RLC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
+{
+	uint8_t result = value;
+
+	if(amt) {
+		amt = amt % 8;
+		// normal carry
+		uint8_t a = (value << amt);
+		uint8_t b = (amt >> (8-amt));
+		// insert c
+		b = (b >> 1) | (carry << (amt-1));
+		//
+		result = a | b;
+	}
+
+	debug("RLC             0x%X = 0x%X <<< 1 and carry = %d\n", result, value, amt);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right)

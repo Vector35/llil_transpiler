@@ -53,6 +53,14 @@ def traverse_IL(il, depth=0):
             print('LOAD%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
             print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_RLC:
+            print('RLC%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[2], depth+1)
+            print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_STORE:
             print('STORE%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
@@ -235,7 +243,10 @@ if __name__ == '__main__':
     # function prototypes
     for func in bv.functions:
         prototype = ''.join(map(lambda x: x.text, func.type_tokens))
-        func_name = re.match(r'^.* (.*)\(.*\)$', prototype).group(1)
+        m = re.match(r'^.* (.*)\(.*\)', prototype)
+        if not m:
+            print('malformed function prototype: %s' % prototype)
+        func_name = m.group(1)
         print('void %s(void);' % func_name)
     print('')
 
@@ -243,7 +254,7 @@ if __name__ == '__main__':
     for func in bv.functions:
         #print('// function %s()' % func.name)
         prototype = ''.join(map(lambda x: x.text, func.type_tokens))
-        funcName = re.match(r'^.* (.*)\(.*\)$', prototype).group(1)
+        funcName = re.match(r'^.* (.*)\(.*\)', prototype).group(1)
 
         print('/* %s */' % prototype)
         print('void %s(void)' % funcName)

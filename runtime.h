@@ -126,7 +126,11 @@ SREGTYPE SUB(SREGTYPE left, SREGTYPE right);
 REGTYPE AND(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_OR: [("left", "expr"), ("right", "expr")] */
+REGTYPE OR(REGTYPE left, REGTYPE right);
+
 /* LowLevelILOperation.LLIL_XOR: [("left", "expr"), ("right", "expr")] */
+REGTYPE XOR(REGTYPE left, REGTYPE right);
+
 /* LowLevelILOperation.LLIL_LSL: [("left", "expr"), ("right", "expr")] */
 REGTYPE LSL(REGTYPE left, REGTYPE right);
 
@@ -137,6 +141,8 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_ROL: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_RLC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+uint8_t RLC1(uint8_t value, uint8_t amt, bool carry);
+
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
