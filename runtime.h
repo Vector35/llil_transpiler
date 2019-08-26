@@ -56,7 +56,10 @@ struct RegisterInfo {
 void NOP(void);
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG(string dest, SREGTYPE src);
+void SET_REG1(string dest, uint8_t src);
+void SET_REG2(string dest, uint16_t src);
+void SET_REG4(string dest, uint32_t src);
+void SET_REG8(string dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
@@ -106,7 +109,10 @@ bool FLAG(string src);
 
 /* LowLevelILOperation.LLIL_FLAG_BIT: [("src", "flag"), ("bit", "int")] */
 /* LowLevelILOperation.LLIL_ADD: [("left", "expr"), ("right", "expr")] */
-SREGTYPE ADD(SREGTYPE left, SREGTYPE right);
+uint8_t ADD1(uint8_t left, uint8_t right);
+uint16_t ADD2(uint16_t left, uint16_t right);
+uint32_t ADD4(uint32_t left, uint32_t right);
+uint64_t ADD8(uint64_t left, uint64_t right);
 
 /* LowLevelILOperation.LLIL_ADC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry);
@@ -198,6 +204,8 @@ bool CMP_NE(REGTYPE left, REGTYPE right);
 bool CMP_SLT4(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
+bool CMP_ULT(REGTYPE left, REGTYPE right);
+
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
 bool CMP_SLE4(int32_t left, int32_t right);
 

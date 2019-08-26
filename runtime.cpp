@@ -115,10 +115,28 @@ void NOP(void)
 }
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG(string dest, SREGTYPE src)
+void SET_REG1(string dest, uint8_t src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG         %s = " FMT_REG "\n", dest.c_str(), src);
+	debug("SET_REG1        %s = 0x%02X\n", dest.c_str(), src);
+}
+
+void SET_REG2(string dest, uint16_t src)
+{
+	reg_set_value(dest, src);
+	debug("SET_REG2        %s = 0x%04X\n", dest.c_str(), src);
+}
+
+void SET_REG4(string dest, uint32_t src)
+{
+	reg_set_value(dest, src);
+	debug("SET_REG4        %s = 0x%08X\n", dest.c_str(), src);
+}
+
+void SET_REG8(string dest, uint64_t src)
+{
+	reg_set_value(dest, src);
+	debug("SET_REG8        %s = 0x%016llX\n", dest.c_str(), src);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
@@ -262,12 +280,34 @@ bool FLAG(string src)
 }
 
 /* LowLevelILOperation.LLIL_FLAG_BIT: [("src", "flag"), ("bit", "int")] */
+
 /* LowLevelILOperation.LLIL_ADD: [("left", "expr"), ("right", "expr")] */
-SREGTYPE ADD(SREGTYPE left, SREGTYPE right)
+uint8_t ADD1(uint8_t left, uint8_t right)
 {
-	SREGTYPE result = left + right;
-	debug("ADD             " FMT_REG " = " FMT_REG " + " FMT_REG "\n", result, left, right);
-	return result;	
+	uint8_t result = left + right;
+	debug("ADD1            0x%02X = 0x%02X + 0x%02X\n", result & 0xFF, left & 0xFF, right & 0xFF);
+	return result;
+}
+
+uint16_t ADD2(uint16_t left, uint16_t right)
+{
+	uint16_t result = left + right;
+	debug("ADD2            0x%04X = 0x%04X + 0x%04X\n", result & 0xFFFF, left & 0xFFFF, right & 0xFFFF);
+	return result;
+}
+
+uint32_t ADD4(uint32_t left, uint32_t right)
+{
+	uint32_t result = left + right;
+	debug("ADD4            0x%08X = 0x%08X + 0x%08X\n", result, left, right);
+	return result;
+}
+
+uint64_t ADD8(uint64_t left, uint64_t right)
+{
+	uint64_t result = left + right;
+	debug("ADD8            0x%016llX = 0x%016llX + 0x%016llX\n", result, left, right);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_ADC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
@@ -275,7 +315,7 @@ SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry)
 {
 	SREGTYPE result = left + right + carry;
 	debug("ADC             " FMT_REG " = " FMT_REG " + " FMT_REG " + %d\n", result, left, right, carry);
-	return result;	
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
@@ -283,7 +323,7 @@ SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left - right;
 	debug("SUB             " FMT_SREG " = " FMT_SREG " - " FMT_SREG "\n", result, left, right);
-	return result;	
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_SBB: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
@@ -463,6 +503,13 @@ bool CMP_SLT4(int32_t left, int32_t right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
+bool CMP_ULT(REGTYPE left, REGTYPE right)
+{
+	bool result = left <= right;
+	debug("CMP_ULT         %d = %d <= %d\n", result, left, right);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
 bool CMP_SLE4(int32_t left, int32_t right)
 {

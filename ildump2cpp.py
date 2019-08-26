@@ -59,6 +59,18 @@ def traverse_IL(il, depth=0):
             print(',', end='')
             traverse_IL(il.operands[1], depth+1)
             print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_SET_REG:
+            print('SET_REG%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_ADD:
+            print('ADD%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(')', end='')
         elif opname.startswith('CMP_S'):
             print('%s%d(' % (opname, il.size), end='')
             traverse_IL(il.operands[0], depth+1)
