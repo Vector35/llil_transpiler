@@ -9,7 +9,7 @@ using namespace std;
 /* VM components */
 #include "runtime.h"
 extern vector<REGTYPE> vm_stack;
-extern map<REGTYPE,REGTYPE> vm_mem;
+extern uint8_t vm_mem[VM_MEM_SZ];
 extern map<string,REGTYPE> vm_regs;
 extern map<string,double> vm_regs_double;
 
@@ -41,36 +41,36 @@ void factorial();
 
 /* architecture-specific VM utilities to init stack, set args, return values */
 #ifdef ARCH_X64
-void vm_init_stack() { vm_regs["rsp"] = 0xC00000000000000; }
+void vm_init_stack() { vm_regs["rsp"] = VM_MEM_SZ; }
 void vm_set_arg0(int a) { vm_regs["rdi"] = a; }
 void vm_set_arg1(int a) { vm_regs["rsi"] = a; }
 void vm_set_arg2(int a) { vm_regs["rdx"] = a; }
-void vm_precall() { vm_regs["rsp"] -= 8; vm_mem[vm_regs["rsp"]] = 0x00C4113200C41132; }
+void vm_precall() { vm_regs["rsp"] -= 8; *(uint64_t *)vm_mem = 0x00C4113200C41132; }
 int vm_get_retval() { return vm_regs["rax"]; }
 #endif
 
 #ifdef ARCH_ARM
-void vm_init_stack() { vm_regs["sp"] = 0xC0000000; }
+void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
 void vm_set_arg0(int a) { vm_regs["r0"] = a; }
 void vm_set_arg1(int a) { vm_regs["r1"] = a; }
 void vm_set_arg2(int a) { vm_regs["r2"] = a; }
-void vm_precall() { vm_regs["sp"] -= 4; vm_mem[vm_regs["rsp"]] = 0x00C41132; }
+void vm_precall() { vm_regs["sp"] -= 4; *(uint32_t *)vm_mem = 0x00C41132; }
 int vm_get_retval() { return vm_regs["r0"]; }
 #endif
 
 #ifdef ARCH_Z80
-void vm_init_stack() { vm_regs["SP"] = 0xC000; }
-void vm_set_arg0(int a) { vm_regs["SP"] -= 1; vm_mem[vm_regs["SP"]] = a; }
-void vm_set_arg1(int a) { vm_set_arg0(a); }
-void vm_set_arg2(int a) { vm_set_arg0(a); }
-void vm_precall() { vm_regs["sp"] -= 2; vm_mem[vm_regs["rsp"]] = 0x1132; }
-int vm_get_retval() { return vm_regs["HL"]; }
+void vm_init_stack() { vm_regs["SP"] = VM_MEM_SZ; }
+void vm_set_arg0(int16_t a) { vm_regs["SP"] -= 2; *(int16_t *)(vm_mem + vm_regs["SP"]) = a; }
+void vm_set_arg1(int16_t a) { vm_set_arg0(a); }
+void vm_set_arg2(int16_t a) { vm_set_arg0(a); }
+void vm_precall() { vm_regs["SP"] -= 2; *(uint16_t *)(vm_mem + vm_regs["SP"]) = 0xAAAA; }
+int16_t vm_get_retval() { return (int16_t)vm_regs["HL"]; }
 #endif
 
 /* architecture-independent VM utilities */
 void vm_reset()
 {
-	vm_mem.clear();
+	memset(vm_mem, 0, VM_MEM_SZ);
 	vm_regs.clear();
 	vm_init_stack();
 	/* from tests_il.cpp, generated to include switch lookup tables */

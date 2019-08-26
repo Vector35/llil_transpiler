@@ -16,7 +16,7 @@ extern string stackRegName;
 extern map<string,struct RegisterInfo> regInfos;
 
 /* VM components */
-map<REGTYPE,REGTYPE> vm_mem;
+uint8_t vm_mem[VM_MEM_SZ];
 map<string,REGTYPE> vm_regs;
 map<string,REGTYPE> vm_regs_temp;
 map<string,int> vm_flags;
@@ -43,9 +43,9 @@ static REGTYPE reg_core_get_value(string regName)
 		REGTYPE fwr = vm_regs[ri.full_width_reg];
 		int shift = 8*ri.offset;
 		REGTYPE mask = ((REGTYPE)1 << 8*(ri.size))-1;
-		result = (fwr & mask) >> shift;
-		//debug("%s(): %s is subreg, (" FMT_REG " & " FMT_REG ")>>%d == " FMT_REG "\n",
-		//	__func__, regName.c_str(), fwr, mask, shift, result);
+		result = (fwr >> shift) & mask;
+		//debug("%s(): %s is subreg, (" FMT_REG ">>%d) & " FMT_REG " == " FMT_REG "\n",
+		//	__func__, regName.c_str(), fwr, shift, mask, result);
 	}
 
 	return result;
@@ -74,6 +74,8 @@ static void reg_core_set_value(string regName, REGTYPE value)
 	RegisterInfo ri = regInfos[regName];
 
 	if(ri.full_width_reg == regName) {
+		//debug("%s is a full-width reg, setting to " FMT_REG "\n",
+		//	regName.c_str(), value);
 		vm_regs[regName] = value;
 	}
 	/* sub register */
@@ -85,13 +87,15 @@ static void reg_core_set_value(string regName, REGTYPE value)
 		tmp &= ~mask; /* clear bits in area */
 		tmp |= (value << shift); /* bring in the value */
 		vm_regs[ri.full_width_reg] = tmp;
+		//debug("%s is half width, setting %s to " FMT_REG "\n",
+		//	regName.c_str(), ri.full_width_reg.c_str(), value);
 	}
 }
 
 static void reg_set_value(string regName, REGTYPE value)
 {
 	/* temp registers simply come from the temp regs file */
-	if(regName.rfind("temp",0) == 0) {
+	if(regName.rfind("temp", 0) == 0) {
 		vm_regs_temp[regName] = value;
 	}
 	/* core registers must consider full-width vs. sub registers */
@@ -154,37 +158,55 @@ void SET_FLAG(string left, bool right)
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
 uint8_t LOAD1(REGTYPE expr)
 {
-	uint32_t result = vm_mem[expr];
+	uint8_t result = vm_mem[expr];
 	debug("LOAD1           0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
 uint16_t LOAD2(REGTYPE expr)
 {
-	uint16_t result = vm_mem[expr];
+	uint16_t result = *(uint16_t *)(vm_mem + expr);
 	debug("LOAD2           0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
 uint32_t LOAD4(REGTYPE expr)
 {
-	uint32_t result = vm_mem[expr];
+	uint32_t result = *(uint32_t *)(vm_mem + expr);
 	debug("LOAD4           0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
 uint64_t LOAD8(REGTYPE expr)
 {
-	uint64_t result = vm_mem[expr];
+	uint64_t result = *(uint64_t *)(vm_mem + expr);
 	debug("LOAD8           0x%llX = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
-void STORE(REGTYPE dest, REGTYPE src)
+void STORE1(REGTYPE dest, uint8_t src)
 {
-	debug("STORE           mem[" FMT_REG "] = " FMT_REG "\n", dest, src);
-	vm_mem[dest] = src;
+	debug("STORE1          byte[" FMT_REG "] = 0x%02X\n", dest, src);
+	*(uint8_t *)(vm_mem + dest) = src;
+}
+
+void STORE2(REGTYPE dest, uint16_t src)
+{
+	debug("STORE2          word[" FMT_REG "] = 0x%04X\n", dest, src);
+	*(uint16_t *)(vm_mem + dest) = src;
+}
+
+void STORE4(REGTYPE dest, uint32_t src)
+{
+	debug("STORE4          dword[" FMT_REG "] = 0x%08X\n", dest, src);
+	*(uint32_t *)(vm_mem + dest) = src;
+}
+
+void STORE8(REGTYPE dest, uint64_t src)
+{
+	debug("STORE8          qword[" FMT_REG "] = 0x%016llX\n", dest, src);
+	*(uint64_t *)(vm_mem + dest) = src;
 }
 
 /* LowLevelILOperation.LLIL_PUSH: [("src", "expr")] */
@@ -194,8 +216,8 @@ void PUSH(REGTYPE src)
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
 	/* store on stack */
 	REGTYPE ea = vm_regs[stackRegName];
-	vm_mem[ea] = src;
 	debug("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
+	*(REGTYPE *)(vm_mem + ea) = src;
 }
 
 /* LowLevelILOperation.LLIL_POP: [] */
@@ -203,10 +225,10 @@ REGTYPE POP(void)
 {
 	/* store on stack */
 	REGTYPE ea = vm_regs[stackRegName];
-	REGTYPE val = vm_mem[ea];
+	debug("POP             " FMT_REG " from mem[" FMT_REG "]\n", ea, ea);
+	REGTYPE val = *(REGTYPE *)(vm_mem + ea);
 	/* decrement stack pointer */
 	vm_regs[stackRegName] += sizeof(REGTYPE);
-	debug("POP             " FMT_REG " from mem[" FMT_REG "]\n", val, ea);
 	return val;
 }
 
@@ -214,7 +236,7 @@ REGTYPE POP(void)
 REGTYPE REG(string src)
 {
 	REGTYPE result = reg_get_value(src);
-	debug("REG             %s = " FMT_REG "\n", src.c_str(), result);
+	debug("REG             " FMT_REG " = %s\n", result, src.c_str());
 	return result;
 }
 
@@ -249,6 +271,13 @@ SREGTYPE ADD(SREGTYPE left, SREGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_ADC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry)
+{
+	SREGTYPE result = left + right + carry;
+	debug("ADC             " FMT_REG " = " FMT_REG " + " FMT_REG " + %d\n", result, left, right, carry);
+	return result;	
+}
+
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
 SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 {
@@ -380,7 +409,7 @@ void CALL(REGTYPE dest)
 {
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	vm_mem[vm_regs[stackRegName]] = (REGTYPE)(0xCA11BACC & REGMASK);
+	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(0xCA11BACC & REGMASK);
 	debug("CALL            " FMT_REG "\n", dest);
 }
 
@@ -391,7 +420,7 @@ void TAILCALL(REGTYPE dest)
 {
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	vm_mem[vm_regs[stackRegName]] = (REGTYPE)(0xCA11BAC2 & REGMASK);
+	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(0xCA11BAC2 & REGMASK);
 	debug("TAILCALL        " FMT_REG "\n", dest);
 }
 

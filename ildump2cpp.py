@@ -53,6 +53,12 @@ def traverse_IL(il, depth=0):
             print('LOAD%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
             print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_STORE:
+            print('STORE%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(')', end='')
         elif opname.startswith('CMP_S'):
             print('%s%d(' % (opname, il.size), end='')
             traverse_IL(il.operands[0], depth+1)
@@ -80,7 +86,7 @@ def traverse_IL(il, depth=0):
                 for i in range(amt):
                     addr = sym.address + 4*i
                     value = struct.unpack('<I', bv.read(addr, 4))[0]
-                    line = 'vm_mem[0x%X] = 0x%X;' % (addr, value)
+                    line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
                     init_mem_lines.append(line)
 
             # TODO: this could be a pointer, eg "uin8_t *"
@@ -211,7 +217,7 @@ if __name__ == '__main__':
     print('')
     print('#include "runtime.h"')
     print('')
-    print('extern map<REGTYPE,REGTYPE> vm_mem;')
+    print('extern uint8_t vm_mem[VM_MEM_SZ];')
     print('')
 
     # function prototypes

@@ -1,3 +1,4 @@
+#define VM_MEM_SZ 2048
 
 #ifdef ARCH_64BIT
 	#define REGWIDTH 64
@@ -32,12 +33,15 @@
 #if REGWIDTH == 64
 	#define FMT_REG "0x%llX"
 	#define FMT_REG_HALF "0x%X"
+	#define FMT_SREG "0x%llX"
 #elif REGWIDTH == 32
 	#define FMT_REG "0x%X"
 	#define FMT_REG_HALF "0x%X"
+	#define FMT_SREG "%d"
 #elif REGWIDTH == 16
 	#define FMT_REG "0x%04X"
 	#define FMT_REG_HALF "0x%02X"
+	#define FMT_SREG "%d"
 #endif
 
 struct RegisterInfo {
@@ -70,7 +74,10 @@ uint32_t LOAD4(REGTYPE expr);
 uint64_t LOAD8(REGTYPE expr);
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
-void STORE(REGTYPE dest, REGTYPE src);
+void STORE1(REGTYPE dest, uint8_t src);
+void STORE2(REGTYPE dest, uint16_t src);
+void STORE4(REGTYPE dest, uint32_t src);
+void STORE8(REGTYPE dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_PUSH: [("src", "expr")] */
 void PUSH(REGTYPE src);
@@ -102,6 +109,8 @@ bool FLAG(string src);
 SREGTYPE ADD(SREGTYPE left, SREGTYPE right);
 
 /* LowLevelILOperation.LLIL_ADC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry);
+
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
 SREGTYPE SUB(SREGTYPE left, SREGTYPE right);
 
