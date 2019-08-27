@@ -156,10 +156,10 @@ int main(int ac, char **av)
 
     /* triangle numbers */
 	result = vm_call(triangle_up, 4);
-	check(result, 9, "triangle_up(4)");
+	check(result, 10, "triangle_up(4)");
 
 	result = vm_call(triangle_up, 7);
-	check(result, 27, "triangle_up(7)");
+	check(result, 28, "triangle_up(7)");
 
 	result = vm_call(triangle_up, 10);
 	check(result, 55, "triangle_up(10)");
@@ -168,10 +168,10 @@ int main(int ac, char **av)
 	check(result, 5050, "triangle_up(100)");
 
 	result = vm_call(triangle_down, 4);
-	check(result, 9, "triangle_down(4)");
+	check(result, 10, "triangle_down(4)");
 
 	result = vm_call(triangle_down, 7);
-	check(result, 27, "triangle_down(7)");
+	check(result, 28, "triangle_down(7)");
 
 	result = vm_call(triangle_down, 10);
 	check(result, 55, "triangle_down(10)");

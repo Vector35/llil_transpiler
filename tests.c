@@ -18,6 +18,8 @@ int triangle_up(int a)
     {
         result += i;
     }
+
+    return result;
 }
 
 int triangle_down(int a)
@@ -27,6 +29,8 @@ int triangle_down(int a)
     {
         result += i;
     }
+
+    return result;
 }
 
 /* this is pretty hard if arch doesn't have a mul instruction */
