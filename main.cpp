@@ -15,6 +15,8 @@ extern map<string,double> vm_regs_double;
 
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
+#define is_greater_10 _is_greater_10
+#define is_less_than_equal_10 _is_less_than_equal_10
 #define add _add
 #define triangle_up _triangle_up
 #define triangle_down _triangle_down
@@ -32,6 +34,8 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
+void is_greater_10();
+void is_less_than_equal_10();
 void triangle_up();
 void triangle_down();
 void multiply();
@@ -153,6 +157,25 @@ int main(int ac, char **av)
 
 	result = vm_call(add, 123,456);
 	check(result, 579, "add(123,456)");
+
+	/* comparison */
+	result = vm_call(is_greater_10, 3);
+	check(result, 0, "is_greater_10(3)");
+	result = vm_call(is_greater_10, 7);
+	check(result, 0, "is_greater_10(7)");
+	result = vm_call(is_greater_10, 11);
+	check(result, 1, "is_greater_10(11)");
+	result = vm_call(is_greater_10, 13);
+	check(result, 1, "is_greater_10(13)");
+
+	result = vm_call(is_less_than_equal_10, 3);
+	check(result, 1, "is_less_than_equal_10(3)");
+	result = vm_call(is_less_than_equal_10, 7);
+	check(result, 1, "is_less_than_equal_10(7)");
+	result = vm_call(is_less_than_equal_10, 11);
+	check(result, 0, "is_less_than_equal_10(11)");
+	result = vm_call(is_less_than_equal_10, 13);
+	check(result, 0, "is_less_than_equal_10(13)");
 
     /* triangle numbers */
 	result = vm_call(triangle_up, 4);

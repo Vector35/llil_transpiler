@@ -144,6 +144,11 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right);
 uint8_t RLC1(uint8_t value, uint8_t amt, bool carry);
 
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
+uint8_t ROR1(uint8_t value, uint8_t amt);
+uint16_t ROR2(uint16_t value, uint16_t amt);
+uint32_t ROR4(uint32_t value, uint32_t amt);
+uint64_t ROR8(uint64_t value, uint64_t amt);
+
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 
@@ -184,6 +189,8 @@ REGTYPE NOT(REGTYPE src);
 SREGTYPE SX(SREGTYPE_HALF src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
+uint32_t ZX4(uint8_t src);
+
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest);

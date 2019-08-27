@@ -39,6 +39,9 @@ def traverse_IL(il, depth=0):
     sz2stdint[4] = 'uint32_t'
     sz2stdint[8] = 'uint64_t'
 
+    # these operations have foo1(), foo2(), foo4(), foo8() versions...
+    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE']
+
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
@@ -49,28 +52,6 @@ def traverse_IL(il, depth=0):
             print('UNIMPL()', end='')
         elif il.operation == LowLevelILOperation.LLIL_GOTO:
             print('goto loc_%d' % il.operands[0], end='')
-        elif il.operation == LowLevelILOperation.LLIL_LOAD:
-            print('LOAD%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_NEG:
-            print('NEG%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_RLC:
-            print('RLC%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[2], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_STORE:
-            print('STORE%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_ADD_OVERFLOW:
             print('ADD_OVERFLOW%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
@@ -193,8 +174,10 @@ def traverse_IL(il, depth=0):
             print('\t}', end='')
             semi = False
         else:
-            #print('%s((%s)' % (opname, sz2stdint[il.size]), end='')
-            print('%s(' % (opname), end='')
+            if opname in sizified:
+                print('%s%d(' % (opname, il.size), end='')
+            else:
+                print('%s(' % (opname), end='')
 
             for (i,o) in enumerate(il.operands):
                 traverse_IL(o, depth+1)

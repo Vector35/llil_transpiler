@@ -393,6 +393,38 @@ uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
 }
 
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
+uint8_t ROR1(uint8_t value, uint8_t amt)
+{
+	amt = amt % 8;
+	uint8_t result = (value >> amt) | (value << (8-amt));
+	debug("ROR1(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint16_t ROR2(uint16_t value, uint16_t amt)
+{
+	amt = amt % 16;
+	uint16_t result = (value >> amt) | (value << (16-amt));
+	debug("ROR2(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint32_t ROR4(uint32_t value, uint32_t amt)
+{
+	amt = amt % 32;
+	uint32_t result = (value >> amt) | (value << (8-amt));
+	debug("ROR4(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint64_t ROR8(uint64_t value, uint64_t amt)
+{
+	amt = amt % 64;
+	uint64_t result = (value >> amt) | (value << (8-amt));
+	debug("ROR8(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 {
@@ -496,6 +528,13 @@ SREGTYPE SX(SREGTYPE_HALF src)
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
+uint32_t ZX4(uint8_t src)
+{
+	uint8_t result = src;
+	debug("ZX4             0x%02X -> 0x%08X\n", src & 0xFF, result);
+	return (SREGTYPE)src;
+}
+
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest)

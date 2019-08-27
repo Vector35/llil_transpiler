@@ -10,6 +10,17 @@ int add(int a, int b)
 	return a + b;
 }
 
+/* establish flag testing/setting */
+int is_greater_10(int a)
+{
+	return a > 10;
+}
+
+int is_less_than_equal_10(int a)
+{
+	return a <= 10;
+}
+
 /* establish ability to loop and conditionally jump */
 int triangle_up(int a)
 {
