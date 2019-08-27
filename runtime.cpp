@@ -8,8 +8,8 @@ using namespace std;
 
 #include "runtime.h"
 
-#define debug(...) while(0);
-//#define debug printf
+//#define debug(...) while(0);
+#define debug printf
 
 /* the foo_il.c must export this, else we can't implement PUSH */
 extern string stackRegName;
@@ -330,28 +330,28 @@ SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 uint8_t SBB1(uint8_t a, uint8_t b, uint8_t c)
 {
 	uint8_t result = a - b - c;
-	debug("SBB1(0x%02X, %02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("SBB1(0x%02X, 0x%02X, %d) returns 0x%02X\n", a, b, c, result);
 	return result;
 }
 
 uint16_t SBB2(uint16_t a, uint16_t b, uint16_t c)
 {
 	uint16_t result = a - b - c;
-	debug("SBB2(0x%04X, 0x%04X, %d) returns 0x%02X\n", value, amount, result);
+	debug("SBB2(0x%04X, 0x%04X, %d) returns 0x%04X\n", a, b, c, result);
 	return result;
 }
 
 uint32_t SBB4(uint32_t a, uint32_t b, uint32_t c)
 {
 	uint32_t result = a - b - c;
-	debug("SBB4(0x%08X, 0x%08X, %d) returns 0x%02X\n", value, amount, result);
+	debug("SBB4(0x%08X, 0x%08X, %d) returns 0x%08X\n", a, b, c, result);
 	return result;
 }
 
 uint64_t SBB8(uint64_t a, uint64_t b, uint64_t c)
 {
 	uint64_t result = a - b - c;
-	debug("SBB8(0x%016llX, 0x%016llX, %d) returns 0x%02X\n", value, amount, result);
+	debug("SBB8(0x%016llX, 0x%016llX, %lld) returns 0x%016llX\n", a, b, c, result);
 	return result;
 }
 
@@ -403,7 +403,7 @@ uint8_t ROL1(uint8_t value, uint8_t amt)
 {
 	amt = amt % 8;
 	uint8_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL1(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROL1(0x%02X, %d) returns 0x%02X\n", value, amt, result);
 	return result;
 }
 
@@ -411,7 +411,7 @@ uint16_t ROL2(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value << amt) | (value >> (16-amt));
-	debug("ROL2(0x%04X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROL2(0x%04X, %d) returns 0x%04X\n", value, amt, result);
 	return result;
 }
 
@@ -419,7 +419,7 @@ uint32_t ROL4(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL4(0x%08X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROL4(0x%08X, %d) returns 0x%08X\n", value, amt, result);
 	return result;
 }
 
@@ -427,7 +427,7 @@ uint64_t ROL8(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL8(0x%016llX, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROL8(0x%016llX, %lld) returns 0x%08llX\n", value, amt, result);
 	return result;
 }
 
@@ -456,7 +456,7 @@ uint8_t ROR1(uint8_t value, uint8_t amt)
 {
 	amt = amt % 8;
 	uint8_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR1(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR1(0x%02X, %d) returns 0x%02X\n", value, amt, result);
 	return result;
 }
 
@@ -464,7 +464,7 @@ uint16_t ROR2(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value >> amt) | (value << (16-amt));
-	debug("ROR2(0x%04X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR2(0x%04X, %d) returns 0x%04X\n", value, amt, result);
 	return result;
 }
 
@@ -472,7 +472,7 @@ uint32_t ROR4(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR4(0x%08X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR4(0x%08X, %d) returns 0x%08X\n", value, amt, result);
 	return result;
 }
 
@@ -480,7 +480,7 @@ uint64_t ROR8(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR8(0x%016llX, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR8(0x%016llX, %lld) returns 0x%016llX\n", value, amt, result);
 	return result;
 }
 
@@ -551,21 +551,21 @@ uint8_t NEG1(uint8_t src)
 
 uint16_t NEG2(uint16_t src)
 {
-    uint8_t result = (src ^ 0xFFFF) + 1;
+    uint16_t result = (src ^ 0xFFFF) + 1;
 	debug("NEG              0x%04X = neg(0x%04X)\n", result, src);
     return result;
 }
 
 uint32_t NEG4(uint32_t src)
 {
-    uint8_t result = (src ^ 0xFFFFFFFF) + 1;
+    uint32_t result = (src ^ 0xFFFFFFFF) + 1;
 	debug("NEG              0x%08X = neg(0x%08X)\n", result, src);
     return result;
 }
 
 uint64_t NEG8(uint64_t src)
 {
-    uint8_t result = (src ^ 0xFFFFFFFFFFFFFFFF) + 1;
+    uint64_t result = (src ^ 0xFFFFFFFFFFFFFFFF) + 1;
 	debug("NEG              0x%016llX = neg(0x%016llX)\n", result, src);
     return result;
 }
@@ -678,7 +678,7 @@ bool CMP_SLT4(int32_t left, int32_t right)
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
 bool CMP_ULT(REGTYPE left, REGTYPE right)
 {
-	bool result = left <= right;
+	bool result = left < right;
 	debug("CMP_ULT         %d = %d <= %d\n", result, left, right);
 	return result;
 }
