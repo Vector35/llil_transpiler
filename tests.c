@@ -1,13 +1,35 @@
+/* establish ability to return values */
 int life_universe_everything()
 {
 	return 42;
 }
 
+/* establish ability to operate on arguments */
 int add(int a, int b)
 {
 	return a + b;
 }
 
+/* establish ability to loop and conditionally jump */
+int triangle_up(int a)
+{
+    int i, result = 0;
+    for(i=1; i<=a; ++i)
+    {
+        result += i;
+    }
+}
+
+int triangle_down(int a)
+{
+    int i, result = 0;
+    for(i=a; i>0; --i)
+    {
+        result += i;
+    }
+}
+
+/* this is pretty hard if arch doesn't have a mul instruction */
 int multiply(int a, int b)
 {
 	return a * b;

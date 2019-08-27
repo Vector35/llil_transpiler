@@ -451,6 +451,34 @@ SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_NEG: [("src", "expr")] */
+uint8_t NEG1(uint8_t src)
+{
+    uint8_t result = (src ^ 0xFF) + 1;
+	debug("NEG              0x%02X = neg(0x%02X)\n", result, src);
+    return result;
+}
+
+uint16_t NEG2(uint16_t src)
+{
+    uint8_t result = (src ^ 0xFFFF) + 1;
+	debug("NEG              0x%04X = neg(0x%04X)\n", result, src);
+    return result;
+}
+
+uint32_t NEG4(uint32_t src)
+{
+    uint8_t result = (src ^ 0xFFFFFFFF) + 1;
+	debug("NEG              0x%08X = neg(0x%08X)\n", result, src);
+    return result;
+}
+
+uint64_t NEG8(uint64_t src)
+{
+    uint8_t result = (src ^ 0xFFFFFFFFFFFFFFFF) + 1;
+	debug("NEG              0x%016llX = neg(0x%016llX)\n", result, src);
+    return result;
+}
+
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
 REGTYPE NOT(REGTYPE left)
 {
@@ -528,10 +556,24 @@ bool CMP_NE(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SLT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SLT1(int8_t left, int8_t right)
+{
+	bool result = left < right;
+	debug("CMP_SLT1        %d = %d < %d\n", result, left, right);
+	return result;
+}
+
+bool CMP_SLT2(int16_t left, int16_t right)
+{
+	bool result = left < right;
+	debug("CMP_SLT2        %d = %d < %d\n", result, left, right);
+	return result;
+}
+
 bool CMP_SLT4(int32_t left, int32_t right)
 {
 	bool result = left < right;
-	debug("CMP_SLT         %d = %d < %d\n", result, left, right);
+	debug("CMP_SLT4        %d = %d < %d\n", result, left, right);
 	return result;
 }
 
@@ -586,8 +628,36 @@ bool CMP_UGT(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_TEST_BIT: [("left", "expr"), ("right", "expr")] */
+bool TEST_BIT(REGTYPE value, REGTYPE mask)
+{
+	bool result = !!(value & mask);
+	debug("TEST_BIT        %d = bool(" FMT_REG " & " FMT_REG ")\n", result, value, mask);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_BOOL_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_ADD_OVERFLOW: [("left", "expr"), ("right", "expr")] */
+bool ADD_OVERFLOW1(uint8_t a, uint8_t b)
+{
+	bool result = 256 - a >= b;
+	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	return result;
+}
+
+bool ADD_OVERFLOW2(uint16_t a, uint16_t b)
+{
+	bool result = 65536 - a >= b;
+	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	return result;
+}
+
+bool ADD_OVERFLOW4(uint32_t a, uint32_t b)
+{
+	bool result = 4294967296 - a >= b;
+	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_SYSCALL: [] */
 /* LowLevelILOperation.LLIL_INTRINSIC: [("output", "reg_or_flag_list"), ("intrinsic", "intrinsic"), ("param", "expr")] */
 /* LowLevelILOperation.LLIL_INTRINSIC_SSA: [("output", "reg_or_flag_ssa_list"), ("intrinsic", "intrinsic"), ("param", "expr")] */

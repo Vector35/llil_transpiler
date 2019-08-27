@@ -16,6 +16,8 @@ extern map<string,double> vm_regs_double;
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
 #define add _add
+#define triangle_up _triangle_up
+#define triangle_down _triangle_down
 #define multiply _multiply
 #define multiply_loop _multiply_loop
 #define exp_dummy _exp_dummy
@@ -30,6 +32,8 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
+void triangle_up();
+void triangle_down();
 void multiply();
 void multiply_loop();
 void exp_dummy();
@@ -149,6 +153,31 @@ int main(int ac, char **av)
 
 	result = vm_call(add, 123,456);
 	check(result, 579, "add(123,456)");
+
+    /* triangle numbers */
+	result = vm_call(triangle_up, 4);
+	check(result, 9, "triangle_up(4)");
+
+	result = vm_call(triangle_up, 7);
+	check(result, 27, "triangle_up(7)");
+
+	result = vm_call(triangle_up, 10);
+	check(result, 55, "triangle_up(10)");
+
+	result = vm_call(triangle_up, 100);
+	check(result, 5050, "triangle_up(100)");
+
+	result = vm_call(triangle_down, 4);
+	check(result, 9, "triangle_down(4)");
+
+	result = vm_call(triangle_down, 7);
+	check(result, 27, "triangle_down(7)");
+
+	result = vm_call(triangle_down, 10);
+	check(result, 55, "triangle_down(10)");
+
+	result = vm_call(triangle_down, 100);
+	check(result, 5050, "triangle_down(11)");
 
 	/* multiply: easy case with MUL instruction, else kinda tough */
 	result = vm_call(multiply, 4,7);

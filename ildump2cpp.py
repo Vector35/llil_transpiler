@@ -53,6 +53,10 @@ def traverse_IL(il, depth=0):
             print('LOAD%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
             print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_NEG:
+            print('NEG%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_RLC:
             print('RLC%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
@@ -63,6 +67,12 @@ def traverse_IL(il, depth=0):
             print(')', end='')
         elif il.operation == LowLevelILOperation.LLIL_STORE:
             print('STORE%d(' % il.size, end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(',', end='')
+            traverse_IL(il.operands[1], depth+1)
+            print(')', end='')
+        elif il.operation == LowLevelILOperation.LLIL_ADD_OVERFLOW:
+            print('ADD_OVERFLOW%d(' % il.size, end='')
             traverse_IL(il.operands[0], depth+1)
             print(',', end='')
             traverse_IL(il.operands[1], depth+1)

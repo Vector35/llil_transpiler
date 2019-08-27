@@ -172,6 +172,10 @@ SREGTYPE MODS(SREGTYPE left, SREGTYPE right);
 SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right);
 
 /* LowLevelILOperation.LLIL_NEG: [("src", "expr")] */
+uint8_t NEG1(uint8_t src);
+uint16_t NEG2(uint16_t src);
+uint32_t NEG4(uint32_t src);
+uint64_t NEG8(uint64_t src);
 
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
 REGTYPE NOT(REGTYPE src);
@@ -207,6 +211,8 @@ bool CMP_E(REGTYPE left, REGTYPE right);
 bool CMP_NE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SLT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SLT1(int8_t left, int8_t right);
+bool CMP_SLT2(int16_t left, int16_t right);
 bool CMP_SLT4(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
@@ -230,8 +236,14 @@ bool CMP_SGT4(int32_t left, int32_t right);
 bool CMP_UGT(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_TEST_BIT: [("left", "expr"), ("right", "expr")] */
+bool TEST_BIT(REGTYPE value, REGTYPE mask);
+
 /* LowLevelILOperation.LLIL_BOOL_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_ADD_OVERFLOW: [("left", "expr"), ("right", "expr")] */
+bool ADD_OVERFLOW1(uint8_t a, uint8_t b);
+bool ADD_OVERFLOW2(uint16_t a, uint16_t b);
+bool ADD_OVERFLOW4(uint32_t a, uint32_t b);
+
 /* LowLevelILOperation.LLIL_SYSCALL: [] */
 /* LowLevelILOperation.LLIL_INTRINSIC: [("output", "reg_or_flag_list"), ("intrinsic", "intrinsic"), ("param", "expr")] */
 /* LowLevelILOperation.LLIL_INTRINSIC_SSA: [("output", "reg_or_flag_ssa_list"), ("intrinsic", "intrinsic"), ("param", "expr")] */
