@@ -11,12 +11,22 @@ int add(int a, int b)
 }
 
 /* establish flag testing/setting */
-int is_greater_10(int a)
+unsigned int is_greater_10_unsigned(unsigned int a)
 {
 	return a > 10;
 }
 
-int is_less_than_equal_10(int a)
+unsigned int is_less_than_equal_10_unsigned(unsigned int a)
+{
+	return a <= 10;
+}
+
+signed int is_greater_10_signed(signed int a)
+{
+	return a > 10;
+}
+
+signed int is_less_than_equal_10_signed(signed int a)
 {
 	return a <= 10;
 }

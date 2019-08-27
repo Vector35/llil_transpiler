@@ -15,8 +15,10 @@ extern map<string,double> vm_regs_double;
 
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
-#define is_greater_10 _is_greater_10
-#define is_less_than_equal_10 _is_less_than_equal_10
+#define is_greater_10_signed _is_greater_10_signed
+#define is_less_than_equal_10_signed _is_less_than_equal_10_signed
+#define is_greater_10_unsigned _is_greater_10_unsigned
+#define is_less_than_equal_10_unsigned _is_less_than_equal_10_unsigned
 #define add _add
 #define triangle_up _triangle_up
 #define triangle_down _triangle_down
@@ -34,8 +36,10 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
-void is_greater_10();
-void is_less_than_equal_10();
+void is_greater_10_signed();
+void is_less_than_equal_10_signed();
+void is_greater_10_unsigned();
+void is_less_than_equal_10_unsigned();
 void triangle_up();
 void triangle_down();
 void multiply();
@@ -159,23 +163,41 @@ int main(int ac, char **av)
 	check(result, 579, "add(123,456)");
 
 	/* comparison */
-	result = vm_call(is_greater_10, 3);
-	check(result, 0, "is_greater_10(3)");
-	result = vm_call(is_greater_10, 7);
-	check(result, 0, "is_greater_10(7)");
-	result = vm_call(is_greater_10, 11);
-	check(result, 1, "is_greater_10(11)");
-	result = vm_call(is_greater_10, 13);
-	check(result, 1, "is_greater_10(13)");
+	result = vm_call(is_greater_10_unsigned, 3);
+	check(result, 0, "is_greater_10_unsigned(3)");
+	result = vm_call(is_greater_10_unsigned, 7);
+	check(result, 0, "is_greater_10_unsigned(7)");
+	result = vm_call(is_greater_10_unsigned, 11);
+	check(result, 1, "is_greater_10_unsigned(11)");
+	result = vm_call(is_greater_10_unsigned, 13);
+	check(result, 1, "is_greater_10_unsigned(13)");
 
-	result = vm_call(is_less_than_equal_10, 3);
-	check(result, 1, "is_less_than_equal_10(3)");
-	result = vm_call(is_less_than_equal_10, 7);
-	check(result, 1, "is_less_than_equal_10(7)");
-	result = vm_call(is_less_than_equal_10, 11);
-	check(result, 0, "is_less_than_equal_10(11)");
-	result = vm_call(is_less_than_equal_10, 13);
-	check(result, 0, "is_less_than_equal_10(13)");
+	result = vm_call(is_less_than_equal_10_unsigned, 3);
+	check(result, 1, "is_less_than_equal_10_unsigned(3)");
+	result = vm_call(is_less_than_equal_10_unsigned, 7);
+	check(result, 1, "is_less_than_equal_10_unsigned(7)");
+	result = vm_call(is_less_than_equal_10_unsigned, 11);
+	check(result, 0, "is_less_than_equal_10_unsigned(11)");
+	result = vm_call(is_less_than_equal_10_unsigned, 13);
+	check(result, 0, "is_less_than_equal_10_unsigned(13)");
+
+	result = vm_call(is_greater_10_signed, 3);
+	check(result, 0, "is_greater_10_signed(3)");
+	result = vm_call(is_greater_10_signed, 7);
+	check(result, 0, "is_greater_10_signed(7)");
+	result = vm_call(is_greater_10_signed, 11);
+	check(result, 1, "is_greater_10_signed(11)");
+	result = vm_call(is_greater_10_signed, 13);
+	check(result, 1, "is_greater_10_signed(13)");
+
+	result = vm_call(is_less_than_equal_10_signed, 3);
+	check(result, 1, "is_less_than_equal_10_signed(3)");
+	result = vm_call(is_less_than_equal_10_signed, 7);
+	check(result, 1, "is_less_than_equal_10_signed(7)");
+	result = vm_call(is_less_than_equal_10_signed, 11);
+	check(result, 0, "is_less_than_equal_10_signed(11)");
+	result = vm_call(is_less_than_equal_10_signed, 13);
+	check(result, 0, "is_less_than_equal_10_signed(13)");
 
     /* triangle numbers */
 	result = vm_call(triangle_up, 4);

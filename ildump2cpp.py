@@ -33,7 +33,8 @@ def traverse_IL(il, depth=0):
 
     # these operations have foo1(), foo2(), foo4(), foo8() versions...
     sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD', 'SET_REG',
-        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE', 'CMP_SLT']
+        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE', 'CMP_SLT',
+        'SBB', 'ROL']
 
     # il pass thru here will probably be:
     # LowLevelILInstruction

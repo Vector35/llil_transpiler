@@ -327,6 +327,33 @@ SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_SBB: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+uint8_t SBB1(uint8_t a, uint8_t b, uint8_t c)
+{
+	uint8_t result = a - b - c;
+	debug("SBB1(0x%02X, %02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint16_t SBB2(uint16_t a, uint16_t b, uint16_t c)
+{
+	uint16_t result = a - b - c;
+	debug("SBB2(0x%04X, 0x%04X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint32_t SBB4(uint32_t a, uint32_t b, uint32_t c)
+{
+	uint32_t result = a - b - c;
+	debug("SBB4(0x%08X, 0x%08X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint64_t SBB8(uint64_t a, uint64_t b, uint64_t c)
+{
+	uint64_t result = a - b - c;
+	debug("SBB8(0x%016llX, 0x%016llX, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
 
 /* LowLevelILOperation.LLIL_AND: [("left", "expr"), ("right", "expr")] */
 REGTYPE AND(REGTYPE left, REGTYPE right)
@@ -372,6 +399,38 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_ROL: [("left", "expr"), ("right", "expr")] */
+uint8_t ROL1(uint8_t value, uint8_t amt)
+{
+	amt = amt % 8;
+	uint8_t result = (value << amt) | (value >> (8-amt));
+	debug("ROL1(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint16_t ROL2(uint16_t value, uint16_t amt)
+{
+	amt = amt % 16;
+	uint16_t result = (value << amt) | (value >> (16-amt));
+	debug("ROL2(0x%04X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint32_t ROL4(uint32_t value, uint32_t amt)
+{
+	amt = amt % 32;
+	uint32_t result = (value << amt) | (value >> (8-amt));
+	debug("ROL4(0x%08X, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
+uint64_t ROL8(uint64_t value, uint64_t amt)
+{
+	amt = amt % 64;
+	uint64_t result = (value << amt) | (value >> (8-amt));
+	debug("ROL8(0x%016llX, %d) returns 0x%02X\n", value, amount, result);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_RLC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
 {
@@ -405,7 +464,7 @@ uint16_t ROR2(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value >> amt) | (value << (16-amt));
-	debug("ROR2(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR2(0x%04X, %d) returns 0x%02X\n", value, amount, result);
 	return result;
 }
 
@@ -413,7 +472,7 @@ uint32_t ROR4(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR4(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR4(0x%08X, %d) returns 0x%02X\n", value, amount, result);
 	return result;
 }
 
@@ -421,7 +480,7 @@ uint64_t ROR8(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR8(0x%02X, %d) returns 0x%02X\n", value, amount, result);
+	debug("ROR8(0x%016llX, %d) returns 0x%02X\n", value, amount, result);
 	return result;
 }
 
@@ -651,6 +710,13 @@ bool CMP_SGE4(int32_t left, int32_t right)
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGT2(int16_t left, int16_t right)
+{
+	bool result = left > right;
+	debug("CMP_SGT         %d = %d > %d\n", result, left, right);
+	return result;
+}
+
 bool CMP_SGT4(int32_t left, int32_t right)
 {
 	bool result = left > right;
@@ -708,6 +774,8 @@ bool ADD_OVERFLOW4(uint32_t a, uint32_t b)
 REGTYPE UNIMPL()
 {
 	debug("UNIMPL");
+	printf("UNIMPLEMENTED!\n");
+	exit(-1);
 	return 0;
 }
 
