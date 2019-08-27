@@ -23,8 +23,6 @@ def shellout(cmd):
     (stdout, stderr) = process.communicate()
     stdout = stdout.decode("utf-8")
     stderr = stderr.decode("utf-8")
-    #print('stdout: -%s-' % stdout)
-    #print('stderr: -%s-' % stderr)
     process.wait()
     return (stdout, stderr)
 
@@ -33,57 +31,42 @@ def traverse_IL(il, depth=0):
     global init_mem_lines
     semi = True
 
-    sz2stdint = ['error']*9
-    sz2stdint[1] = 'uint8_t'
-    sz2stdint[2] = 'uint16_t'
-    sz2stdint[4] = 'uint32_t'
-    sz2stdint[8] = 'uint64_t'
-
     # these operations have foo1(), foo2(), foo4(), foo8() versions...
-    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE']
+    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD', 'SET_REG',
+        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE', 'CMP_SLT']
+
+    # il pass thru here will probably be:
+    # LowLevelILInstruction
+    # LowLevelILRegister
+    # LowLevelILFlag
+    # ----
+    # but here are some other LLIL related objects:
+    # LowLevelILLabel
+    # LowLevelILFunction
+    # LowLevelILExpr
+    # LowLevelILBasicBlock
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
             opname = opname[5:]
 
-        traverse = True
-        if il.operation == LowLevelILOperation.LLIL_UNIMPL:
-            print('UNIMPL()', end='')
-        elif il.operation == LowLevelILOperation.LLIL_GOTO:
+        if opname == 'GOTO':
             print('goto loc_%d' % il.operands[0], end='')
-        elif il.operation == LowLevelILOperation.LLIL_ADD_OVERFLOW:
-            print('ADD_OVERFLOW%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_SET_REG:
-            print('SET_REG%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_ADD:
-            print('ADD%d(' % il.size, end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
-        elif opname.startswith('CMP_S'):
-            print('%s%d(' % (opname, il.size), end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(',', end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_RET:
+
+        elif opname == 'RET':
             print('RET(', end='')
             traverse_IL(il.operands[0], depth+1)
             print(');\n\treturn', end='')
-        elif il.operation == LowLevelILOperation.LLIL_CONST:
-            #print('(%s)%d' % (sz2stdint[il.size], il.operands[0]), end='')
-            print('%d' % (il.operands[0]), end='')
-        elif il.operation == LowLevelILOperation.LLIL_CONST_PTR:
+
+        elif opname == 'CONST':
+            val = il.operands[0]
+            if val < 16:
+                print('%d' % val, end='')
+            else:
+                print('0x%X' % val, end='')
+
+        elif opname == 'CONST_PTR':
             # is it a jump table? rip it
             sym = bv.get_symbol_at(il.operands[0])
             dvar = bv.get_data_var_at(il.operands[0])
@@ -100,10 +83,9 @@ def traverse_IL(il, depth=0):
                     line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
                     init_mem_lines.append(line)
 
-            # TODO: this could be a pointer, eg "uin8_t *"
-            #print('(%s)0x%X' % (sz2stdint[il.size], il.operands[0]), end='')
             print('0x%X' % (il.operands[0]), end='')
-        elif il.operation == LowLevelILOperation.LLIL_IF:
+
+        elif opname == 'IF':
             print('if(', end='')
             traverse_IL(il.operands[0], depth+1)
             print(')')
@@ -111,13 +93,8 @@ def traverse_IL(il, depth=0):
             print('\telse')
             print('\t\tgoto loc_%d;' % il.operands[2], end='')
             semi = False
-        elif il.operation == LowLevelILOperation.LLIL_SET_FLAG:
-            print('SET_FLAG("%s", ' % il.operands[0], end='')
-            traverse_IL(il.operands[1], depth+1)
-            print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_FLAG:
-            print('FLAG("%s")' % il.operands[0], end='')
-        elif il.operation == LowLevelILOperation.LLIL_JUMP:
+
+        elif opname == 'JUMP':
             if arch == 'arm' and \
               il.operands[0].operation == LowLevelILOperation.LLIL_REG and \
               il.operands[0].src.name == 'lr':
@@ -131,7 +108,8 @@ def traverse_IL(il, depth=0):
                 print('JUMP(', end='')
                 traverse_IL(il.operands[0], depth+1)
                 print(')', end='')
-        elif il.operation == LowLevelILOperation.LLIL_CALL:
+
+        elif opname == 'CALL':
             print('CALL(', end='')
             traverse_IL(il.operands[0], depth+1)
             print(');')
@@ -161,7 +139,7 @@ def traverse_IL(il, depth=0):
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
 
-        elif il.operation == LowLevelILOperation.LLIL_JUMP_TO:
+        elif opname == 'JUMP_TO':
             print('// %s' % str(il))
             print('\tswitch(', end='')
             traverse_IL(il.operands[0], depth+1)
@@ -173,6 +151,7 @@ def traverse_IL(il, depth=0):
             print('\t\tdefault: printf("switch fucked\\n"); while(1);')
             print('\t}', end='')
             semi = False
+
         else:
             if opname in sizified:
                 print('%s%d(' % (opname, il.size), end='')
@@ -185,8 +164,13 @@ def traverse_IL(il, depth=0):
                     print(', ', end='')
 
             print(')', end='')
+
     elif isinstance(il, lowlevelil.ILRegister):
         print('"%s"'%il, end='')
+
+    elif isinstance(il, lowlevelil.ILFlag):
+        print('"%s"'%il, end='')
+
     else:
         print(str(il), end='')
         #print(str(il)+('[%s]'%type(il)), end='')
