@@ -244,8 +244,9 @@ if __name__ == '__main__':
 
             # loop over binaryninja.basicblock.BasicBlock
             for insn in block:
-                print('\t', end='')
                 current_llil = func.low_level_il
+                print('\truntime_comment("%s\\n");' % str(insn))
+                print('\t', end='')
                 traverse_IL(insn)
                 il_addr += 1
                 print('')

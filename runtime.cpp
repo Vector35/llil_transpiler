@@ -8,8 +8,12 @@ using namespace std;
 
 #include "runtime.h"
 
-//#define debug(...) while(0);
-#define debug printf
+#define DEBUG_RUNTIME
+#ifdef DEBUG_RUNTIME
+	#define debug printf
+#else
+	#define debug(...) while(0);
+#endif
 
 /* the foo_il.c must export this, else we can't implement PUSH */
 extern string stackRegName;
@@ -885,6 +889,13 @@ REGTYPE UNIMPL(REGTYPE)
 /* LowLevelILOperation.LLIL_REG_STACK_PHI: [("dest", "reg_stack_ssa"), ("src", "reg_stack_ssa_list")] */
 /* LowLevelILOperation.LLIL_FLAG_PHI: [("dest", "flag_ssa"), ("src", "flag_ssa_list")] */
 /* LowLevelILOperation.LLIL_MEM_PHI: [("dest_memory", "int"), ("src_memory", "int_list")] */
+
+void runtime_comment(const char *msg)
+{
+	#ifdef DEBUG_RUNTIME
+	printf("\x1B[32m%s\x1B[0m", msg);
+	#endif
+}
 
 #ifdef ARCH_ARM
 void __aeabi_idivmod()

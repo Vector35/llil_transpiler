@@ -332,6 +332,9 @@ REGTYPE UNIMPL(REGTYPE);
 /* LowLevelILOperation.LLIL_FLAG_PHI: [("dest", "flag_ssa"), ("src", "flag_ssa_list")] */
 /* LowLevelILOperation.LLIL_MEM_PHI: [("dest_memory", "int"), ("src_memory", "int_list")] */
 
+void runtime_comment(const char *msg);
+
 #ifdef ARCH_ARM
 void __aeabi_idivmod();
 #endif
+
