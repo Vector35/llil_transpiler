@@ -11,6 +11,27 @@ int add(int a, int b)
 }
 
 /* establish flag testing/setting */
+unsigned int is_greater_10_unsigned_u8(unsigned char a)
+{
+	return a > 10;
+}
+
+unsigned int than_equal_10_unsigned_u8(unsigned char a)
+{
+	return a <= 10;
+}
+
+signed int is_greater_10_signed_s8(signed char a)
+{
+	return a > 10;
+}
+
+signed int is_less_than_equal_10_signed_s8(signed char a)
+{
+	return a <= 10;
+}
+
+/* establish flag testing/setting */
 unsigned int is_greater_10_unsigned(unsigned int a)
 {
 	return a > 10;

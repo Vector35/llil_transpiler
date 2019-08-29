@@ -15,11 +15,15 @@ extern map<string,double> vm_regs_double;
 
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
+#define add _add
+#define is_greater_10_unsigned_u8 _is_greater_10_unsigned_u8
+#define than_equal_10_unsigned_u8 _than_equal_10_unsigned_u8
+#define is_greater_10_signed_s8 _is_greater_10_signed_s8
+#define is_less_than_equal_10_signed_s8 _is_less_than_equal_10_signed_s8
 #define is_greater_10_signed _is_greater_10_signed
 #define is_less_than_equal_10_signed _is_less_than_equal_10_signed
 #define is_greater_10_unsigned _is_greater_10_unsigned
 #define is_less_than_equal_10_unsigned _is_less_than_equal_10_unsigned
-#define add _add
 #define triangle_up _triangle_up
 #define triangle_down _triangle_down
 #define multiply _multiply
@@ -36,6 +40,10 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
+void is_greater_10_unsigned_u8();
+void than_equal_10_unsigned_u8();
+void is_greater_10_signed_s8();
+void is_less_than_equal_10_signed_s8();
 void is_greater_10_signed();
 void is_less_than_equal_10_signed();
 void is_greater_10_unsigned();
@@ -162,7 +170,44 @@ int main(int ac, char **av)
 	result = vm_call(add, 123,456);
 	check(result, 579, "add(123,456)");
 
-	/* comparison */
+	/* comparison, 1 byte */
+	result = vm_call(is_greater_10_unsigned_u8, 3);
+	check(result, 0, "is_greater_10_unsigned_u8(3)");
+	result = vm_call(is_greater_10_unsigned_u8, 7);
+	check(result, 0, "is_greater_10_unsigned_u8(7)");
+	result = vm_call(is_greater_10_unsigned_u8, 11);
+	check(result, 1, "is_greater_10_unsigned_u8(11)");
+	result = vm_call(is_greater_10_unsigned_u8, 13);
+	check(result, 1, "is_greater_10_unsigned_u8(13)");
+
+	result = vm_call(than_equal_10_unsigned_u8, 3);
+	check(result, 1, "than_equal_10_unsigned_u8(3)");
+	result = vm_call(than_equal_10_unsigned_u8, 7);
+	check(result, 1, "than_equal_10_unsigned_u8(7)");
+	result = vm_call(than_equal_10_unsigned_u8, 11);
+	check(result, 0, "than_equal_10_unsigned_u8(11)");
+	result = vm_call(than_equal_10_unsigned_u8, 13);
+	check(result, 0, "than_equal_10_unsigned_u8(13)");
+
+	result = vm_call(is_greater_10_signed_s8, 3);
+	check(result, 0, "is_greater_10_signed_s8(3)");
+	result = vm_call(is_greater_10_signed_s8, 7);
+	check(result, 0, "is_greater_10_signed_s8(7)");
+	result = vm_call(is_greater_10_signed_s8, 11);
+	check(result, 1, "is_greater_10_signed_s8(11)");
+	result = vm_call(is_greater_10_signed_s8, 13);
+	check(result, 1, "is_greater_10_signed_s8(13)");
+
+	result = vm_call(is_less_than_equal_10_signed_s8, 3);
+	check(result, 1, "is_less_than_equal_10_signed_s8(3)");
+	result = vm_call(is_less_than_equal_10_signed_s8, 7);
+	check(result, 1, "is_less_than_equal_10_signed_s8(7)");
+	result = vm_call(is_less_than_equal_10_signed_s8, 11);
+	check(result, 0, "is_less_than_equal_10_signed_s8(11)");
+	result = vm_call(is_less_than_equal_10_signed_s8, 13);
+	check(result, 0, "is_less_than_equal_10_signed_s8(13)");
+
+	/* comparison, more bytes */
 	result = vm_call(is_greater_10_unsigned, 3);
 	check(result, 0, "is_greater_10_unsigned(3)");
 	result = vm_call(is_greater_10_unsigned, 7);

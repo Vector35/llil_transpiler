@@ -319,10 +319,31 @@ SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry)
 }
 
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
-SREGTYPE SUB(SREGTYPE left, SREGTYPE right)
+uint8_t SUB1(uint8_t a, uint8_t b)
 {
-	SREGTYPE result = left - right;
-	debug("SUB             " FMT_SREG " = " FMT_SREG " - " FMT_SREG "\n", result, left, right);
+	uint8_t result = a - b;
+	debug("SUB1(0x%02X, 0x%02X) returns 0x%02X\n", a, b, result);
+	return result;
+}
+
+uint16_t SUB2(uint16_t a, uint16_t b)
+{
+	uint16_t result = a - b;
+	debug("SUB2(0x%04X, 0x%04X) returns 0x%04X\n", a, b, result);
+	return result;
+}
+
+uint32_t SUB4(uint32_t a, uint32_t b)
+{
+	uint32_t result = a - b;
+	debug("SUB4(0x%08X, 0x%08X) returns 0x%08X\n", a, b, result);
+	return result;
+}
+
+uint64_t SUB8(uint64_t a, uint64_t b)
+{
+	uint64_t result = a - b;
+	debug("SUB8(0x%016llX, 0x%016llX) returns 0x%016llX\n", a, b, result);
 	return result;
 }
 
@@ -440,14 +461,14 @@ uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
 		amt = amt % 8;
 		// normal carry
 		uint8_t a = (value << amt);
-		uint8_t b = (amt >> (8-amt));
+		uint8_t b = (value >> (8-amt));
 		// insert c
 		b = (b >> 1) | (carry << (amt-1));
 		//
 		result = a | b;
 	}
 
-	debug("RLC             0x%X = 0x%X <<< 1 and carry = %d\n", result, value, amt);
+	debug("RLC1            0x%X = 0x%X <<< %d and carry = %d\n", result, value, amt, carry);
 	return result;
 }
 
@@ -571,10 +592,31 @@ uint64_t NEG8(uint64_t src)
 }
 
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
-REGTYPE NOT(REGTYPE left)
+uint8_t NOT1(uint8_t left)
 {
-	REGTYPE result = ~left;
-	debug("NOT             " FMT_REG " = ~" FMT_REG "\n", result, left);
+	uint8_t result = ~left;
+	debug("NOT1            0x%02X = ~0x%02X\n", result, left);
+	return result;
+}
+
+uint16_t NOT2(uint16_t left)
+{
+	uint16_t result = ~left;
+	debug("NOT2            0x%04X = ~0x%04X\n", result, left);
+	return result;
+}
+
+uint32_t NOT4(uint32_t left)
+{
+	uint32_t result = ~left;
+	debug("NOT4            0x%08X = ~0x%08X\n", result, left);
+	return result;
+}
+
+uint64_t NOT8(uint64_t left)
+{
+	uint64_t result = ~left;
+	debug("NOT8            0x%016llX = ~0x%016llX\n", result, left);
 	return result;
 }
 
@@ -679,7 +721,7 @@ bool CMP_SLT4(int32_t left, int32_t right)
 bool CMP_ULT(REGTYPE left, REGTYPE right)
 {
 	bool result = left < right;
-	debug("CMP_ULT         %d = %d <= %d\n", result, left, right);
+	debug("CMP_ULT         %d = %d < %d\n", result, left, right);
 	return result;
 }
 
@@ -708,6 +750,12 @@ bool CMP_SGE4(int32_t left, int32_t right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
+bool CMP_UGE(REGTYPE left, REGTYPE right)
+{
+	bool result = left >= right;
+	debug("CMP_UGE         %d = " FMT_REG " >= " FMT_REG "\n", result, left, right);
+	return result;
+}
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
 bool CMP_SGT2(int16_t left, int16_t right)
