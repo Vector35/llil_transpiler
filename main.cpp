@@ -123,8 +123,8 @@ int vm_call(VMFUNC pfunc, int a)
 int vm_call(VMFUNC pfunc, int a, int b)
 {
 	vm_reset();
-	vm_set_arg0(a);
 	vm_set_arg1(b);
+	vm_set_arg0(a);
 	vm_precall();
 	pfunc();
 	return vm_get_retval();
@@ -134,9 +134,9 @@ int vm_call(VMFUNC pfunc, int a, int b)
 int vm_call(VMFUNC pfunc, int a, int b, int c)
 {
 	vm_reset();
-	vm_set_arg0(a);
-	vm_set_arg1(b);
 	vm_set_arg2(c);
+	vm_set_arg1(b);
+	vm_set_arg0(a);
 	vm_precall();
 	pfunc();
 	return vm_get_retval();
@@ -158,10 +158,6 @@ int main(int ac, char **av)
 	
 	result = vm_call(life_universe_everything);
 	check(result, 42, "life_universe_everything()");
-
-	result = vm_call(exp_dummy, 2,1);
-	check(result, 2, "exp(2,1)");
-	return 0;
 
 	/* add */
 	result = vm_call(add, 4,7);

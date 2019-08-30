@@ -212,12 +212,12 @@ void JUMP(REGTYPE dest);
 
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
-void CALL(REGTYPE dest);
+void CALL(REGTYPE dest, void (*)(void), const char *func_name);
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
 
 /* LowLevelILOperation.LLIL_TAILCALL: [("dest", "expr")] */
-void TAILCALL(REGTYPE dest);
+void TAILCALL(REGTYPE dest, void (*)(void), const char *func_name);
 
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */
 void RET(REGTYPE dest);

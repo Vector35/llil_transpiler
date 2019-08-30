@@ -9,12 +9,12 @@ using namespace std;
 #include "runtime.h"
 
 //#define DEBUG_RUNTIME_ALL
-//#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_SETS
 #define DEBUG_RUNTIME_STACK
 
-#define debug while(0);
-#define debug_set while(0);
-#define debug_stack while(0);
+#define debug(...) while(0);
+#define debug_set(...) while(0);
+#define debug_stack(...) while(0);
 
 #if defined(DEBUG_ALL)
 	#define debug printf
@@ -260,8 +260,8 @@ REGTYPE POP(void)
 {
 	/* retrieve from stack */
 	REGTYPE ea = vm_regs[stackRegName];
-	debug_stack("POP             " FMT_REG " = mem[" FMT_REG "]\n", ea, ea);
 	REGTYPE val = *(REGTYPE *)(vm_mem + ea);
+	debug_stack("POP             " FMT_REG " = mem[" FMT_REG "]\n", val, ea);
 	/* increment stack pointer */
 	vm_regs[stackRegName] += sizeof(REGTYPE);
 	return val;
@@ -663,26 +663,27 @@ void JUMP(REGTYPE dest)
 
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
-void CALL(REGTYPE dest)
+void CALL(REGTYPE dest, void (*pfunc)(void), const char *func_name)
 {
-	#define RUNTIME_CALLER_ADDR_DUMMY 0xCA11BACC
+	#define RUNTIME_CALLER_ADDR_DUMMY 0xAAAAAAAA
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
 	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
-	debug_stack("CALL            " FMT_REG " mem[" FMT_REG "] = " FMT_REG "\n",
-		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY);
+	debug_stack("CALL            " FMT_REG "   mem[" FMT_REG "] = " FMT_REG " %s()\n",
+		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY, func_name);
+
+	return pfunc();
 }
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
 /* LowLevelILOperation.LLIL_TAILCALL: [("dest", "expr")] */
 
-void TAILCALL(REGTYPE dest)
+void TAILCALL(REGTYPE dest, void (*pfunc)(void), const char *func_name)
 {
 	/* dummy push of return address */
-	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(0xCA11BAC2 & REGMASK);
-	debug_stack("TAILCALL        " FMT_REG " mem[" FMT_REG "] = " FMT_REG "\n",
-		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY);
+	debug_stack("TAILCALL        " FMT_REG " %s()\n", dest, func_name);
+
+	return pfunc();
 }
 
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */

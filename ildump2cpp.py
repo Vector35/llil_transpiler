@@ -111,9 +111,9 @@ def traverse_IL(il, depth=0):
                 print(')', end='')
 
         elif opname in ['CALL', 'TAILCALL']:
-            print('CALL(', end='')
+            print('%s(' % opname, end='')
             traverse_IL(il.operands[0], depth+1)
-            print(');')
+            print(', ', end='')
 
             handled = False
             oper = il.operands[0]
@@ -128,17 +128,20 @@ def traverse_IL(il, depth=0):
                 sym = bv.get_symbol_at(addr)
 
                 if sym and sym.full_name:
-                    print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
+                    #print('// %s    sym.full_name: %s' % (str(il), sym.full_name))
                     #print('\tSET_REG("r0", MODU(REG("r0"), REG("r1")))', end='')
-                    noparens = sym.full_name.split('(',1)[0]
-                    print('\t%s()' % noparens, end='')
+                    func_name = sym.full_name.split('(',1)[0]
+                    print('%s, "%s"' % (func_name, func_name), end='')
                     handled = True
                 else:
-                    print('\tsub_%X()' % addr, end='')
+                    func_name = 'sub_%X' % addr
+                    print('sub_%X, "%s"' % (addr, func_name), end='')
                     handled = True
 
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
+
+            print(');')
 
         elif opname == 'JUMP_TO':
             print('// %s' % str(il))
