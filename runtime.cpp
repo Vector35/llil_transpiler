@@ -8,7 +8,7 @@ using namespace std;
 
 #include "runtime.h"
 
-#define DEBUG_RUNTIME
+//#define DEBUG_RUNTIME
 #ifdef DEBUG_RUNTIME
 	#define debug printf
 #else
@@ -85,14 +85,14 @@ static void reg_core_set_value(string regName, REGTYPE value)
 	/* sub register */
 	else {
 		int shift = 8*ri.offset;
-		REGTYPE mask = (((REGTYPE)2 << 8*(ri.size))-1) << shift;
+		REGTYPE mask = (((REGTYPE)1 << 8*(ri.size))-1) << shift;
 
 		REGTYPE tmp = vm_regs[ri.full_width_reg];
 		tmp &= ~mask; /* clear bits in area */
 		tmp |= (value << shift); /* bring in the value */
 		vm_regs[ri.full_width_reg] = tmp;
-		//debug("%s is half width, setting %s to " FMT_REG "\n",
-		//	regName.c_str(), ri.full_width_reg.c_str(), value);
+		//debug("%s is subreg, doing (offset=%d shift=%d mask=" FMT_REG ") into %s = " FMT_REG "\n",
+		//	regName.c_str(), ri.offset, shift, mask, ri.full_width_reg.c_str(), tmp);
 	}
 }
 
@@ -326,28 +326,28 @@ SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry)
 uint8_t SUB1(uint8_t a, uint8_t b)
 {
 	uint8_t result = a - b;
-	debug("SUB1(0x%02X, 0x%02X) returns 0x%02X\n", a, b, result);
+	debug("SUB1            0x%02X = 0x%02X - 0x%02X\n", result, a, b);
 	return result;
 }
 
 uint16_t SUB2(uint16_t a, uint16_t b)
 {
 	uint16_t result = a - b;
-	debug("SUB2(0x%04X, 0x%04X) returns 0x%04X\n", a, b, result);
+	debug("SUB2            0x%04X = 0x%04X - 0x%04X\n", result, a, b);
 	return result;
 }
 
 uint32_t SUB4(uint32_t a, uint32_t b)
 {
 	uint32_t result = a - b;
-	debug("SUB4(0x%08X, 0x%08X) returns 0x%08X\n", a, b, result);
+	debug("SUB4            0x%08X = 0x%08X - 0x%08X\n", result, a, b);
 	return result;
 }
 
 uint64_t SUB8(uint64_t a, uint64_t b)
 {
 	uint64_t result = a - b;
-	debug("SUB8(0x%016llX, 0x%016llX) returns 0x%016llX\n", a, b, result);
+	debug("SUB8            0x%016llX = 0x%016llX - 0x%016llX\n", result, a, b);
 	return result;
 }
 
@@ -355,28 +355,28 @@ uint64_t SUB8(uint64_t a, uint64_t b)
 uint8_t SBB1(uint8_t a, uint8_t b, uint8_t c)
 {
 	uint8_t result = a - b - c;
-	debug("SBB1(0x%02X, 0x%02X, %d) returns 0x%02X\n", a, b, c, result);
+	debug("SBB1            0x%02X = 0x%02X - 0x%02X - %d\n", result, a, b, c);
 	return result;
 }
 
 uint16_t SBB2(uint16_t a, uint16_t b, uint16_t c)
 {
 	uint16_t result = a - b - c;
-	debug("SBB2(0x%04X, 0x%04X, %d) returns 0x%04X\n", a, b, c, result);
+	debug("SBB2            0x%04X = 0x%04X - 0x%04X - %d\n", result, a, b, c);
 	return result;
 }
 
 uint32_t SBB4(uint32_t a, uint32_t b, uint32_t c)
 {
 	uint32_t result = a - b - c;
-	debug("SBB4(0x%08X, 0x%08X, %d) returns 0x%08X\n", a, b, c, result);
+	debug("SBB4            0x%08X = 0x%08X - 0x%08X - %d\n", result, a, b, c);
 	return result;
 }
 
 uint64_t SBB8(uint64_t a, uint64_t b, uint64_t c)
 {
 	uint64_t result = a - b - c;
-	debug("SBB8(0x%016llX, 0x%016llX, %lld) returns 0x%016llX\n", a, b, c, result);
+	debug("SBB8            0x%016llX = 0x%016llX - 0x%016llX - %lld\n", result, a, b, c);
 	return result;
 }
 
@@ -893,7 +893,9 @@ REGTYPE UNIMPL(REGTYPE)
 void runtime_comment(const char *msg)
 {
 	#ifdef DEBUG_RUNTIME
-	printf("\x1B[32m%s\x1B[0m", msg);
+	//printf("\x1B[32m%s\x1B[0m", msg);
+	printf("\n%s", msg);
+	printf("----------------\n");
 	#endif
 }
 
