@@ -76,6 +76,11 @@ int triangle_down(int a)
 }
 
 /* this is pretty hard if arch doesn't have a mul instruction */
+unsigned char multiply_u8(unsigned char a, unsigned char b)
+{
+	return a * b;
+}
+
 int multiply(int a, int b)
 {
 	return a * b;

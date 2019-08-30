@@ -26,6 +26,7 @@ extern map<string,double> vm_regs_double;
 #define is_less_than_equal_10_unsigned _is_less_than_equal_10_unsigned
 #define triangle_up _triangle_up
 #define triangle_down _triangle_down
+#define multiply_u8 _multiply_u8
 #define multiply _multiply
 #define multiply_loop _multiply_loop
 #define exp_dummy _exp_dummy
@@ -51,6 +52,7 @@ void is_less_than_equal_10_unsigned();
 void triangle_up();
 void triangle_down();
 void multiply();
+void multiply_u8();
 void multiply_loop();
 void exp_dummy();
 void expmod();
@@ -156,6 +158,10 @@ int main(int ac, char **av)
 	
 	result = vm_call(life_universe_everything);
 	check(result, 42, "life_universe_everything()");
+
+	result = vm_call(exp_dummy, 2,1);
+	check(result, 2, "exp(2,1)");
+	return 0;
 
 	/* add */
 	result = vm_call(add, 4,7);
@@ -267,33 +273,33 @@ int main(int ac, char **av)
 	check(result, 55, "triangle_down(10)");
 
 	result = vm_call(triangle_down, 100);
-	check(result, 5050, "triangle_down(11)");
+	check(result, 5050, "triangle_down(100)");
 
 	/* multiply: easy case with MUL instruction, else kinda tough */
-	result = vm_call(multiply, 4,7);
-	check(result, 28, "multiply(4,7)");
+	result = vm_call(multiply, 4, 7);
+	check(result, 28, "multiply(4, 7)");
 
-	result = vm_call(multiply, -4,7);
-	check(result, -28, "multiply(-4,7)");
+	result = vm_call(multiply, -4, 7);
+	check(result, -28, "multiply(-4, 7)");
 
-	result = vm_call(multiply, -4,-7);
-	check(result, 28, "multiply(-4,-7)");
+	result = vm_call(multiply, -4, -7);
+	check(result, 28, "multiply(-4, -7)");
 
-	result = vm_call(multiply, 123,456);
-	check(result, 56088, "multiply(123,456)");
+	result = vm_call(multiply, 151, 217);
+	check(result, 32767, "multiply(151, 217)");
 
 	/* multiply: using loop */
-	result = vm_call(multiply_loop, 4,7);
-	check(result, 28, "multiply_loop(4,7)");
+	result = vm_call(multiply_loop, 4, 7);
+	check(result, 28, "multiply_loop(4, 7)");
 
-	result = vm_call(multiply_loop, -4,7);
-	check(result, -28, "multiply_loop(-4,7)");
+	result = vm_call(multiply_loop, -4, 7);
+	check(result, -28, "multiply_loop(-4, 7)");
 
-	result = vm_call(multiply_loop, -4,-7);
-	check(result, 28, "multiply_loop(-4,-7)");
+	result = vm_call(multiply_loop, -4, -7);
+	check(result, 28, "multiply_loop(-4, -7)");
 
-	result = vm_call(multiply_loop, 123,456);
-	check(result, 56088, "multiply_loop(123,456)");
+	result = vm_call(multiply_loop, 151, 217);
+	check(result, 32767, "multiply_loop(151, 217)");
 
 	/* exponentiate */
 	result = vm_call(exp_dummy, 4,7);

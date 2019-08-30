@@ -110,7 +110,7 @@ def traverse_IL(il, depth=0):
                 traverse_IL(il.operands[0], depth+1)
                 print(')', end='')
 
-        elif opname == 'CALL':
+        elif opname in ['CALL', 'TAILCALL']:
             print('CALL(', end='')
             traverse_IL(il.operands[0], depth+1)
             print(');')

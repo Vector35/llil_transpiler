@@ -8,11 +8,24 @@ using namespace std;
 
 #include "runtime.h"
 
-//#define DEBUG_RUNTIME
-#ifdef DEBUG_RUNTIME
+//#define DEBUG_RUNTIME_ALL
+//#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_STACK
+
+#define debug while(0);
+#define debug_set while(0);
+#define debug_stack while(0);
+
+#if defined(DEBUG_ALL)
 	#define debug printf
-#else
-	#define debug(...) while(0);
+#endif
+
+#if defined(DEBUG_RUNTIME_SETS) || defined(DEBUG_ALL)
+	#define debug_set printf
+#endif
+
+#if defined(DEBUG_RUNTIME_STACK) || defined(DEBUG_ALL)
+	#define debug_stack printf
 #endif
 
 /* the foo_il.c must export this, else we can't implement PUSH */
@@ -122,25 +135,25 @@ void NOP(void)
 void SET_REG1(string dest, uint8_t src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG1        %s = 0x%02X\n", dest.c_str(), src);
+	debug_set("SET_REG1        %s = 0x%02X\n", dest.c_str(), src);
 }
 
 void SET_REG2(string dest, uint16_t src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG2        %s = 0x%04X\n", dest.c_str(), src);
+	debug_set("SET_REG2        %s = 0x%04X\n", dest.c_str(), src);
 }
 
 void SET_REG4(string dest, uint32_t src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG4        %s = 0x%08X\n", dest.c_str(), src);
+	debug_set("SET_REG4        %s = 0x%08X\n", dest.c_str(), src);
 }
 
 void SET_REG8(string dest, uint64_t src)
 {
 	reg_set_value(dest, src);
-	debug("SET_REG8        %s = 0x%016llX\n", dest.c_str(), src);
+	debug_set("SET_REG8        %s = 0x%016llX\n", dest.c_str(), src);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
@@ -150,7 +163,7 @@ void SET_REG_SPLIT(string hi, string lo, REGTYPE src_val)
 	REGTYPE dst_val_lo = (REGTYPE) (src_val & REGMASKLOHALF);
 	reg_set_value(hi, dst_val_hi);
 	reg_set_value(lo, dst_val_lo);
-	debug("SET_REG_SPLIT   " FMT_REG " -> %s = " FMT_REG ", %s = " FMT_REG "\n",
+	debug_set("SET_REG_SPLIT   " FMT_REG " -> %s = " FMT_REG ", %s = " FMT_REG "\n",
 		src_val, hi.c_str(), dst_val_hi, lo.c_str(), dst_val_lo);
 }
 
@@ -174,7 +187,7 @@ REGTYPE REG_SPLIT(string hi, string lo)
 void SET_FLAG(string left, bool right)
 {
 	vm_flags[left] = right;
-	debug("SET_FLAG        %s = %d\n", left.c_str(), right);
+	debug_set("SET_FLAG        %s = %d\n", left.c_str(), right);
 }
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
@@ -238,18 +251,18 @@ void PUSH(REGTYPE src)
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
 	/* store on stack */
 	REGTYPE ea = vm_regs[stackRegName];
-	debug("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
+	debug_stack("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
 	*(REGTYPE *)(vm_mem + ea) = src;
 }
 
 /* LowLevelILOperation.LLIL_POP: [] */
 REGTYPE POP(void)
 {
-	/* store on stack */
+	/* retrieve from stack */
 	REGTYPE ea = vm_regs[stackRegName];
-	debug("POP             " FMT_REG " from mem[" FMT_REG "]\n", ea, ea);
+	debug_stack("POP             " FMT_REG " = mem[" FMT_REG "]\n", ea, ea);
 	REGTYPE val = *(REGTYPE *)(vm_mem + ea);
-	/* decrement stack pointer */
+	/* increment stack pointer */
 	vm_regs[stackRegName] += sizeof(REGTYPE);
 	return val;
 }
@@ -652,10 +665,12 @@ void JUMP(REGTYPE dest)
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest)
 {
+	#define RUNTIME_CALLER_ADDR_DUMMY 0xCA11BACC
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(0xCA11BACC & REGMASK);
-	debug("CALL            " FMT_REG "\n", dest);
+	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
+	debug_stack("CALL            " FMT_REG " mem[" FMT_REG "] = " FMT_REG "\n",
+		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY);
 }
 
 /* LowLevelILOperation.LLIL_CALL_STACK_ADJUST: [("dest", "expr"), ("stack_adjustment", "int"), ("reg_stack_adjustments", "reg_stack_adjust")] */
@@ -666,7 +681,8 @@ void TAILCALL(REGTYPE dest)
 	/* dummy push of return address */
 	vm_regs[stackRegName] -= sizeof(REGTYPE);
 	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(0xCA11BAC2 & REGMASK);
-	debug("TAILCALL        " FMT_REG "\n", dest);
+	debug_stack("TAILCALL        " FMT_REG " mem[" FMT_REG "] = " FMT_REG "\n",
+		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY);
 }
 
 /* LowLevelILOperation.LLIL_RET: [("dest", "expr")] */
@@ -675,7 +691,10 @@ void RET(REGTYPE dest)
 	/* IL semantics of RET are _not_ necessarily to pop and jump (but can be)
 		an x86 style ret will be RET(POP())
 		an arm style ret might be RET(REG("lr")) */
-	debug("RET             " FMT_REG "\n", dest);
+
+	// DO NOT:
+	// vm_regs[stackRegName] += sizeof(REGTYPE);
+	debug_stack("RET             " FMT_REG "\n", dest);
 }
 
 /* LowLevelILOperation.LLIL_NORET: [] */
@@ -892,8 +911,8 @@ REGTYPE UNIMPL(REGTYPE)
 
 void runtime_comment(const char *msg)
 {
-	#ifdef DEBUG_RUNTIME
-	//printf("\x1B[32m%s\x1B[0m", msg);
+	#if defined(DEBUG_RUNTIME_ALL) || defined(DEBUG_RUNTIME_SETS)
+	//printf("\x1B[36m%s\x1B[0m", msg);
 	printf("\n%s", msg);
 	printf("----------------\n");
 	#endif
