@@ -29,6 +29,8 @@ extern map<string,double> vm_regs_double;
 #define multiply_u8 _multiply_u8
 #define multiply _multiply
 #define multiply_loop _multiply_loop
+#define div _div
+#define mod _mod
 #define exp_dummy _exp_dummy
 #define expmod _expmod
 #define gcd _gcd
@@ -54,6 +56,8 @@ void triangle_down();
 void multiply();
 void multiply_u8();
 void multiply_loop();
+void div();
+void mod();
 void exp_dummy();
 void expmod();
 void gcd();
@@ -297,18 +301,47 @@ int main(int ac, char **av)
 	result = vm_call(multiply_loop, 151, 217);
 	check(result, 32767, "multiply_loop(151, 217)");
 
+	/* div */
+	result = vm_call(div, 4, 2);
+	check(result, 2, "div(4, 2)");
+
+	result = vm_call(div, 4, 7);
+	check(result, 0, "div(4, 7)");
+
+	result = vm_call(div, 7, 4);
+	check(result, 1, "div(7, 4)");
+
+	result = vm_call(div, 28, 7);
+	check(result, 4, "div(28, 7)");
+
+	result = vm_call(div, -151, 50);
+	check(result, -3, "div(151, -50)");
+
+	/* mod */
+	result = vm_call(mod, 4, 7);
+	check(result, 4, "mod(4, 7)");
+
+	result = vm_call(mod, 7, 4);
+	check(result, 3, "mod(7, 4)");
+
+	result = vm_call(mod, 28, 7);
+	check(result, 0, "mod(28, 7)");
+
+	result = vm_call(mod, -151, 50);
+	check(result, -49, "mod(-151, 50)");	
+
 	/* exponentiate */
-	result = vm_call(exp_dummy, 4,7);
-	check(result, 16384, "exp(4,7)");
+	result = vm_call(exp_dummy, 4, 7);
+	check(result, 16384, "exp(4, 7)");
 
-	result = vm_call(exp_dummy, 2,16);
-	check(result, 65536, "exp(2,16)");
+	result = vm_call(exp_dummy, 2, 14);
+	check(result, 16384, "exp(2, 14)");
 
-	result = vm_call(exp_dummy, 3,17);
-	check(result, 129140163, "exp(3,17)");
+	result = vm_call(exp_dummy, 3, 7);
+	check(result, 2187, "exp(3, 7)");
 
-	result = vm_call(exp_dummy, 17,3);
-	check(result, 4913, "exp(17,3)");
+	result = vm_call(exp_dummy, -2, 7);
+	check(result, -128, "exp(-2, 7)");
 
 	/* exponentiate with a modulus */
 	result = vm_call(expmod, 4,7,5);

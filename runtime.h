@@ -162,6 +162,8 @@ uint32_t ROR4(uint32_t value, uint32_t amt);
 uint64_t ROR8(uint64_t value, uint64_t amt);
 
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+uint8_t RRC1(uint8_t value, uint8_t amt, bool carry);
+
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 
 /* LowLevelILOperation.LLIL_MULU_DP: [("left", "expr"), ("right", "expr")] */

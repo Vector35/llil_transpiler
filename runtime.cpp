@@ -9,8 +9,8 @@ using namespace std;
 #include "runtime.h"
 
 //#define DEBUG_RUNTIME_ALL
-#define DEBUG_RUNTIME_SETS
-#define DEBUG_RUNTIME_STACK
+//#define DEBUG_RUNTIME_SETS
+//#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
 #define debug_set(...) while(0);
@@ -523,6 +523,25 @@ uint64_t ROR8(uint64_t value, uint64_t amt)
 }
 
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
+uint8_t RRC1(uint8_t value, uint8_t amt, bool carry)
+{
+	uint8_t result = value;
+
+	if(amt) {
+		amt = amt % 8;
+		// normal carry
+		uint8_t a = (value >> amt);
+		uint8_t b = (value << (8-amt));
+		// insert c
+		b = (b << 1) | (carry >> (amt-1));
+		//
+		result = a | b;
+	}
+
+	debug("RRC1            0x%X = 0x%X >>> %d and carry = %d\n", result, value, amt, carry);
+	return result;
+}
+
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 {
 	SREGTYPE result = left * right;

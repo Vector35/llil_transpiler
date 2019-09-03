@@ -104,11 +104,24 @@ int multiply_loop(int a, int b)
 	return neg * result;
 }
 
+int div(int a, int b)
+{
+	return a / b;
+}
+
+int mod(int a, int b)
+{
+	return a % b;
+}
+
 /* "_dummy" because exp() is built-in in some compilers */
 int exp_dummy(int base, int e)
 {
 	int i;
 	int result = 1;
+
+	if(base == 0)
+		return 0;
 
 	for(i=0; i<e; ++i)
 		result = result * base;
@@ -120,6 +133,9 @@ int expmod(int base, int e, int m)
 {
 	int result = 1;
 	int runner = base;
+
+	if(base == 0)
+		return 0;
 
 	while(e) {
 		if(e & 1) {
