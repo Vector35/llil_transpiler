@@ -557,10 +557,10 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 
 /* LowLevelILOperation.LLIL_DIVS_DP: [("left", "expr"), ("right", "expr")] */
 // TODO: figure out "DP"
-SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE right)
+SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE_HALF right)
 {
-	SREGTYPE result = left/right;
-	debug("DIVS_DP         " FMT_SREG " = " FMT_SREG " / " FMT_SREG "\n", result, left, right);
+	SREGTYPE result = left / right;
+	debug("DIVS_DP         " FMT_SREG " = " FMT_SREG " / " FMT_REG_HALF "\n", result, left, right);
 	return result;
 }
 

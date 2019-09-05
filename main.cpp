@@ -156,10 +156,12 @@ void check(int actual, int expected, const char *msg)
 	}
 }
 
+void __divu16(void);
+
 int main(int ac, char **av)
 {
 	int result;
-	
+
 	result = vm_call(life_universe_everything);
 	check(result, 42, "life_universe_everything()");
 
@@ -302,8 +304,8 @@ int main(int ac, char **av)
 	check(result, 32767, "multiply_loop(151, 217)");
 
 	/* div */
-	result = vm_call(div, 4, 2);
-	check(result, 2, "div(4, 2)");
+	result = vm_call(div, 4, -2);
+	check(result, -2, "div(4, -2)");
 
 	result = vm_call(div, 4, 7);
 	check(result, 0, "div(4, 7)");
@@ -314,7 +316,7 @@ int main(int ac, char **av)
 	result = vm_call(div, 28, 7);
 	check(result, 4, "div(28, 7)");
 
-	result = vm_call(div, -151, 50);
+	result = vm_call(div, 151, -50);
 	check(result, -3, "div(151, -50)");
 
 	/* mod */
@@ -327,8 +329,8 @@ int main(int ac, char **av)
 	result = vm_call(mod, 28, 7);
 	check(result, 0, "mod(28, 7)");
 
-	result = vm_call(mod, -151, 50);
-	check(result, -49, "mod(-151, 50)");	
+	result = vm_call(mod, 151, 50);
+	check(result, 1, "mod(151, 50)");
 
 	/* exponentiate */
 	result = vm_call(exp_dummy, 4, 7);
@@ -361,7 +363,7 @@ int main(int ac, char **av)
 	check(result, 5, "gcd(5,15)");
 
 	result = vm_call(gcd, 16,24);
-	check(result, 8, "gcd(16,24)");	
+	check(result, 8, "gcd(16,24)");
 
 	result = vm_call(gcd, 51,77);
 	check(result, 1, "gcd(51,77)");
@@ -374,7 +376,7 @@ int main(int ac, char **av)
 	check(result, 0, "switch_doubler(0)");
 
 	result = vm_call(switch_doubler, 2);
-	check(result, 4, "switch_doubler(2)");	
+	check(result, 4, "switch_doubler(2)");
 
 	result = vm_call(switch_doubler, 999);
 	check(result, -1, "switch_doubler(999)");
@@ -387,7 +389,7 @@ int main(int ac, char **av)
 	check(result, 1, "factorial(0)");
 
 	result = vm_call(factorial, 5);
-	check(result, 120, "factorial(5)");	
+	check(result, 120, "factorial(5)");
 
 	result = vm_call(factorial, 8);
 	check(result, 40320, "factorial(8)");
@@ -400,11 +402,11 @@ int main(int ac, char **av)
 	check(result, 5, "gcd_recursive(5,15)");
 
 	result = vm_call(gcd_recursive, 16,24);
-	check(result, 8, "gcd_recursive(16,24)");	
+	check(result, 8, "gcd_recursive(16,24)");
 
 	result = vm_call(gcd_recursive, 51,77);
 	check(result, 1, "gcd_recursive(51,77)");
 
 	result = vm_call(gcd_recursive, 51,119);
-	check(result, 17, "gcd_recursive(51,119)");	
+	check(result, 17, "gcd_recursive(51,119)");
 }

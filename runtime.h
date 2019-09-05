@@ -173,10 +173,10 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 /* LowLevelILOperation.LLIL_DIVU_DP: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_DIVS: [("left", "expr"), ("right", "expr")] */
-SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE right);
+SREGTYPE DIVS(SREGTYPE left, SREGTYPE right);
 
 /* LowLevelILOperation.LLIL_DIVS_DP: [("left", "expr"), ("right", "expr")] */
-SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE right);
+SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE_HALF right);
 
 /* LowLevelILOperation.LLIL_MODU: [("left", "expr"), ("right", "expr")] */
 REGTYPE MODU(REGTYPE left, REGTYPE right);
