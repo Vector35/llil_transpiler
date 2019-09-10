@@ -63,9 +63,9 @@ def traverse_IL(il, depth=0):
         elif opname == 'CONST':
             val = il.operands[0]
             if val < 16:
-                print('%d' % val, end='')
+                print('/* CONST */ %d' % val, end='')
             else:
-                print('0x%X' % val, end='')
+                print('/* CONST */ 0x%X' % val, end='')
 
         elif opname == 'CONST_PTR':
             # is it a jump table? rip it
@@ -84,7 +84,7 @@ def traverse_IL(il, depth=0):
                     line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
                     init_mem_lines.append(line)
 
-            print('0x%X' % (il.operands[0]), end='')
+            print('/* CONST_PTR */ 0x%X' % (il.operands[0]), end='')
 
         elif opname == 'IF':
             print('if(', end='')

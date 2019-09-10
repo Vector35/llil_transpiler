@@ -371,19 +371,6 @@ int main(int ac, char **av)
 	result = vm_call(gcd, 51,119);
 	check(result, 17, "gcd(51,119)");
 
-	/* switch statements */
-	result = vm_call(switch_doubler, 0);
-	check(result, 0, "switch_doubler(0)");
-
-	result = vm_call(switch_doubler, 2);
-	check(result, 4, "switch_doubler(2)");
-
-	result = vm_call(switch_doubler, 999);
-	check(result, -1, "switch_doubler(999)");
-
-	result = vm_call(switch_doubler, 9);
-	check(result, 18, "switch_doubler(9)");
-
 	/* recursion */
 	result = vm_call(factorial, 0);
 	check(result, 1, "factorial(0)");
@@ -391,11 +378,20 @@ int main(int ac, char **av)
 	result = vm_call(factorial, 5);
 	check(result, 120, "factorial(5)");
 
+#if REGWIDTH == 16
+	/* be nice and don't let tests set MSB -> negative */
+	result = vm_call(factorial, 6);
+	check(result, 720, "factorial(6)");
+
+	result = vm_call(factorial, 7);
+	check(result, 5040, "factorial(7)");
+#else
 	result = vm_call(factorial, 8);
 	check(result, 40320, "factorial(8)");
 
 	result = vm_call(factorial, 11);
 	check(result, 39916800, "factorial(11)");
+#endif
 
 	/* recursive version: greatest common divisor */
 	result = vm_call(gcd_recursive, 5,15);
@@ -409,4 +405,17 @@ int main(int ac, char **av)
 
 	result = vm_call(gcd_recursive, 51,119);
 	check(result, 17, "gcd_recursive(51,119)");
+
+	/* switch statements */
+	result = vm_call(switch_doubler, 0);
+	check(result, 0, "switch_doubler(0)");
+
+	result = vm_call(switch_doubler, 2);
+	check(result, 4, "switch_doubler(2)");
+
+	result = vm_call(switch_doubler, 999);
+	check(result, -1, "switch_doubler(999)");
+
+	result = vm_call(switch_doubler, 9);
+	check(result, 18, "switch_doubler(9)");
 }

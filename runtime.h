@@ -197,6 +197,7 @@ uint32_t NEG4(uint32_t src);
 uint64_t NEG8(uint64_t src);
 
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
+uint8_t NOT0(uint8_t left);
 uint8_t NOT1(uint8_t left);
 uint16_t NOT2(uint16_t left);
 uint32_t NOT4(uint32_t left);

@@ -628,6 +628,14 @@ uint64_t NEG8(uint64_t src)
 }
 
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
+uint8_t NOT0(uint8_t left)
+{
+	/* size 0 is special case which means to not LSB */
+	uint8_t result = left ^ 1;
+	debug("NOT0            0x%02X = 0x%02X ^ 1\n", result, left);
+	return result;
+}
+
 uint8_t NOT1(uint8_t left)
 {
 	uint8_t result = ~left;
