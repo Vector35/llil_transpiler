@@ -34,7 +34,7 @@ def traverse_IL(il, depth=0):
     # these operations have foo1(), foo2(), foo4(), foo8() versions...
     sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD', 'SET_REG',
         'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE', 'CMP_SLT',
-        'SBB', 'ROL', 'NOT', 'SUB', 'RRC']
+        'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
 
     # il pass thru here will probably be:
     # LowLevelILInstruction
@@ -52,63 +52,16 @@ def traverse_IL(il, depth=0):
         if opname.startswith('LLIL_'):
             opname = opname[5:]
 
-        if opname == 'GOTO':
-            print('goto loc_%d' % il.operands[0], end='')
-
-        elif opname == 'RET':
-            print('RET(', end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(');\n\treturn', end='')
-
-        elif opname == 'CONST':
-            val = il.operands[0]
-            if val < 16:
-                print('/* CONST */ %d' % val, end='')
-            else:
-                print('/* CONST */ 0x%X' % val, end='')
-
-        elif opname == 'CONST_PTR':
-            # is it a jump table? rip it
-            sym = bv.get_symbol_at(il.operands[0])
-            dvar = bv.get_data_var_at(il.operands[0])
-            if sym and sym.name.startswith('jump_table_') and dvar:
-                strdv = str(dvar.type)
-                if not strdv.startswith('uint32_t '):
-                    raise Exception('dunno how to parse type from: %s' % strdv)
-                m = re.match(r'uint32_t \[(\d+)\]', strdv)
-                amt = int(m.group(1))
-                init_mem_lines.append('// %s' % str(sym))
-                for i in range(amt):
-                    addr = sym.address + 4*i
-                    value = struct.unpack('<I', bv.read(addr, 4))[0]
-                    line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
-                    init_mem_lines.append(line)
-
-            print('/* CONST_PTR */ 0x%X' % (il.operands[0]), end='')
-
-        elif opname == 'IF':
-            print('if(', end='')
-            traverse_IL(il.operands[0], depth+1)
-            print(')')
-            print('\t\tgoto loc_%d;' % il.operands[1])
-            print('\telse')
-            print('\t\tgoto loc_%d;' % il.operands[2], end='')
-            semi = False
-
-        elif opname == 'JUMP':
-            if arch == 'arm' and \
-              il.operands[0].operation == LowLevelILOperation.LLIL_REG and \
-              il.operands[0].src.name == 'lr':
-                  print('// %s' % str(il))
-                  print('\treturn', end='')
-            elif arch == 'arm' and \
-              il.operands[0].operation == LowLevelILOperation.LLIL_POP:
-                  print('// %s' % str(il))
-                  print('\treturn', end='')
-            else:
-                print('JUMP(', end='')
+        if opname == 'ADD_OVERFLOW' and il.size == 0:
+            # see if an operand will clue us into the size
+            if il.operands[0].size and il.operands[0].size == il.operands[1].size:
+                print('ADD_OVERFLOW%d(' % il.operands[0].size, end='')
                 traverse_IL(il.operands[0], depth+1)
-                print(')', end='')
+                print(', ', end='')
+                traverse_IL(il.operands[0], depth+1)
+                print(')');
+            else:
+                raise Exception('cant find size for ADD_OVERFLOW()')
 
         elif opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')
@@ -143,6 +96,59 @@ def traverse_IL(il, depth=0):
 
             print(');')
 
+        elif opname == 'CONST':
+            val = il.operands[0]
+            if val < 16:
+                print('/* CONST */ %d' % val, end='')
+            else:
+                print('/* CONST */ 0x%X' % val, end='')
+
+        elif opname == 'CONST_PTR':
+            # is it a jump table? rip it
+            sym = bv.get_symbol_at(il.operands[0])
+            dvar = bv.get_data_var_at(il.operands[0])
+            if sym and sym.name.startswith('jump_table_') and dvar:
+                strdv = str(dvar.type)
+                if not strdv.startswith('uint32_t '):
+                    raise Exception('dunno how to parse type from: %s' % strdv)
+                m = re.match(r'uint32_t \[(\d+)\]', strdv)
+                amt = int(m.group(1))
+                init_mem_lines.append('// %s' % str(sym))
+                for i in range(amt):
+                    addr = sym.address + 4*i
+                    value = struct.unpack('<I', bv.read(addr, 4))[0]
+                    line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
+                    init_mem_lines.append(line)
+
+            print('/* CONST_PTR */ 0x%X' % (il.operands[0]), end='')
+
+        elif opname == 'GOTO':
+            print('goto loc_%d' % il.operands[0], end='')
+
+        elif opname == 'IF':
+            print('if(', end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(')')
+            print('\t\tgoto loc_%d;' % il.operands[1])
+            print('\telse')
+            print('\t\tgoto loc_%d;' % il.operands[2], end='')
+            semi = False
+
+        elif opname == 'JUMP':
+            if arch == 'arm' and \
+              il.operands[0].operation == LowLevelILOperation.LLIL_REG and \
+              il.operands[0].src.name == 'lr':
+                  print('// %s' % str(il))
+                  print('\treturn', end='')
+            elif arch == 'arm' and \
+              il.operands[0].operation == LowLevelILOperation.LLIL_POP:
+                  print('// %s' % str(il))
+                  print('\treturn', end='')
+            else:
+                print('JUMP(', end='')
+                traverse_IL(il.operands[0], depth+1)
+                print(')', end='')
+
         elif opname == 'JUMP_TO':
             print('// %s' % str(il))
             print('\tswitch(', end='')
@@ -155,6 +161,11 @@ def traverse_IL(il, depth=0):
             print('\t\tdefault: printf("switch fucked\\n"); while(1);')
             print('\t}', end='')
             semi = False
+
+        elif opname == 'RET':
+            print('RET(', end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(');\n\treturn', end='')
 
         else:
             if opname in sizified:
