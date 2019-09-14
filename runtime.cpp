@@ -9,22 +9,22 @@ using namespace std;
 #include "runtime.h"
 
 //#define DEBUG_RUNTIME_ALL
-//#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_SETS
 //#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
 #define debug_set(...) while(0);
 #define debug_stack(...) while(0);
 
-#if defined(DEBUG_ALL)
+#if defined(DEBUG_RUNTIME_ALL)
 	#define debug printf
 #endif
 
-#if defined(DEBUG_RUNTIME_SETS) || defined(DEBUG_ALL)
+#if defined(DEBUG_RUNTIME_SETS) || defined(DEBUG_RUNTIME_ALL)
 	#define debug_set printf
 #endif
 
-#if defined(DEBUG_RUNTIME_STACK) || defined(DEBUG_ALL)
+#if defined(DEBUG_RUNTIME_STACK) || defined(DEBUG_RUNTIME_ALL)
 	#define debug_stack printf
 #endif
 
@@ -630,7 +630,10 @@ uint64_t NEG8(uint64_t src)
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
 uint8_t NOT0(uint8_t left)
 {
-	/* size 0 is special case which means to not LSB */
+	/* size 0 is special case which means treat as bool
+		nonzero -> zero
+		zero -> 1
+	*/
 	uint8_t result = left ^ 1;
 	debug("NOT0            0x%02X = 0x%02X ^ 1\n", result, left);
 	return result;
@@ -681,6 +684,20 @@ uint32_t ZX4(uint8_t src)
 }
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
+uint8_t LOW_PART1(REGTYPE left)
+{
+	uint8_t result = left & 0xFF;
+	debug("LOW_PART1       " FMT_REG " -> 0x%02X\n", left, result);
+	return result;
+}
+
+uint16_t LOW_PART2(REGTYPE left)
+{
+	uint8_t result = left & 0xFFFF;
+	debug("LOW_PART2       " FMT_REG " -> 0x%04X\n", left, result);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest)
 {
@@ -947,12 +964,21 @@ void runtime_comment(const char *msg)
 }
 
 #ifdef ARCH_ARM
+void __aeabi_idiv()
+{
+    SREGTYPE a = reg_get_value("r0");
+    SREGTYPE b = reg_get_value("r1");
+    SREGTYPE result = a / b;
+    reg_set_value("r0", result);
+	debug("__aeabi_idiv() returns " FMT_SREG " = " FMT_SREG " / " FMT_SREG "\n", result, a, b);
+}
+
 void __aeabi_idivmod()
 {
     SREGTYPE a = reg_get_value("r0");
     SREGTYPE b = reg_get_value("r1");
     SREGTYPE result = a % b;
-    reg_set_value("r1", result);
+    reg_set_value("r0", result);
 	debug("__aeabi_idivmod() returns " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, a, b);
 }
 #endif

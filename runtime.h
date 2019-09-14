@@ -210,6 +210,9 @@ SREGTYPE SX(SREGTYPE_HALF src);
 uint32_t ZX4(uint8_t src);
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
+uint8_t LOW_PART1(REGTYPE left);
+uint16_t LOW_PART2(REGTYPE left);
+
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest);
 
@@ -338,6 +341,7 @@ REGTYPE UNIMPL(REGTYPE);
 void runtime_comment(const char *msg);
 
 #ifdef ARCH_ARM
+void __aeabi_idiv();
 void __aeabi_idivmod();
 #endif
 
