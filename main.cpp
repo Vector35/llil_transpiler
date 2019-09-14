@@ -16,6 +16,7 @@ extern map<string,double> vm_regs_double;
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
 #define add _add
+#define is_equal_10 _is_equal_10
 #define is_greater_10_unsigned_u8 _is_greater_10_unsigned_u8
 #define than_equal_10_unsigned_u8 _than_equal_10_unsigned_u8
 #define is_greater_10_signed_s8 _is_greater_10_signed_s8
@@ -43,6 +44,7 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
+void is_equal_10();
 void is_greater_10_unsigned_u8();
 void than_equal_10_unsigned_u8();
 void is_greater_10_signed_s8();
@@ -179,6 +181,15 @@ int main(int ac, char **av)
 	check(result, 579, "add(123,456)");
 
 	/* comparison, 1 byte */
+	result = vm_call(is_equal_10, 3);
+	check(result, 0, "is_equal_10(3)");
+	result = vm_call(is_equal_10, 7);
+	check(result, 0, "is_equal_10(7)");
+	result = vm_call(is_equal_10, 10);
+	check(result, 1, "is_equal_10(10)");
+	result = vm_call(is_equal_10, 13);
+	check(result, 0, "is_equal_10(13)");
+
 	result = vm_call(is_greater_10_unsigned_u8, 3);
 	check(result, 0, "is_greater_10_unsigned_u8(3)");
 	result = vm_call(is_greater_10_unsigned_u8, 7);

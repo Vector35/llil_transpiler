@@ -11,6 +11,12 @@ int add(int a, int b)
 }
 
 /* establish flag testing/setting */
+unsigned int is_equal_10(unsigned char a)
+{
+	if (a == 10) return 1;
+	return 0;
+}
+
 unsigned int is_greater_10_unsigned_u8(unsigned char a)
 {
 	return a > 10;
