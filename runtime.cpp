@@ -441,7 +441,7 @@ uint8_t ROL1(uint8_t value, uint8_t amt)
 {
 	amt = amt % 8;
 	uint8_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL1(0x%02X, %d) returns 0x%02X\n", value, amt, result);
+	debug("ROL1            0x%02X = ROL(0x%02X, %d)\n", result, value, amt);
 	return result;
 }
 
@@ -449,7 +449,7 @@ uint16_t ROL2(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value << amt) | (value >> (16-amt));
-	debug("ROL2(0x%04X, %d) returns 0x%04X\n", value, amt, result);
+	debug("ROL2            0x%04X = ROL(0x%04X, %d)\n", result, value, amt);
 	return result;
 }
 
@@ -457,7 +457,7 @@ uint32_t ROL4(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL4(0x%08X, %d) returns 0x%08X\n", value, amt, result);
+	debug("ROL4            0x%08X = ROL(0x%08X, %d)\n", result, value, amt);
 	return result;
 }
 
@@ -465,7 +465,7 @@ uint64_t ROL8(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value << amt) | (value >> (8-amt));
-	debug("ROL8(0x%016llX, %lld) returns 0x%08llX\n", value, amt, result);
+	debug("ROL8            0x%08llX = ROL(0x%016llX, %lld)\n", result, value, amt);
 	return result;
 }
 
@@ -794,10 +794,24 @@ bool CMP_ULT(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
+bool CMP_SLE1(int8_t left, int8_t right)
+{
+	bool result = left <= right;
+	debug("CMP_SLE1        %d = %d <= %d\n", result, left, right);
+	return result;
+}
+
+bool CMP_SLE2(int16_t left, int16_t right)
+{
+	bool result = left <= right;
+	debug("CMP_SLE2        %d = %d <= %d\n", result, left, right);
+	return result;
+}
+
 bool CMP_SLE4(int32_t left, int32_t right)
 {
 	bool result = left <= right;
-	debug("CMP_SLE         %d = %d <= %d\n", result, left, right);
+	debug("CMP_SLE4        %d = %d <= %d\n", result, left, right);
 	return result;
 }
 
@@ -810,10 +824,24 @@ bool CMP_ULE(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SGE: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGE1(int8_t left, int8_t right)
+{
+	bool result = left >= right;
+	debug("CMP_SGE1        %d = %d >= %d\n", result, left, right);
+	return result;
+}
+
+bool CMP_SGE2(int16_t left, int16_t right)
+{
+	bool result = left >= right;
+	debug("CMP_SGE2        %d = %d >= %d\n", result, left, right);
+	return result;
+}
+
 bool CMP_SGE4(int32_t left, int32_t right)
 {
 	bool result = left >= right;
-	debug("CMP_SGE         %d = %d >= %d\n", result, left, right);
+	debug("CMP_SGE4        %d = %d >= %d\n", result, left, right);
 	return result;
 }
 
@@ -826,17 +854,24 @@ bool CMP_UGE(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGT1(int8_t left, int8_t right)
+{
+	bool result = left > right;
+	debug("CMP_SGT1        %d = %d > %d\n", result, left, right);
+	return result;
+}
+
 bool CMP_SGT2(int16_t left, int16_t right)
 {
 	bool result = left > right;
-	debug("CMP_SGT         %d = %d > %d\n", result, left, right);
+	debug("CMP_SGT2        %d = %d > %d\n", result, left, right);
 	return result;
 }
 
 bool CMP_SGT4(int32_t left, int32_t right)
 {
 	bool result = left > right;
-	debug("CMP_SGT         %d = %d > %d\n", result, left, right);
+	debug("CMP_SGT4        %d = %d > %d\n", result, left, right);
 	return result;
 }
 

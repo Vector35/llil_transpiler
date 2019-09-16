@@ -247,18 +247,23 @@ bool CMP_SLT4(int32_t left, int32_t right);
 bool CMP_ULT(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
+bool CMP_SLE1(int8_t left, int8_t right);
+bool CMP_SLE2(int16_t left, int16_t right);
 bool CMP_SLE4(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_ULE: [("left", "expr"), ("right", "expr")] */
 bool CMP_ULE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SGE: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGE1(int8_t left, int8_t right);
+bool CMP_SGE2(int16_t left, int16_t right);
 bool CMP_SGE4(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
 bool CMP_UGE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
+bool CMP_SGT1(int8_t left, int8_t right);
 bool CMP_SGT2(int16_t left, int16_t right);
 bool CMP_SGT4(int32_t left, int32_t right);
 
