@@ -8,8 +8,8 @@ using namespace std;
 
 #include "runtime.h"
 
-//#define DEBUG_RUNTIME_ALL
-#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_ALL
+//#define DEBUG_RUNTIME_SETS
 //#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
@@ -860,22 +860,22 @@ bool TEST_BIT(REGTYPE value, REGTYPE mask)
 /* LowLevelILOperation.LLIL_ADD_OVERFLOW: [("left", "expr"), ("right", "expr")] */
 bool ADD_OVERFLOW1(uint8_t a, uint8_t b)
 {
-	bool result = 256 - a >= b;
-	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	bool result = a >= 256 - b;
+	debug("ADD_OVERFLOW1   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 
 bool ADD_OVERFLOW2(uint16_t a, uint16_t b)
 {
-	bool result = 65536 - a >= b;
-	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	bool result = a >= 65536 - b;
+	debug("ADD_OVERFLOW2   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 
 bool ADD_OVERFLOW4(uint32_t a, uint32_t b)
 {
-	bool result = 4294967296 - a >= b;
-	debug("ADD_OVERFLOW    %d (when %d + %d)\n", result, a, b);
+	bool result = a >= 4294967296 - b;
+	debug("ADD_OVERFLOW4   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 
