@@ -52,9 +52,19 @@ with open(fpath_map) as fp:
 (i_code, i_header) = (None, None)
 for (i, line) in enumerate(lines):
     if line.startswith('_CODE'):
-        i_code = i
         m = re.match(r'^_CODE\s+([A-F0-9]{8})\s+([A-F0-9]{8})', line) 
-        (_CODE_ADDR, _CODE_SZ) = map(lambda x: int(x, 16), m.group(1,2))
+        (addr, size) = map(lambda x: int(x, 16), m.group(1,2))
+
+        if not i_code:
+            i_code = i
+            _CODE_ADDR = addr
+            _CODE_SZ = size
+        else:
+            if addr != _CODE_ADDR:
+                raise Exception('conflicting code segment addresses')
+            if size != _CODE_SZ:
+                raise Exception('conflicting code segment sizes')
+
     if line.startswith('_HEADER0'):
         i_header = i
         break
@@ -64,7 +74,9 @@ syms = []
 for line in lines[i_code:i_header]:
     m = re.search(r'([A-F0-9]{8})\s+(_\w+)', line)
     if m:
-        syms.append((m.group(2), int(m.group(1), 16)))
+        (addr, symname) = m.group(1, 2)
+        print('found %s: %s' % (addr, symname))
+        syms.append((symname, int(addr, 16)));
 
 assert syms
 print('_CODE [%08X, %08X)' % (_CODE_ADDR, _CODE_ADDR+_CODE_SZ))
