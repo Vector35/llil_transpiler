@@ -148,285 +148,173 @@ int vm_call(VMFUNC pfunc, int a, int b, int c)
 	return vm_get_retval();
 }
 
-void check(int actual, int expected, const char *msg)
+void check(int actual, int expected)
 {
 	if(actual == expected)
-		printf("\x1B[32m" "PASSED" "\x1B[0m" " %s (%d is correct)\n", msg, actual);
+		printf("\x1B[32mPASSED\x1B[0m (%d is correct)\n", actual);
 	else {
-		printf("\x1B[31m" "FAILED" "\x1B[0m" " %s (%d is incorrect, expected %d)\n", msg, actual, expected);
+		printf("\x1B[31mFAILED\x1B[0m (%d != %d)\n", actual, expected);
 		exit(-1);
 	}
 }
 
-void __divu16(void);
+void test(const char *sfunc, VMFUNC pfunc, int expected)
+{
+	printf("%s()...", sfunc);
+	check(vm_call(pfunc), expected);
+}
+
+void test(const char *sfunc, VMFUNC pfunc, int a, int expected)
+{
+	printf("%s(%d)...", sfunc, a);
+	check(vm_call(pfunc, a), expected);
+}
+
+void test(const char *sfunc, VMFUNC pfunc, int a, int b, int expected)
+{
+	printf("%s(%d, %d)...", sfunc, a, b);
+	check(vm_call(pfunc, a, b), expected);
+}
+
+void test(const char *sfunc, VMFUNC pfunc, int a, int b, int c, int expected)
+{
+	printf("%s(%d, %d, %d)...", sfunc, a, b, c);
+	check(vm_call(pfunc, a, b, c), expected);
+}
 
 int main(int ac, char **av)
 {
 	int result;
 
-	result = vm_call(life_universe_everything);
-	check(result, 42, "life_universe_everything()");
+	test("life_universe_everything()", life_universe_everything, 42);
 
 	/* add */
-	result = vm_call(add, 4,7);
-	check(result, 11, "add(4,7)");
-
-	result = vm_call(add, -4,7);
-	check(result, 3, "add(-4,7)");
-
-	result = vm_call(add, -4,-7);
-	check(result, -11, "add(-4,-7)");
-
-	result = vm_call(add, 123,456);
-	check(result, 579, "add(123,456)");
+	test("add", add, 4,7, 11);
+	test("add", add, -4,7, 3);
+	test("add", add, -4,-7, -11);
+	test("add", add, 123,456, 579);
 
 	/* comparison, 1 byte */
-	result = vm_call(is_equal_10, 3);
-	check(result, 0, "is_equal_10(3)");
-	result = vm_call(is_equal_10, 7);
-	check(result, 0, "is_equal_10(7)");
-	result = vm_call(is_equal_10, 10);
-	check(result, 1, "is_equal_10(10)");
-	result = vm_call(is_equal_10, 13);
-	check(result, 0, "is_equal_10(13)");
+	test("is_equal_10", is_equal_10,3, 0);
+	test("is_equal_10", is_equal_10,7, 0);
+	test("is_equal_10", is_equal_10,10, 1);
+	test("is_equal_10", is_equal_10,13, 0);
 
-	result = vm_call(is_greater_10_unsigned_u8, 3);
-	check(result, 0, "is_greater_10_unsigned_u8(3)");
-	result = vm_call(is_greater_10_unsigned_u8, 7);
-	check(result, 0, "is_greater_10_unsigned_u8(7)");
-	result = vm_call(is_greater_10_unsigned_u8, 11);
-	check(result, 1, "is_greater_10_unsigned_u8(11)");
-	result = vm_call(is_greater_10_unsigned_u8, 13);
-	check(result, 1, "is_greater_10_unsigned_u8(13)");
+	test("is_greater_10_unsigned_u8", is_greater_10_unsigned_u8,3, 0);
+	test("is_greater_10_unsigned_u8", is_greater_10_unsigned_u8,7, 0);
+	test("is_greater_10_unsigned_u8", is_greater_10_unsigned_u8,11, 1);
+	test("is_greater_10_unsigned_u8", is_greater_10_unsigned_u8,13, 1);
 
-	result = vm_call(than_equal_10_unsigned_u8, 3);
-	check(result, 1, "than_equal_10_unsigned_u8(3)");
-	result = vm_call(than_equal_10_unsigned_u8, 7);
-	check(result, 1, "than_equal_10_unsigned_u8(7)");
-	result = vm_call(than_equal_10_unsigned_u8, 11);
-	check(result, 0, "than_equal_10_unsigned_u8(11)");
-	result = vm_call(than_equal_10_unsigned_u8, 13);
-	check(result, 0, "than_equal_10_unsigned_u8(13)");
+	test("than_equal_10_unsigned_u8", than_equal_10_unsigned_u8,3, 1);
+	test("than_equal_10_unsigned_u8", than_equal_10_unsigned_u8,7, 1);
+	test("than_equal_10_unsigned_u8", than_equal_10_unsigned_u8,11, 0);
+	test("than_equal_10_unsigned_u8", than_equal_10_unsigned_u8,13, 0);
 
-	result = vm_call(is_greater_10_signed_s8, 3);
-	check(result, 0, "is_greater_10_signed_s8(3)");
-	result = vm_call(is_greater_10_signed_s8, 7);
-	check(result, 0, "is_greater_10_signed_s8(7)");
-	result = vm_call(is_greater_10_signed_s8, 11);
-	check(result, 1, "is_greater_10_signed_s8(11)");
-	result = vm_call(is_greater_10_signed_s8, 13);
-	check(result, 1, "is_greater_10_signed_s8(13)");
+	test("is_greater_10_signed_s8", is_greater_10_signed_s8,3, 0);
+	test("is_greater_10_signed_s8", is_greater_10_signed_s8,7, 0);
+	test("is_greater_10_signed_s8", is_greater_10_signed_s8,11, 1);
+	test("is_greater_10_signed_s8", is_greater_10_signed_s8,13, 1);
 
-	result = vm_call(is_less_than_equal_10_signed_s8, 3);
-	check(result, 1, "is_less_than_equal_10_signed_s8(3)");
-	result = vm_call(is_less_than_equal_10_signed_s8, 7);
-	check(result, 1, "is_less_than_equal_10_signed_s8(7)");
-	result = vm_call(is_less_than_equal_10_signed_s8, 11);
-	check(result, 0, "is_less_than_equal_10_signed_s8(11)");
-	result = vm_call(is_less_than_equal_10_signed_s8, 13);
-	check(result, 0, "is_less_than_equal_10_signed_s8(13)");
+	test("is_less_than_equal_10_signed_s8", is_less_than_equal_10_signed_s8,3, 1);
+	test("is_less_than_equal_10_signed_s8", is_less_than_equal_10_signed_s8,7, 1);
+	test("is_less_than_equal_10_signed_s8", is_less_than_equal_10_signed_s8,11, 0);
+	test("is_less_than_equal_10_signed_s8", is_less_than_equal_10_signed_s8,13, 0);
 
 	/* comparison, more bytes */
-	result = vm_call(is_greater_10_unsigned, 3);
-	check(result, 0, "is_greater_10_unsigned(3)");
-	result = vm_call(is_greater_10_unsigned, 7);
-	check(result, 0, "is_greater_10_unsigned(7)");
-	result = vm_call(is_greater_10_unsigned, 11);
-	check(result, 1, "is_greater_10_unsigned(11)");
-	result = vm_call(is_greater_10_unsigned, 13);
-	check(result, 1, "is_greater_10_unsigned(13)");
+	test("is_greater_10_unsigned", is_greater_10_unsigned,3, 0);
+	test("is_greater_10_unsigned", is_greater_10_unsigned,7, 0);
+	test("is_greater_10_unsigned", is_greater_10_unsigned,11, 1);
+	test("is_greater_10_unsigned", is_greater_10_unsigned,13, 1);
 
-	result = vm_call(is_less_than_equal_10_unsigned, 3);
-	check(result, 1, "is_less_than_equal_10_unsigned(3)");
-	result = vm_call(is_less_than_equal_10_unsigned, 7);
-	check(result, 1, "is_less_than_equal_10_unsigned(7)");
-	result = vm_call(is_less_than_equal_10_unsigned, 11);
-	check(result, 0, "is_less_than_equal_10_unsigned(11)");
-	result = vm_call(is_less_than_equal_10_unsigned, 13);
-	check(result, 0, "is_less_than_equal_10_unsigned(13)");
+	test("is_less_than_equal_10_unsigned", is_less_than_equal_10_unsigned,3, 1);
+	test("is_less_than_equal_10_unsigned", is_less_than_equal_10_unsigned,7, 1);
+	test("is_less_than_equal_10_unsigned", is_less_than_equal_10_unsigned,11, 0);
+	test("is_less_than_equal_10_unsigned", is_less_than_equal_10_unsigned,13, 0);
 
-	result = vm_call(is_greater_10_signed, 3);
-	check(result, 0, "is_greater_10_signed(3)");
-	result = vm_call(is_greater_10_signed, 7);
-	check(result, 0, "is_greater_10_signed(7)");
-	result = vm_call(is_greater_10_signed, 11);
-	check(result, 1, "is_greater_10_signed(11)");
-	result = vm_call(is_greater_10_signed, 13);
-	check(result, 1, "is_greater_10_signed(13)");
+	test("is_greater_10_signed", is_greater_10_signed,3, 0);
+	test("is_greater_10_signed", is_greater_10_signed,7, 0);
+	test("is_greater_10_signed", is_greater_10_signed,11, 1);
+	test("is_greater_10_signed", is_greater_10_signed,13, 1);
 
-	result = vm_call(is_less_than_equal_10_signed, 3);
-	check(result, 1, "is_less_than_equal_10_signed(3)");
-	result = vm_call(is_less_than_equal_10_signed, 7);
-	check(result, 1, "is_less_than_equal_10_signed(7)");
-	result = vm_call(is_less_than_equal_10_signed, 11);
-	check(result, 0, "is_less_than_equal_10_signed(11)");
-	result = vm_call(is_less_than_equal_10_signed, 13);
-	check(result, 0, "is_less_than_equal_10_signed(13)");
+	test("is_less_than_equal_10_signed", is_less_than_equal_10_signed,3, 1);
+	test("is_less_than_equal_10_signed", is_less_than_equal_10_signed,7, 1);
+	test("is_less_than_equal_10_signed", is_less_than_equal_10_signed,11, 0);
+	test("is_less_than_equal_10_signed", is_less_than_equal_10_signed,13, 0);
 
     /* triangle numbers */
-	result = vm_call(triangle_up, 4);
-	check(result, 10, "triangle_up(4)");
-
-	result = vm_call(triangle_up, 7);
-	check(result, 28, "triangle_up(7)");
-
-	result = vm_call(triangle_up, 10);
-	check(result, 55, "triangle_up(10)");
-
-	result = vm_call(triangle_up, 100);
-	check(result, 5050, "triangle_up(100)");
-
-	result = vm_call(triangle_down, 4);
-	check(result, 10, "triangle_down(4)");
-
-	result = vm_call(triangle_down, 7);
-	check(result, 28, "triangle_down(7)");
-
-	result = vm_call(triangle_down, 10);
-	check(result, 55, "triangle_down(10)");
-
-	result = vm_call(triangle_down, 100);
-	check(result, 5050, "triangle_down(100)");
+	test("triangle_up", triangle_up,4, 10);
+	test("triangle_up", triangle_up,7, 28);
+	test("triangle_up", triangle_up,10, 55);
+	test("triangle_up", triangle_up,100, 5050);
+	test("triangle_down", triangle_down,4, 10);
+	test("triangle_down", triangle_down,7, 28);
+	test("triangle_down", triangle_down,10, 55);
+	test("triangle_down", triangle_down,100, 5050);
 
 	/* multiply: easy case with MUL instruction, else kinda tough */
-	result = vm_call(multiply, 4, 7);
-	check(result, 28, "multiply(4, 7)");
-
-	result = vm_call(multiply, -4, 7);
-	check(result, -28, "multiply(-4, 7)");
-
-	result = vm_call(multiply, -4, -7);
-	check(result, 28, "multiply(-4, -7)");
-
-	result = vm_call(multiply, 151, 217);
-	check(result, 32767, "multiply(151, 217)");
+	test("multiply", multiply,4,7, 28);
+	test("multiply", multiply,-4,7, -28);
+	test("multiply", multiply,-4,-7, 28);
+	test("multiply", multiply,151,217, 32767);
 
 	/* multiply: using loop */
-	result = vm_call(multiply_loop, 4, 7);
-	check(result, 28, "multiply_loop(4, 7)");
-
-	result = vm_call(multiply_loop, -4, 7);
-	check(result, -28, "multiply_loop(-4, 7)");
-
-	result = vm_call(multiply_loop, -4, -7);
-	check(result, 28, "multiply_loop(-4, -7)");
-
-	result = vm_call(multiply_loop, 151, 217);
-	check(result, 32767, "multiply_loop(151, 217)");
+	test("multiply_loop", multiply_loop,4,7, 28);
+	test("multiply_loop", multiply_loop,-4,7, -28);
+	test("multiply_loop", multiply_loop,-4,-7, 28);
+	test("multiply_loop", multiply_loop,151,217, 32767);
 
 	/* div */
-	result = vm_call(div, 4, -2);
-	check(result, -2, "div(4, -2)");
-
-	result = vm_call(div, 4, 7);
-	check(result, 0, "div(4, 7)");
-
-	result = vm_call(div, 7, 4);
-	check(result, 1, "div(7, 4)");
-
-	result = vm_call(div, 28, 7);
-	check(result, 4, "div(28, 7)");
-
-	result = vm_call(div, 151, -50);
-	check(result, -3, "div(151, -50)");
+	test("div", div,4,-2, -2);
+	test("div", div,4,7, 0);
+	test("div", div,7,4, 1);
+	test("div", div,28,7, 4);
+	test("div", div,151,-50, -3);
 
 	/* mod */
-	result = vm_call(mod, 4, 7);
-	check(result, 4, "mod(4, 7)");
-
-	result = vm_call(mod, 7, 4);
-	check(result, 3, "mod(7, 4)");
-
-	result = vm_call(mod, 28, 7);
-	check(result, 0, "mod(28, 7)");
-
-	result = vm_call(mod, 151, 50);
-	check(result, 1, "mod(151, 50)");
+	test("mod", mod,4,7, 4);
+	test("mod", mod,7,4, 3);
+	test("mod", mod,28,7, 0);
+	test("mod", mod,151,50, 1);
 
 	/* exponentiate */
-	result = vm_call(exp_dummy, 4, 7);
-	check(result, 16384, "exp(4, 7)");
-
-	result = vm_call(exp_dummy, 2, 14);
-	check(result, 16384, "exp(2, 14)");
-
-	result = vm_call(exp_dummy, 3, 7);
-	check(result, 2187, "exp(3, 7)");
-
-	result = vm_call(exp_dummy, -2, 7);
-	check(result, -128, "exp(-2, 7)");
+	test("exp", exp_dummy,4,7, 16384);
+	test("exp", exp_dummy,2,14, 16384);
+	test("exp", exp_dummy,3,7, 2187);
+	test("exp", exp_dummy,-2,7, -128);
 
 	/* exponentiate with a modulus */
-	result = vm_call(expmod, 4,7,5);
-	check(result, 4, "expmod(4,7,5)");
-
-	result = vm_call(expmod, 2,16,17);
-	check(result, 1, "expmod(2,16,17)");
-
-	result = vm_call(expmod, 3,17,19);
-	check(result, 13, "expmod(3,17,19)");
-
-	result = vm_call(expmod, 17,3,23);
-	check(result, 14, "expmod(17,3,23)");
+	test("expmod", expmod,4,7,5, 4);
+	test("expmod", expmod,2,16,17, 1);
+	test("expmod", expmod,3,17,19, 13);
+	test("expmod", expmod,17,3,23, 14);
 
 	/* greatest common divisor */
-	result = vm_call(gcd, 5,15);
-	check(result, 5, "gcd(5,15)");
-
-	result = vm_call(gcd, 16,24);
-	check(result, 8, "gcd(16,24)");
-
-	result = vm_call(gcd, 51,77);
-	check(result, 1, "gcd(51,77)");
-
-	result = vm_call(gcd, 51,119);
-	check(result, 17, "gcd(51,119)");
+	test("gcd", gcd,5,15, 5);
+	test("gcd", gcd,16,24, 8);
+	test("gcd", gcd,51,77, 1);
+	test("gcd", gcd,51,119, 17);
 
 	/* recursion */
-	result = vm_call(factorial, 0);
-	check(result, 1, "factorial(0)");
-
-	result = vm_call(factorial, 5);
-	check(result, 120, "factorial(5)");
-
+	test("factorial", factorial,0, 1);
+	test("factorial", factorial,5, 120);
 #if REGWIDTH == 16
 	/* be nice and don't let tests set MSB -> negative */
-	result = vm_call(factorial, 6);
-	check(result, 720, "factorial(6)");
-
-	result = vm_call(factorial, 7);
-	check(result, 5040, "factorial(7)");
+	test("factorial", factorial,6, 720);
+	test("factorial", factorial,7, 5040);
 #else
-	result = vm_call(factorial, 8);
-	check(result, 40320, "factorial(8)");
-
-	result = vm_call(factorial, 11);
-	check(result, 39916800, "factorial(11)");
+	test("factorial", factorial,8, 40320);
+	test("factorial", factorial,11, 39916800);
 #endif
 
 	/* recursive version: greatest common divisor */
-	result = vm_call(gcd_recursive, 5,15);
-	check(result, 5, "gcd_recursive(5,15)");
-
-	result = vm_call(gcd_recursive, 16,24);
-	check(result, 8, "gcd_recursive(16,24)");
-
-	result = vm_call(gcd_recursive, 51,77);
-	check(result, 1, "gcd_recursive(51,77)");
-
-	result = vm_call(gcd_recursive, 51,119);
-	check(result, 17, "gcd_recursive(51,119)");
+	test("gcd_recursive", gcd_recursive,5,15, 5);
+	test("gcd_recursive", gcd_recursive,16,24, 8);
+	test("gcd_recursive", gcd_recursive,51,77, 1);
+	test("gcd_recursive", gcd_recursive,51,119, 17);
 
 	/* switch statements */
-	result = vm_call(switch_doubler, 0);
-	check(result, 0, "switch_doubler(0)");
-
-	result = vm_call(switch_doubler, 2);
-	check(result, 4, "switch_doubler(2)");
-
-	result = vm_call(switch_doubler, 999);
-	check(result, -1, "switch_doubler(999)");
-
-	result = vm_call(switch_doubler, 9);
-	check(result, 18, "switch_doubler(9)");
+	test("switch_doubler", switch_doubler,0, 0);
+	test("switch_doubler", switch_doubler,2, 4);
+	test("switch_doubler", switch_doubler,999, -1);
+	test("switch_doubler", switch_doubler,9, 18);
 }
