@@ -10,52 +10,148 @@ int add(int a, int b)
 	return a + b;
 }
 
-/* establish flag testing/setting */
-unsigned int is_equal_10(unsigned char a)
+/* establish flag testing/setting,
+	attempt to exercise many LowLevelILFlagCondition */
+unsigned int test_byte_e_10(unsigned char a)
 {
-	if (a == 10) return 1;
+	#ifdef ARCH_Z80
+	if(a == 10) return 1;
 	return 0;
+	#else
+	return a == 10;
+	#endif
 }
 
-unsigned int is_greater_10_unsigned_u8(unsigned char a)
+unsigned int test_byte_ne_10(unsigned char a)
 {
-	return a > 10;
+	#ifdef ARCH_Z80
+	if(a != 10) return 1;
+	return 0;
+	#else
+	return a != 10;
+	#endif
 }
 
-unsigned int than_equal_10_unsigned_u8(unsigned char a)
+unsigned int test_byte_slt_10(signed char a)
 {
-	return a <= 10;
+	return a < 10;
 }
 
-signed int is_greater_10_signed_s8(signed char a)
+unsigned int test_byte_ult_10(unsigned char a)
 {
-	return a > 10;
+	return a < 10;
 }
 
-signed int is_less_than_equal_10_signed_s8(signed char a)
-{
-	return a <= 10;
-}
-
-/* establish flag testing/setting */
-unsigned int is_greater_10_unsigned(unsigned int a)
-{
-	return a > 10;
-}
-
-unsigned int is_less_than_equal_10_unsigned(unsigned int a)
+unsigned int test_byte_sle_10(signed char a)
 {
 	return a <= 10;
 }
 
-signed int is_greater_10_signed(signed int a)
+unsigned int test_byte_ule_10(unsigned char a)
+{
+	return a <= 10;
+}
+
+unsigned int test_byte_sge_10(signed char a)
+{
+	return a >= 10;
+}
+
+unsigned int test_byte_uge_10(unsigned char a)
+{
+	return a >= 10;
+}
+
+unsigned int test_byte_sgt_10(signed char a)
 {
 	return a > 10;
 }
 
-signed int is_less_than_equal_10_signed(signed int a)
+unsigned int test_byte_ugt_10(unsigned char a)
+{
+	return a > 10;
+}
+
+unsigned int test_byte_neg(signed char a)
+{
+	return a < 0;
+}
+
+unsigned int test_byte_pos(signed char a)
+{
+	return a >= 0;
+}
+
+//
+
+unsigned int test_word_e_10(unsigned short a)
+{
+	#ifdef ARCH_Z80
+	if(a == 10) return 1;
+	return 0;
+	#else
+	return a == 10;
+	#endif
+}
+
+unsigned int test_word_ne_10(unsigned short a)
+{
+	#ifdef ARCH_Z80
+	if(a != 10) return 1;
+	return 0;
+	#else
+	return a != 10;
+	#endif
+}
+
+unsigned int test_word_slt_10(signed short a)
+{
+	return a < 10;
+}
+
+unsigned int test_word_ult_10(unsigned short a)
+{
+	return a < 10;
+}
+
+unsigned int test_word_sle_10(signed short a)
 {
 	return a <= 10;
+}
+
+unsigned int test_word_ule_10(unsigned short a)
+{
+	return a <= 10;
+}
+
+unsigned int test_word_sge_10(signed short a)
+{
+	return a >= 10;
+}
+
+unsigned int test_word_uge_10(unsigned short a)
+{
+	return a >= 10;
+}
+
+unsigned int test_word_sgt_10(signed short a)
+{
+	return a > 10;
+}
+
+unsigned int test_word_ugt_10(unsigned short a)
+{
+	return a > 10;
+}
+
+unsigned int test_word_neg(signed short a)
+{
+	return a < 0;
+}
+
+unsigned int test_word_pos(signed short a)
+{
+	return a >= 0;
 }
 
 /* establish ability to loop and conditionally jump */

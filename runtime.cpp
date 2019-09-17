@@ -9,7 +9,7 @@ using namespace std;
 #include "runtime.h"
 
 //#define DEBUG_RUNTIME_ALL
-//#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_SETS
 //#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
