@@ -9,7 +9,7 @@ using namespace std;
 #include "runtime.h"
 
 //#define DEBUG_RUNTIME_ALL
-#define DEBUG_RUNTIME_SETS
+//#define DEBUG_RUNTIME_SETS
 //#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
@@ -530,12 +530,10 @@ uint8_t RRC1(uint8_t value, uint8_t amt, bool carry)
 	if(amt) {
 		amt = amt % 8;
 		// normal carry
-		uint8_t a = (value >> amt);
-		uint8_t b = (value << (8-amt));
-		// insert c
-		b = (b << 1) | (carry >> (amt-1));
-		//
-		result = a | b;
+		uint8_t a = value >> amt;
+		uint8_t b = value << (8-amt+1);
+		uint8_t c = value << (8-amt);
+		result = a | b | c;
 	}
 
 	debug("RRC1            0x%X = 0x%X >>> %d and carry = %d\n", result, value, amt, carry);
