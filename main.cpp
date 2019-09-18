@@ -187,34 +187,34 @@ int vm_call(VMFUNC pfunc, int a, int b, int c)
 void check(int actual, int expected)
 {
 	if(actual == expected)
-		printf("\x1B[32mPASSED\x1B[0m (%d is correct)\n", actual);
+		printf("   \x1B[32mPASSED\x1B[0m (%d is correct)\n", actual);
 	else {
-		printf("\x1B[31mFAILED\x1B[0m (%d != %d)\n", actual, expected);
+		printf("   \x1B[31mFAILED\x1B[0m (%d != %d)\n", actual, expected);
 		exit(-1);
 	}
 }
 
 void test(const char *sfunc, VMFUNC pfunc, int expected)
 {
-	printf("%s()...", sfunc);
+	printf("%s()...\n", sfunc);
 	check(vm_call(pfunc), expected);
 }
 
 void test(const char *sfunc, VMFUNC pfunc, int a, int expected)
 {
-	printf("%s(%d)...", sfunc, a);
+	printf("%s(%d)...\n", sfunc, a);
 	check(vm_call(pfunc, a), expected);
 }
 
 void test(const char *sfunc, VMFUNC pfunc, int a, int b, int expected)
 {
-	printf("%s(%d, %d)...", sfunc, a, b);
+	printf("%s(%d, %d)...\n", sfunc, a, b);
 	check(vm_call(pfunc, a, b), expected);
 }
 
 void test(const char *sfunc, VMFUNC pfunc, int a, int b, int c, int expected)
 {
-	printf("%s(%d, %d, %d)...", sfunc, a, b, c);
+	printf("%s(%d, %d, %d)...\n", sfunc, a, b, c);
 	check(vm_call(pfunc, a, b, c), expected);
 }
 
@@ -233,153 +233,153 @@ int main(int ac, char **av)
 	/* comparison, 1 byte */
 
 	//void test_byte_e_10();
-	test("test_byte_e_10", test_byte_e_10,3, 0);
-	test("test_byte_e_10", test_byte_e_10,7, 0);
-	test("test_byte_e_10", test_byte_e_10,10, 1);
-	test("test_byte_e_10", test_byte_e_10,13, 0);
+	test("test_byte_e_10", test_byte_e_10,3, 13);
+	test("test_byte_e_10", test_byte_e_10,7, 13);
+	test("test_byte_e_10", test_byte_e_10,10, 7);
+	test("test_byte_e_10", test_byte_e_10,13, 13);
 
 	//void test_byte_ne_10();
-	test("test_byte_ne_10", test_byte_ne_10,3, 1);
-	test("test_byte_ne_10", test_byte_ne_10,7, 1);
-	test("test_byte_ne_10", test_byte_ne_10,10, 0);
-	test("test_byte_ne_10", test_byte_ne_10,13, 1);
+	test("test_byte_ne_10", test_byte_ne_10,3, 7);
+	test("test_byte_ne_10", test_byte_ne_10,7, 7);
+	test("test_byte_ne_10", test_byte_ne_10,10, 13);
+	test("test_byte_ne_10", test_byte_ne_10,13, 7);
 
 	//void test_byte_slt_10();
-	test("test_byte_slt_10", test_byte_slt_10,3, 1);
-	test("test_byte_slt_10", test_byte_slt_10,7, 1);
-	test("test_byte_slt_10", test_byte_slt_10,10, 0);
-	test("test_byte_slt_10", test_byte_slt_10,13, 0);
+	test("test_byte_slt_10", test_byte_slt_10,3, 7);
+	test("test_byte_slt_10", test_byte_slt_10,7, 7);
+	test("test_byte_slt_10", test_byte_slt_10,10, 13);
+	test("test_byte_slt_10", test_byte_slt_10,13, 13);
 
 	//void test_byte_ult_10();
-	test("test_byte_ult_10", test_byte_ult_10,3, 1);
-	test("test_byte_ult_10", test_byte_ult_10,7, 1);
-	test("test_byte_ult_10", test_byte_ult_10,10, 0);
-	test("test_byte_ult_10", test_byte_ult_10,13, 0);
+	test("test_byte_ult_10", test_byte_ult_10,3, 7);
+	test("test_byte_ult_10", test_byte_ult_10,7, 7);
+	test("test_byte_ult_10", test_byte_ult_10,10, 13);
+	test("test_byte_ult_10", test_byte_ult_10,13, 13);
 
 	//void test_byte_sle_10();
-	test("test_byte_sle_10", test_byte_sle_10,3, 1);
-	test("test_byte_sle_10", test_byte_sle_10,7, 1);
-	test("test_byte_sle_10", test_byte_sle_10,10, 1);
-	test("test_byte_sle_10", test_byte_sle_10,13, 0);
+	test("test_byte_sle_10", test_byte_sle_10,3, 7);
+	test("test_byte_sle_10", test_byte_sle_10,7, 7);
+	test("test_byte_sle_10", test_byte_sle_10,10, 7);
+	test("test_byte_sle_10", test_byte_sle_10,13, 13);
 
 	//void test_byte_ule_10();
-	test("test_byte_ule_10", test_byte_ule_10,3, 1);
-	test("test_byte_ule_10", test_byte_ule_10,7, 1);
-	test("test_byte_ule_10", test_byte_ule_10,10, 1);
-	test("test_byte_ule_10", test_byte_ule_10,13, 0);
+	test("test_byte_ule_10", test_byte_ule_10,3, 7);
+	test("test_byte_ule_10", test_byte_ule_10,7, 7);
+	test("test_byte_ule_10", test_byte_ule_10,10, 7);
+	test("test_byte_ule_10", test_byte_ule_10,13, 13);
 
 	//void test_byte_sge_10();
-	test("test_byte_sge_10", test_byte_sge_10,3, 0);
-	test("test_byte_sge_10", test_byte_sge_10,7, 0);
-	test("test_byte_sge_10", test_byte_sge_10,10, 1);
-	test("test_byte_sge_10", test_byte_sge_10,13, 1);
+	test("test_byte_sge_10", test_byte_sge_10,3, 13);
+	test("test_byte_sge_10", test_byte_sge_10,7, 13);
+	test("test_byte_sge_10", test_byte_sge_10,10, 7);
+	test("test_byte_sge_10", test_byte_sge_10,13, 7);
 
 	//void test_byte_uge_10();
-	test("test_byte_uge_10", test_byte_uge_10,3, 0);
-	test("test_byte_uge_10", test_byte_uge_10,7, 0);
-	test("test_byte_uge_10", test_byte_uge_10,10, 1);
-	test("test_byte_uge_10", test_byte_uge_10,13, 1);
+	test("test_byte_uge_10", test_byte_uge_10,3, 13);
+	test("test_byte_uge_10", test_byte_uge_10,7, 13);
+	test("test_byte_uge_10", test_byte_uge_10,10, 7);
+	test("test_byte_uge_10", test_byte_uge_10,13, 7);
 
 	//void test_byte_sgt_10();
-	test("test_byte_sgt_10", test_byte_sgt_10,3, 0);
-	test("test_byte_sgt_10", test_byte_sgt_10,7, 0);
-	test("test_byte_sgt_10", test_byte_sgt_10,10, 0);
-	test("test_byte_sgt_10", test_byte_sgt_10,13, 1);
+	test("test_byte_sgt_10", test_byte_sgt_10,3, 13);
+	test("test_byte_sgt_10", test_byte_sgt_10,7, 13);
+	test("test_byte_sgt_10", test_byte_sgt_10,10, 13);
+	test("test_byte_sgt_10", test_byte_sgt_10,13, 7);
 
 	//void test_byte_ugt_10();
-	test("test_byte_ugt_10", test_byte_ugt_10,3, 0);
-	test("test_byte_ugt_10", test_byte_ugt_10,7, 0);
-	test("test_byte_ugt_10", test_byte_ugt_10,10, 0);
-	test("test_byte_ugt_10", test_byte_ugt_10,13, 1);
+	test("test_byte_ugt_10", test_byte_ugt_10,3, 13);
+	test("test_byte_ugt_10", test_byte_ugt_10,7, 13);
+	test("test_byte_ugt_10", test_byte_ugt_10,10, 13);
+	test("test_byte_ugt_10", test_byte_ugt_10,13, 7);
 
 	//void test_byte_neg();
-	test("test_byte_neg", test_byte_neg,-23, 1);
-	test("test_byte_neg", test_byte_neg,-7, 1);
-	test("test_byte_neg", test_byte_neg,0, 0);
-	test("test_byte_neg", test_byte_neg,7, 0);
-	test("test_byte_neg", test_byte_neg,23, 0);
+	test("test_byte_neg", test_byte_neg,-23, 7);
+	test("test_byte_neg", test_byte_neg,-7, 7);
+	test("test_byte_neg", test_byte_neg,0, 13);
+	test("test_byte_neg", test_byte_neg,7, 13);
+	test("test_byte_neg", test_byte_neg,23, 13);
 
 	//void test_byte_pos();
-	test("test_byte_pos", test_byte_pos,-23, 0);
-	test("test_byte_pos", test_byte_pos,-7, 0);
-	test("test_byte_pos", test_byte_pos,0, 1);
-	test("test_byte_pos", test_byte_pos,7, 1);
-	test("test_byte_pos", test_byte_pos,23, 1);
+	test("test_byte_pos", test_byte_pos,-23, 13);
+	test("test_byte_pos", test_byte_pos,-7, 13);
+	test("test_byte_pos", test_byte_pos,0, 7);
+	test("test_byte_pos", test_byte_pos,7, 7);
+	test("test_byte_pos", test_byte_pos,23, 7);
 
 	/* comparison, more bytes */
 	//void test_word_e_10();
-	test("test_word_e_10", test_word_e_10,3, 0);
-	test("test_word_e_10", test_word_e_10,7, 0);
-	test("test_word_e_10", test_word_e_10,10, 1);
-	test("test_word_e_10", test_word_e_10,13, 0);
+	test("test_word_e_10", test_word_e_10,3, 13);
+	test("test_word_e_10", test_word_e_10,7, 13);
+	test("test_word_e_10", test_word_e_10,10, 7);
+	test("test_word_e_10", test_word_e_10,13, 13);
 
 	//void test_word_ne_10();
-	test("test_word_ne_10", test_word_ne_10,3, 1);
-	test("test_word_ne_10", test_word_ne_10,7, 1);
-	test("test_word_ne_10", test_word_ne_10,10, 0);
-	test("test_word_ne_10", test_word_ne_10,13, 1);
+	test("test_word_ne_10", test_word_ne_10,3, 7);
+	test("test_word_ne_10", test_word_ne_10,7, 7);
+	test("test_word_ne_10", test_word_ne_10,10, 13);
+	test("test_word_ne_10", test_word_ne_10,13, 7);
 
 	//void test_word_slt_10();
-	test("test_word_slt_10", test_word_slt_10,3, 1);
-	test("test_word_slt_10", test_word_slt_10,7, 1);
-	test("test_word_slt_10", test_word_slt_10,10, 0);
-	test("test_word_slt_10", test_word_slt_10,13, 0);
+	test("test_word_slt_10", test_word_slt_10,3, 7);
+	test("test_word_slt_10", test_word_slt_10,7, 7);
+	test("test_word_slt_10", test_word_slt_10,10, 13);
+	test("test_word_slt_10", test_word_slt_10,13, 13);
 
 	//void test_word_ult_10();
-	test("test_word_ult_10", test_word_ult_10,3, 1);
-	test("test_word_ult_10", test_word_ult_10,7, 1);
-	test("test_word_ult_10", test_word_ult_10,10, 0);
-	test("test_word_ult_10", test_word_ult_10,13, 0);
+	test("test_word_ult_10", test_word_ult_10,3, 7);
+	test("test_word_ult_10", test_word_ult_10,7, 7);
+	test("test_word_ult_10", test_word_ult_10,10, 13);
+	test("test_word_ult_10", test_word_ult_10,13, 13);
 
 	//void test_word_sle_10();
-	test("test_word_sle_10", test_word_sle_10,3, 1);
-	test("test_word_sle_10", test_word_sle_10,7, 1);
-	test("test_word_sle_10", test_word_sle_10,10, 1);
-	test("test_word_sle_10", test_word_sle_10,13, 0);
+	test("test_word_sle_10", test_word_sle_10,3, 7);
+	test("test_word_sle_10", test_word_sle_10,7, 7);
+	test("test_word_sle_10", test_word_sle_10,10, 7);
+	test("test_word_sle_10", test_word_sle_10,13, 13);
 
 	//void test_word_ule_10();
-	test("test_word_ule_10", test_word_ule_10,3, 1);
-	test("test_word_ule_10", test_word_ule_10,7, 1);
-	test("test_word_ule_10", test_word_ule_10,10, 1);
-	test("test_word_ule_10", test_word_ule_10,13, 0);
+	test("test_word_ule_10", test_word_ule_10,3, 7);
+	test("test_word_ule_10", test_word_ule_10,7, 7);
+	test("test_word_ule_10", test_word_ule_10,10, 7);
+	test("test_word_ule_10", test_word_ule_10,13, 13);
 
 	//void test_word_sge_10();
-	test("test_word_sge_10", test_word_sge_10,3, 0);
-	test("test_word_sge_10", test_word_sge_10,7, 0);
-	test("test_word_sge_10", test_word_sge_10,10, 1);
-	test("test_word_sge_10", test_word_sge_10,13, 1);
+	test("test_word_sge_10", test_word_sge_10,3, 13);
+	test("test_word_sge_10", test_word_sge_10,7, 13);
+	test("test_word_sge_10", test_word_sge_10,10, 7);
+	test("test_word_sge_10", test_word_sge_10,13, 7);
 
 	//void test_word_uge_10();
-	test("test_word_uge_10", test_word_uge_10,3, 0);
-	test("test_word_uge_10", test_word_uge_10,7, 0);
-	test("test_word_uge_10", test_word_uge_10,10, 1);
-	test("test_word_uge_10", test_word_uge_10,13, 1);
+	test("test_word_uge_10", test_word_uge_10,3, 13);
+	test("test_word_uge_10", test_word_uge_10,7, 13);
+	test("test_word_uge_10", test_word_uge_10,10, 7);
+	test("test_word_uge_10", test_word_uge_10,13, 7);
 
 	//void test_word_sgt_10();
-	test("test_word_sgt_10", test_word_sgt_10,3, 0);
-	test("test_word_sgt_10", test_word_sgt_10,7, 0);
-	test("test_word_sgt_10", test_word_sgt_10,10, 0);
-	test("test_word_sgt_10", test_word_sgt_10,13, 1);
+	test("test_word_sgt_10", test_word_sgt_10,3, 13);
+	test("test_word_sgt_10", test_word_sgt_10,7, 13);
+	test("test_word_sgt_10", test_word_sgt_10,10, 13);
+	test("test_word_sgt_10", test_word_sgt_10,13, 7);
 
 	//void test_word_ugt_10();
-	test("test_word_ugt_10", test_word_ugt_10,3, 0);
-	test("test_word_ugt_10", test_word_ugt_10,7, 0);
-	test("test_word_ugt_10", test_word_ugt_10,10, 0);
-	test("test_word_ugt_10", test_word_ugt_10,13, 1);
+	test("test_word_ugt_10", test_word_ugt_10,3, 13);
+	test("test_word_ugt_10", test_word_ugt_10,7, 13);
+	test("test_word_ugt_10", test_word_ugt_10,10, 13);
+	test("test_word_ugt_10", test_word_ugt_10,13, 7);
 
 	//void test_word_neg();
-	test("test_word_neg", test_word_neg,-23, 1);
-	test("test_word_neg", test_word_neg,-7, 1);
-	test("test_word_neg", test_word_neg,0, 0);
-	test("test_word_neg", test_word_neg,7, 0);
-	test("test_word_neg", test_word_neg,23, 0);
+	test("test_word_neg", test_word_neg,-23, 7);
+	test("test_word_neg", test_word_neg,-7, 7);
+	test("test_word_neg", test_word_neg,0, 13);
+	test("test_word_neg", test_word_neg,7, 13);
+	test("test_word_neg", test_word_neg,23, 13);
 
 	//void test_word_pos();
-	test("test_word_pos", test_word_pos,-23, 0);
-	test("test_word_pos", test_word_pos,-7, 0);
-	test("test_word_pos", test_word_pos,0, 1);
-	test("test_word_pos", test_word_pos,7, 1);
-	test("test_word_pos", test_word_pos,23, 1);
+	test("test_word_pos", test_word_pos,-23, 13);
+	test("test_word_pos", test_word_pos,-7, 13);
+	test("test_word_pos", test_word_pos,0, 7);
+	test("test_word_pos", test_word_pos,7, 7);
+	test("test_word_pos", test_word_pos,23, 7);
 
     /* triangle numbers */
 	test("triangle_up", triangle_up,4, 10);

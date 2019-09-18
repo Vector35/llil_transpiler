@@ -11,147 +11,198 @@ int add(int a, int b)
 }
 
 /* establish flag testing/setting,
-	attempt to exercise many LowLevelILFlagCondition */
+	attempt to exercise many LowLevelILFlagCondition
+
+	returns 7 (true) and 13 (false) instead of 1, 0 to avoid compiler
+	generating bit tricks to quickly set return value */
 unsigned int test_byte_e_10(unsigned char a)
 {
-	#ifdef ARCH_Z80
-	if(a == 10) return 1;
-	return 0;
-	#else
-	return a == 10;
-	#endif
+	if(a == 10) return 7;
+	return 13;
 }
 
 unsigned int test_byte_ne_10(unsigned char a)
 {
-	#ifdef ARCH_Z80
-	if(a != 10) return 1;
-	return 0;
-	#else
-	return a != 10;
-	#endif
+	if(a != 10) return 7;
+	return 13;
 }
 
 unsigned int test_byte_slt_10(signed char a)
 {
-	return a < 10;
+	if(a < 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_ult_10(unsigned char a)
 {
-	return a < 10;
+	if(a < 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_sle_10(signed char a)
 {
-	return a <= 10;
+	if(a <= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_ule_10(unsigned char a)
 {
-	return a <= 10;
+	if(a <= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_sge_10(signed char a)
 {
-	return a >= 10;
+	if(a >= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_uge_10(unsigned char a)
 {
-	return a >= 10;
+	if(a >= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_sgt_10(signed char a)
 {
-	return a > 10;
+	if(a > 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_ugt_10(unsigned char a)
 {
-	return a > 10;
+	if(a > 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_neg(signed char a)
 {
-	return a < 0;
+	if(a < 0)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_byte_pos(signed char a)
 {
-	return a >= 0;
+	if(a >= 0)
+		return 7;
+	else
+		return 13;
 }
 
 //
 
 unsigned int test_word_e_10(unsigned short a)
 {
-	#ifdef ARCH_Z80
-	if(a == 10) return 1;
-	return 0;
-	#else
-	return a == 10;
-	#endif
+	if(a == 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_ne_10(unsigned short a)
 {
-	#ifdef ARCH_Z80
-	if(a != 10) return 1;
-	return 0;
-	#else
-	return a != 10;
-	#endif
+	if(a != 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_slt_10(signed short a)
 {
-	return a < 10;
+	if(a < 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_ult_10(unsigned short a)
 {
-	return a < 10;
+	if(a < 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_sle_10(signed short a)
 {
-	return a <= 10;
+	if(a <= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_ule_10(unsigned short a)
 {
-	return a <= 10;
+	if(a <= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_sge_10(signed short a)
 {
-	return a >= 10;
+	if(a >= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_uge_10(unsigned short a)
 {
-	return a >= 10;
+	if(a >= 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_sgt_10(signed short a)
 {
-	return a > 10;
+	if(a > 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_ugt_10(unsigned short a)
 {
-	return a > 10;
+	if(a > 10)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_neg(signed short a)
 {
-	return a < 0;
+	if(a < 0)
+		return 7;
+	else
+		return 13;
 }
 
 unsigned int test_word_pos(signed short a)
 {
-	return a >= 0;
+	if(a >= 0)
+		return 7;
+	else
+		return 13;
 }
 
 /* establish ability to loop and conditionally jump */
