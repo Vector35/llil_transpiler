@@ -27,54 +27,30 @@ def shellout(cmd):
     return (stdout, stderr)
 
 def traverse_IL(il, depth=0):
+    # il pass thru here will probably be:
+    # LowLevelILInstruction
+    # LowLevelILRegister
+    # LowLevelILFlag
+
     global bv
     global init_mem_lines
     semi = True
 
     # these operations have foo1(), foo2(), foo4(), foo8() versions depending on
     # their LowLevelILInstruciton.size
-    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD',
+    sz_from_output = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD',
         'SET_REG', 'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
-        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART', 'SX']
+        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
 
-    # il pass thru here will probably be:
-    # LowLevelILInstruction
-    # LowLevelILRegister
-    # LowLevelILFlag
-    # ----
-    # but here are some other LLIL related objects:
-    # LowLevelILLabel
-    # LowLevelILFunction
-    # LowLevelILExpr
-    # LowLevelILBasicBlock
+    # these operations have foo1(), foo2(), etc. depending on their operand(s) size(s)
+    sz_from_input = ['ADD_OVERFLOW', 'SX']
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
             opname = opname[5:]
 
-        if opname == 'ADD_OVERFLOW' and il.size == 0:
-            # see if an operand will clue us into the size
-            if il.operands[0].size and il.operands[0].size == il.operands[1].size:
-                print('ADD_OVERFLOW%d(' % il.operands[0].size, end='')
-                traverse_IL(il.operands[0], depth+1)
-                print(', ', end='')
-                traverse_IL(il.operands[0], depth+1)
-                print(')', end='')
-            else:
-                raise Exception('cant find size for ADD_OVERFLOW()')
-
-        elif opname == 'SX':
-            # we'll actually append size based on INPUT, not output
-            # so SX1() converts a byte, SX2() converts a word, and so on...
-            if il.operands[0].size:
-                print('SX%d(' % il.operands[0].size, end='')
-                traverse_IL(il.operands[0], depth+1)
-                print(')', end='')
-            else:
-                raise Exception('cant find size for SX()')
-
-        elif opname in ['CALL', 'TAILCALL']:
+        if opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')
             traverse_IL(il.operands[0], depth+1)
             print(', ', end='')
@@ -178,8 +154,13 @@ def traverse_IL(il, depth=0):
             print(');\n\treturn', end='')
 
         else:
-            if opname in sizified:
+            if opname in sz_from_output:
                 print('%s%d(' % (opname, il.size), end='')
+            elif opname in sz_from_input:
+                size = il.operands[0].size
+                for oper in il.operands:
+                    assert(oper.size == size)
+                print('%s%d(' % (opname, size), end='')
             else:
                 print('%s(' % (opname), end='')
 
