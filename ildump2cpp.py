@@ -31,10 +31,11 @@ def traverse_IL(il, depth=0):
     global init_mem_lines
     semi = True
 
-    # these operations have foo1(), foo2(), foo4(), foo8() versions...
-    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD', 'SET_REG',
-        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE', 'CMP_SLT',
-        'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
+    # these operations have foo1(), foo2(), foo4(), foo8() versions depending on
+    # their LowLevelILInstruciton.size
+    sizified = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD',
+        'SET_REG', 'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
+        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART', 'SX']
 
     # il pass thru here will probably be:
     # LowLevelILInstruction
@@ -62,6 +63,16 @@ def traverse_IL(il, depth=0):
                 print(')');
             else:
                 raise Exception('cant find size for ADD_OVERFLOW()')
+
+        elif opname == 'SX':
+            # we'll actually append size based on INPUT, not output
+            # so SX1() converts a byte, SX2() converts a word, and so on...
+            if il.operands[0].size:
+                print('SX%d(' % il.operands[0].size, end='')
+                traverse_IL(il.operands[0], depth+1)
+                print(')');
+            else:
+                raise Exception('cant find size for SX()')
 
         elif opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')

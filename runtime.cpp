@@ -666,11 +666,25 @@ uint64_t NOT8(uint64_t left)
 }
 
 /* LowLevelILOperation.LLIL_SX: [("src", "expr")] */
-SREGTYPE SX(SREGTYPE_HALF src)
+SREGTYPE SX1(int8_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              " FMT_REG_HALF " -> " FMT_REG "\n", src, result);
-	return (SREGTYPE)src;
+	debug("SX              %d -> %d\n", src, result);
+	return result;
+}
+
+SREGTYPE SX2(int16_t src)
+{
+	SREGTYPE result = src;
+	debug("SX              %d -> %d\n", src, result);
+	return result;
+}
+
+SREGTYPE SX4(int32_t src)
+{
+	SREGTYPE result = src;
+	debug("SX              %d -> %d\n", src, result);
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
@@ -678,7 +692,7 @@ uint32_t ZX4(uint8_t src)
 {
 	uint8_t result = src;
 	debug("ZX4             0x%02X -> 0x%08X\n", src & 0xFF, result);
-	return (SREGTYPE)src;
+	return result;
 }
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */

@@ -204,7 +204,9 @@ uint32_t NOT4(uint32_t left);
 uint64_t NOT8(uint64_t left);
 
 /* LowLevelILOperation.LLIL_SX: [("src", "expr")] */
-SREGTYPE SX(SREGTYPE_HALF src);
+SREGTYPE SX1(int8_t src);
+SREGTYPE SX2(int16_t src);
+SREGTYPE SX4(int32_t src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
 uint32_t ZX4(uint8_t src);
