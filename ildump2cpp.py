@@ -60,7 +60,7 @@ def traverse_IL(il, depth=0):
                 traverse_IL(il.operands[0], depth+1)
                 print(', ', end='')
                 traverse_IL(il.operands[0], depth+1)
-                print(')');
+                print(')', end='')
             else:
                 raise Exception('cant find size for ADD_OVERFLOW()')
 
@@ -70,7 +70,7 @@ def traverse_IL(il, depth=0):
             if il.operands[0].size:
                 print('SX%d(' % il.operands[0].size, end='')
                 traverse_IL(il.operands[0], depth+1)
-                print(')');
+                print(')', end='')
             else:
                 raise Exception('cant find size for SX()')
 
@@ -105,14 +105,16 @@ def traverse_IL(il, depth=0):
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
 
-            print(');')
+            print(')', end='')
 
         elif opname == 'CONST':
             val = il.operands[0]
             if val < 16:
-                print('/* CONST */ %d' % val, end='')
+                #print('/* CONST */ %d' % val, end='')
+                print('%d' % val, end='')
             else:
-                print('/* CONST */ 0x%X' % val, end='')
+                #print('/* CONST */ 0x%X' % val, end='')
+                print('0x%X' % val, end='')
 
         elif opname == 'CONST_PTR':
             # is it a jump table? rip it
@@ -124,7 +126,7 @@ def traverse_IL(il, depth=0):
                     raise Exception('dunno how to parse type from: %s' % strdv)
                 m = re.match(r'uint32_t \[(\d+)\]', strdv)
                 amt = int(m.group(1))
-                init_mem_lines.append('// %s' % str(sym))
+                init_mem_lines.append('/* %s */' % str(sym))
                 for i in range(amt):
                     addr = sym.address + 4*i
                     value = struct.unpack('<I', bv.read(addr, 4))[0]
@@ -149,22 +151,19 @@ def traverse_IL(il, depth=0):
             if arch == 'arm' and \
               il.operands[0].operation == LowLevelILOperation.LLIL_REG and \
               il.operands[0].src.name == 'lr':
-                  print('// %s' % str(il))
-                  print('\treturn', end='')
+                  print('return', end='')
             elif arch == 'arm' and \
               il.operands[0].operation == LowLevelILOperation.LLIL_POP:
-                  print('// %s' % str(il))
-                  print('\treturn', end='')
+                  print('return', end='')
             else:
                 print('JUMP(', end='')
                 traverse_IL(il.operands[0], depth+1)
                 print(')', end='')
 
         elif opname == 'JUMP_TO':
-            print('// %s' % str(il))
             print('\tswitch(', end='')
             traverse_IL(il.operands[0], depth+1)
-            print(')')
+            print(')', end='')
             print('\t{')
             for (val, target_il) in enumerate(il.operands[1]):
                 target_native = current_llil[target_il].address
@@ -263,21 +262,22 @@ if __name__ == '__main__':
         print('void %s(void)' % funcName)
         print('{')
 
-        il_addr = 0
-        for block in func.low_level_il:
+        blocks = func.low_level_il.basic_blocks
+        for block in blocks:
             print('\tloc_%d:' % block.start)
 
             # loop over binaryninja.basicblock.BasicBlock
             for insn in block:
                 current_llil = func.low_level_il
                 #print('\truntime_comment("%s\\n");' % str(insn))
-                print('\t // %s' % str(insn))
+                print('\t// %s' % str(insn))
                 print('\t', end='')
                 traverse_IL(insn)
-                il_addr += 1
                 print('')
 
-            print('')
+            # newline to separate blocks
+            if block != blocks[-1]:
+                print('')
 
         print('}')
         print('')

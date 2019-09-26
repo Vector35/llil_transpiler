@@ -187,9 +187,9 @@ int vm_call(VMFUNC pfunc, int a, int b, int c)
 void check(int actual, int expected)
 {
 	if(actual == expected)
-		printf("   \x1B[32mPASSED\x1B[0m (%d is correct)\n", actual);
+		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%d,%d)\n", actual, expected);
 	else {
-		printf("   \x1B[31mFAILED\x1B[0m (%d != %d)\n", actual, expected);
+		printf("   \x1B[31mFAILED\x1B[0m (actual,expected) = (%d,%d)\n", actual, expected);
 		exit(-1);
 	}
 }
