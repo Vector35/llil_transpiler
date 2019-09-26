@@ -1024,8 +1024,11 @@ void __aeabi_idivmod()
 {
     SREGTYPE a = reg_get_value("r0");
     SREGTYPE b = reg_get_value("r1");
-    SREGTYPE result = a % b;
-    reg_set_value("r0", result);
-	debug("__aeabi_idivmod() returns " FMT_SREG " = " FMT_SREG " %% " FMT_SREG "\n", result, a, b);
+    SREGTYPE q = a / b;
+    SREGTYPE r = a % b;
+    reg_set_value("r0", q);
+    reg_set_value("r1", r);
+	debug("__aeabi_idivmod() returns q=" FMT_SREG " r=" FMT_SREG " " FMT_SREG " %% " FMT_SREG "\n",
+		q, r, a, b);
 }
 #endif

@@ -109,7 +109,8 @@ def traverse_IL(il, depth=0):
                     line = '*(uint32_t *)(vm_mem + 0x%X) = 0x%X;' % (addr, value)
                     init_mem_lines.append(line)
 
-            print('/* CONST_PTR */ 0x%X' % (il.operands[0]), end='')
+            #print('/* CONST_PTR */ 0x%X' % (il.operands[0]), end='')
+            print('0x%X' % (il.operands[0]), end='')
 
         elif opname == 'GOTO':
             print('goto loc_%d' % il.operands[0], end='')
