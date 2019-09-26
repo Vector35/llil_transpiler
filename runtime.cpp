@@ -632,7 +632,7 @@ uint8_t NOT0(uint8_t left)
 		nonzero -> zero
 		zero -> 1
 	*/
-	uint8_t result = left ^ 1;
+	uint8_t result = !!(left);
 	debug("NOT0            0x%02X = 0x%02X ^ 1\n", result, left);
 	return result;
 }
