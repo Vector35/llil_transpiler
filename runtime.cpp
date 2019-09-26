@@ -705,7 +705,7 @@ uint8_t LOW_PART1(REGTYPE left)
 
 uint16_t LOW_PART2(REGTYPE left)
 {
-	uint8_t result = left & 0xFFFF;
+	uint16_t result = left & 0xFFFF;
 	debug("LOW_PART2       " FMT_REG " -> 0x%04X\n", left, result);
 	return result;
 }
