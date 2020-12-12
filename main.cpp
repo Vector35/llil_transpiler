@@ -122,6 +122,15 @@ void vm_precall() { vm_regs["sp"] -= 4; *(uint32_t *)vm_mem = 0x00C41132; }
 int vm_get_retval() { return vm_regs["r0"]; }
 #endif
 
+#ifdef ARCH_A64
+void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
+void vm_set_arg0(int a) { vm_regs["x0"] = a; }
+void vm_set_arg1(int a) { vm_regs["x1"] = a; }
+void vm_set_arg2(int a) { vm_regs["x2"] = a; }
+void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = 0x00C4113200C41132; }
+int vm_get_retval() { return vm_regs["x0"]; }
+#endif
+
 #ifdef ARCH_Z80
 void vm_init_stack() { vm_regs["SP"] = VM_MEM_SZ; }
 void vm_set_arg0(int16_t a) { vm_regs["SP"] -= 2; *(int16_t *)(vm_mem + vm_regs["SP"]) = a; }

@@ -20,3 +20,13 @@ z80:
 	ildump2cpp.py tests.elf z80 > tests_il.cpp
 	g++ -g -O0 --std=c++11 -DARCH_Z80 -DARCH_16BIT -DLEADING_UNDERSCORE tests_il.cpp main.cpp runtime.cpp -o main
 
+# get ndk-r21d from https://developer.android.com/ndk/downloads
+# unzip, cd to android/build/tools
+# ./make_standalone_toolchain.py --arch arm64 --api 21 --install-dir ~/android_a64_api21_toolchain
+BUILT_TOOLCHAIN = $(HOME)/android_a64_api21_toolchain
+GCC = $(BUILT_TOOLCHAIN)/bin/aarch64-linux-android-gcc
+a64:
+	$(GCC) tests.c -c -o tests.o
+	ildump2cpp.py tests.o a64 > tests_il.cpp
+	g++ -g -O0 --std=c++11 -DARCH_A64 -DARCH_64BIT tests_il.cpp main.cpp runtime.cpp -o main
+

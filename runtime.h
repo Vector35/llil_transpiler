@@ -142,6 +142,7 @@ REGTYPE XOR(REGTYPE left, REGTYPE right);
 REGTYPE LSL(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_LSR: [("left", "expr"), ("right", "expr")] */
+REGTYPE LSR(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_ASR: [("left", "expr"), ("right", "expr")] */
 SREGTYPE ASR(SREGTYPE left, REGTYPE right);
@@ -173,7 +174,7 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 /* LowLevelILOperation.LLIL_DIVU_DP: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_DIVS: [("left", "expr"), ("right", "expr")] */
-SREGTYPE DIVS(SREGTYPE left, SREGTYPE right);
+SREGTYPE DIVS(SREGTYPE left, SREGTYPE_HALF right);
 
 /* LowLevelILOperation.LLIL_DIVS_DP: [("left", "expr"), ("right", "expr")] */
 SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE_HALF right);
@@ -209,7 +210,8 @@ SREGTYPE SX2(int16_t src);
 SREGTYPE SX4(int32_t src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX4(uint8_t src);
+REGTYPE ZX4(uint32_t src);
+REGTYPE ZX8(uint64_t src);
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 uint8_t LOW_PART1(REGTYPE left);

@@ -202,7 +202,7 @@ if __name__ == '__main__':
     else:
         usage()
 
-    # arg2: architecture 'x64', 'arm'
+    # arg2: architecture 'x64', 'arm', 'a64'
     arch = ''
     if sys.argv[2:]:
         arch = sys.argv[2]

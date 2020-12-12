@@ -426,6 +426,12 @@ REGTYPE LSL(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_LSR: [("left", "expr"), ("right", "expr")] */
+REGTYPE LSR(REGTYPE left, REGTYPE right)
+{
+	REGTYPE result = left >> right;
+	debug("LSR             " FMT_REG " = " FMT_REG " << " FMT_REG "\n", result, left, right);
+	return result;
+}
 
 /* LowLevelILOperation.LLIL_ASR: [("left", "expr"), ("right", "expr")] */
 SREGTYPE ASR(SREGTYPE left, REGTYPE right)
@@ -551,7 +557,14 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 /* LowLevelILOperation.LLIL_MULS_DP: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_DIVU: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_DIVU_DP: [("left", "expr"), ("right", "expr")] */
+
 /* LowLevelILOperation.LLIL_DIVS: [("left", "expr"), ("right", "expr")] */
+SREGTYPE DIVS(SREGTYPE left, SREGTYPE_HALF right)
+{
+	SREGTYPE result = left / right;
+	debug("DIVS_DP         " FMT_SREG " = " FMT_SREG " / " FMT_REG_HALF "\n", result, left, right);
+	return result;
+}
 
 /* LowLevelILOperation.LLIL_DIVS_DP: [("left", "expr"), ("right", "expr")] */
 // TODO: figure out "DP"
@@ -688,10 +701,17 @@ SREGTYPE SX4(int32_t src)
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX4(uint8_t src)
+REGTYPE ZX4(uint32_t src)
 {
-	uint8_t result = src;
-	debug("ZX4             0x%02X -> 0x%08X\n", src & 0xFF, result);
+	uint32_t result = src;
+	debug("ZX4             0x%08X -> " FMT_REG "\n", src & 0xFFFFFFFF, result);
+	return result;
+}
+
+REGTYPE ZX8(uint64_t src)
+{
+	uint64_t result = src;
+	debug("ZX8             0x%016X -> " FMT_REG "\n", src & 0xFFFFFFFFFFFFFFFF, result);
 	return result;
 }
 
