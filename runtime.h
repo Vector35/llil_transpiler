@@ -210,8 +210,8 @@ SREGTYPE SX2(int16_t src);
 SREGTYPE SX4(int32_t src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-REGTYPE ZX4(uint32_t src);
-REGTYPE ZX8(uint64_t src);
+uint32_t ZX4(uint32_t src);
+uint64_t ZX8(uint64_t src);
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 uint8_t LOW_PART1(REGTYPE left);

@@ -8,9 +8,9 @@ using namespace std;
 
 #include "runtime.h"
 
-//#define DEBUG_RUNTIME_ALL
-//#define DEBUG_RUNTIME_SETS
-//#define DEBUG_RUNTIME_STACK
+#define DEBUG_RUNTIME_ALL
+#define DEBUG_RUNTIME_SETS
+#define DEBUG_RUNTIME_STACK
 
 #define debug(...) while(0);
 #define debug_set(...) while(0);
@@ -30,6 +30,8 @@ using namespace std;
 
 /* the foo_il.c must export this, else we can't implement PUSH */
 extern string stackRegName;
+extern bool isLinkRegArch;
+extern string linkRegName;
 extern map<string,struct RegisterInfo> regInfos;
 
 /* VM components */
@@ -682,36 +684,36 @@ uint64_t NOT8(uint64_t left)
 SREGTYPE SX1(int8_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> %d\n", src, result);
+	debug("SX              %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
 SREGTYPE SX2(int16_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> %d\n", src, result);
+	debug("SX              %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
 SREGTYPE SX4(int32_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> %d\n", src, result);
+	debug("SX              %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-REGTYPE ZX4(uint32_t src)
+uint32_t ZX4(uint32_t src)
 {
 	uint32_t result = src;
-	debug("ZX4             0x%08X -> " FMT_REG "\n", src & 0xFFFFFFFF, result);
+	debug("ZX4             0x%08X -> 0x%08X\n", src, result);
 	return result;
 }
 
-REGTYPE ZX8(uint64_t src)
+uint64_t ZX8(uint64_t src)
 {
 	uint64_t result = src;
-	debug("ZX8             0x%016X -> " FMT_REG "\n", src & 0xFFFFFFFFFFFFFFFF, result);
+	debug("ZX8             0x%016llX -> 0x%016llX\n", src, result);
 	return result;
 }
 
@@ -741,12 +743,22 @@ void JUMP(REGTYPE dest)
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest, void (*pfunc)(void), const char *func_name)
 {
-	#define RUNTIME_CALLER_ADDR_DUMMY 0xAAAAAAAA
-	/* dummy push of return address */
-	vm_regs[stackRegName] -= sizeof(REGTYPE);
-	*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
-	debug_stack("CALL            " FMT_REG "   mem[" FMT_REG "] = " FMT_REG " %s()\n",
-		dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY, func_name);
+	#define RUNTIME_CALLER_ADDR_DUMMY ((REGTYPE)0xAAAAAAAA)
+	#define BN_INVALID_REGISTER 0xFFFFFFFF
+
+	if(isLinkRegArch) {
+		/* this is a link register style of architecture, so set the LR */
+		reg_set_value(linkRegName, RUNTIME_CALLER_ADDR_DUMMY);
+		debug_set("SET             %s = " FMT_REG "\n", linkRegName.c_str(), RUNTIME_CALLER_ADDR_DUMMY);
+	}
+	else {
+		/* this is a push-the-return-address style of architecture
+			so push a dummy return address */
+		vm_regs[stackRegName] -= sizeof(REGTYPE);
+		*(REGTYPE *)(vm_mem + vm_regs[stackRegName]) = (REGTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
+		debug_stack("CALL            " FMT_REG "   mem[" FMT_REG "] = " FMT_REG " %s()\n",
+			dest, vm_regs[stackRegName], RUNTIME_CALLER_ADDR_DUMMY, func_name);
+	}
 
 	return pfunc();
 }
@@ -821,7 +833,7 @@ bool CMP_SLT4(int32_t left, int32_t right)
 bool CMP_ULT(REGTYPE left, REGTYPE right)
 {
 	bool result = left < right;
-	debug("CMP_ULT         %d = %d < %d\n", result, left, right);
+	debug("CMP_ULT         %d = " FMT_REG " < " FMT_REG "\n", result, left, right);
 	return result;
 }
 
