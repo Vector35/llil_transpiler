@@ -146,7 +146,7 @@ def traverse_IL(il, depth=0):
 			traverse_IL(il.operands[0], depth+1)
 			print(')', end='')
 			print('\t{')
-			for (val, target_il) in enumerate(il.operands[1]):
+			for (val, target_il) in il.operands[1].items():
 				print('\t\t// val=%s target_il=%s' % (str(val), str(target_il)))
 				target_native = current_llil[target_il].address
 				print('\t\tcase 0x%X: goto loc_%d;' % (target_native, target_il))
