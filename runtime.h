@@ -216,6 +216,7 @@ uint64_t ZX8(uint64_t src);
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
 uint8_t LOW_PART1(REGTYPE left);
 uint16_t LOW_PART2(REGTYPE left);
+uint32_t LOW_PART4(REGTYPE left);
 
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest);

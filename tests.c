@@ -364,6 +364,29 @@ int factorial(int n)
 		return n * factorial(n-1);
 }
 
+/* primitive floating point */
+float fadd(float a, float b)
+{
+	return a + b;
+}
+
+float fsub(float a, float b)
+{
+	return a - b;
+}
+
+float fmul(float a, float b)
+{
+	return a * b;
+}
+
+float fdiv(float a, float b)
+{
+	return a / b;
+}
+
+
+
 #ifdef ARCH_Z80
 int main()
 {

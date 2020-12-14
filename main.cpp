@@ -56,6 +56,7 @@ extern map<string,double> vm_regs_double;
 #define gcd_recursive _gcd_recursive
 #define switch_doubler _switch_doubler
 #define factorial _factorial
+#define fadd _fadd
 #endif
 
 /* functions from generated tests_il.o we'll be using */
@@ -102,6 +103,7 @@ void gcd();
 void gcd_recursive();
 void switch_doubler();
 void factorial();
+void fadd();
 
 /* architecture-specific VM utilities to init stack, set args, return values */
 #ifdef ARCH_X64
@@ -203,6 +205,17 @@ void check(int actual, int expected)
 	}
 }
 
+void fcheck(float actual, float expected)
+{
+	if(actual == expected)
+		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%f,%f)\n", actual, expected);
+	else {
+		printf("   \x1B[31mFAILED\x1B[0m (actual,expected) = (%f,%f)\n", actual, expected);
+		exit(-1);
+	}
+}
+
+/* test functions that take integers */
 void test(const char *sfunc, VMFUNC pfunc, int expected)
 {
 	printf("%s()...\n", sfunc);
@@ -227,6 +240,32 @@ void test(const char *sfunc, VMFUNC pfunc, int a, int b, int c, int expected)
 	check(vm_call(pfunc, a, b, c), expected);
 }
 
+/* test functions that take floats */
+void ftest(const char *func_name, VMFUNC pfunc, float expected)
+{
+	printf("%s()...\n", func_name);
+	fcheck(vm_call(pfunc), expected);
+}
+
+void ftest(const char *func_name, VMFUNC pfunc, float a, float expected)
+{
+	printf("%s(%f)...\n", func_name, a);
+	fcheck(vm_call(pfunc, a), expected);
+}
+
+void ftest(const char *func_name, VMFUNC pfunc, float a, float b, float expected)
+{
+	printf("%s(%f, %f)...\n", func_name, a, b);
+	fcheck(vm_call(pfunc, a, b), expected);
+}
+
+void ftest(const char *func_name, VMFUNC pfunc, float a, float b, float c, float expected)
+{
+	printf("%s(%f, %f, %f)...\n", func_name, a, b, c);
+	fcheck(vm_call(pfunc, a, b, c), expected);
+}
+
+/* */
 int main(int ac, char **av)
 {
 	int result;
@@ -466,4 +505,11 @@ int main(int ac, char **av)
 	test("switch_doubler", switch_doubler,2, 4);
 	test("switch_doubler", switch_doubler,999, -1);
 	test("switch_doubler", switch_doubler,9, 18);
+
+	/* floating point */
+	ftest("fadd", fadd,1.0,2.0, 3.0);
+	ftest("fadd", fadd,1.5,2.5, 4.0);
+	ftest("fadd", fadd,2.5,3.5, 8.0);
+	ftest("fadd", fadd,2.5,-3.5, -1.5);
+
 }

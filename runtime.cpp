@@ -732,6 +732,13 @@ uint16_t LOW_PART2(REGTYPE left)
 	return result;
 }
 
+uint32_t LOW_PART4(REGTYPE left)
+{
+	uint32_t result = left & 0xFFFF;
+	debug("LOW_PART4       " FMT_REG " -> 0x%08X\n", left, result);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest)
 {
