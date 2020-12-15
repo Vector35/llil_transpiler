@@ -98,6 +98,9 @@ int tv_cmp(type_val a, type_val b)
 #define switch_doubler _switch_doubler
 #define factorial _factorial
 #define fp_single_add _fp_single_add
+#define fp_single_add _fp_single_sub
+#define fp_single_add _fp_single_mul
+#define fp_single_add _fp_single_div
 #endif
 
 /* functions from generated tests_il.o we'll be using */
@@ -142,6 +145,9 @@ void gcd_recursive();
 void switch_doubler();
 void factorial();
 void fp_single_add();
+void fp_single_sub();
+void fp_single_mul();
+void fp_single_div();
 
 //-----------------------------------------------------------------------------
 // architecture-specific VM utilities to init stack, set args, return values
@@ -546,6 +552,21 @@ int main(int ac, char **av)
 	test_f("fadd", fp_single_add,1.5,2.5, 4.0);
 	test_f("fadd", fp_single_add,2.5,3.5, 6.0);
 	test_f("fadd", fp_single_add,2.5,-3.5, -1.0);
+
+	test_f("fsub", fp_single_sub,1.0,2.0, -1.0);
+	test_f("fsub", fp_single_sub,1.5,2.5, -1.0);
+	test_f("fsub", fp_single_sub,2.5,3.5, -1.0);
+	test_f("fsub", fp_single_sub,2.5,-3.5, 6.0);
+
+	test_f("fmul", fp_single_mul,1.0,2.0, 2.0);
+	test_f("fmul", fp_single_mul,1.5,2.5, 3.75);
+	test_f("fmul", fp_single_mul,2.5,3.5, 8.75);
+	test_f("fmul", fp_single_mul,2.5,-3.5, -8.75);
+
+	test_f("fdiv", fp_single_div,1.0,2.0, 0.5);
+	test_f("fdiv", fp_single_div,1.5,2.5, 0.6);
+	test_f("fdiv", fp_single_div,2.5,4.0, 0.625);
+	test_f("fdiv", fp_single_div,2.5,-4.0, -0.625);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);
