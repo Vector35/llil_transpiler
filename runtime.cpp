@@ -41,12 +41,12 @@ map<string,REGTYPE> vm_regs_temp;
 map<string,int> vm_flags;
 
 /*****************************************************************************/
-/* local helpers */
+/* register setting/getting */
 /*****************************************************************************/
 
 /* access core registers file, taking into account possible subregister
 	relationships */
-static REGTYPE reg_core_get_value(string regName)
+REGTYPE reg_core_get_value(string regName)
 {
 	REGTYPE result;
 
@@ -70,7 +70,7 @@ static REGTYPE reg_core_get_value(string regName)
 	return result;
 }
 
-static REGTYPE reg_get_value(string regName)
+REGTYPE reg_get_value(string regName)
 {
 	REGTYPE result;
 
@@ -88,7 +88,7 @@ static REGTYPE reg_get_value(string regName)
 
 /* access core registers file, taking into account possible subregister
 	relationships */
-static void reg_core_set_value(string regName, REGTYPE value)
+void reg_core_set_value(string regName, REGTYPE value)
 {
 	RegisterInfo ri = regInfos[regName];
 
@@ -111,7 +111,7 @@ static void reg_core_set_value(string regName, REGTYPE value)
 	}
 }
 
-static void reg_set_value(string regName, REGTYPE value)
+void reg_set_value(string regName, REGTYPE value)
 {
 	/* temp registers simply come from the temp regs file */
 	if(regName.rfind("temp", 0) == 0) {

@@ -25,8 +25,14 @@ z80:
 # ./make_standalone_toolchain.py --arch arm64 --api 21 --install-dir ~/android_a64_api21_toolchain
 BUILT_TOOLCHAIN = $(HOME)/android_a64_api21_toolchain
 GCC = $(BUILT_TOOLCHAIN)/bin/aarch64-linux-android-gcc
-a64:
+
+tests.o: tests.c
 	$(GCC) tests.c -c -o tests.o
+
+tests_il.cpp: tests.o
 	ildump2cpp.py tests.o a64 > tests_il.cpp
+
+main: tests_il.cpp runtime.cpp main.cpp
 	g++ -g -O0 --std=c++11 -DARCH_A64 -DARCH_64BIT tests_il.cpp main.cpp runtime.cpp -o main
 
+a64: tests.o tests_il.cpp main

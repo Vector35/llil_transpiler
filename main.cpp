@@ -13,10 +13,53 @@ extern uint8_t vm_mem[VM_MEM_SZ];
 extern map<string,REGTYPE> vm_regs;
 extern map<string,double> vm_regs_double;
 
+/* arguments */
+#define VM_TYPE_NONE 0
+#define VM_TYPE_UINT16 1
+#define VM_TYPE_UINT32 2
+#define VM_TYPE_UINT64 3
+#define VM_TYPE_FLOAT32 4
+
+//-----------------------------------------------------------------------------
+// type/value definition, helpers
+//-----------------------------------------------------------------------------
+
+typedef struct type_val_
+{
+	int type; // VM_TYPE_
+	uint16_t u16;
+	union {
+		uint32_t u32;
+		float f32;
+	};
+	uint64_t u64;
+
+} type_val;
+
+void tv_to_str(type_val tv, char *str)
+{
+	if(tv.type == VM_TYPE_UINT32) sprintf(str, "0x%08X", tv.u32);
+	else if(tv.type == VM_TYPE_FLOAT32) sprintf(str, "%f", tv.f32);
+	else strcpy(str, "None");
+}
+
+int tv_cmp(type_val a, type_val b)
+{
+	if(a.type != b.type) return -1;
+	if(a.type == VM_TYPE_UINT16 && a.u16 == b.u16) return 0;
+	if(a.type == VM_TYPE_UINT32 && a.u32 == b.u32) return 0;
+	if(a.type == VM_TYPE_UINT64 && a.u64 == b.u64) return 0;
+	if(a.type == VM_TYPE_FLOAT32 && a.f32 == b.f32) return 0;
+	return -1;
+}
+
+//-----------------------------------------------------------------------------
+// functions from tests_il.o
+//-----------------------------------------------------------------------------
+
 #ifdef LEADING_UNDERSCORE
 #define life_universe_everything _life_universe_everything
 #define add _add
-
 #define test_byte_e_10 _test_byte_e_10
 #define test_byte_ne_10 _test_byte_ne_10
 #define test_byte_slt_10 _test_byte_slt_10
@@ -29,7 +72,6 @@ extern map<string,double> vm_regs_double;
 #define test_byte_ugt_10 _test_byte_ugt_10
 #define test_byte_neg _test_byte_neg
 #define test_byte_pos _test_byte_pos
-
 #define test_word_e_10 _test_word_e_10
 #define test_word_ne_10 _test_word_ne_10
 #define test_word_slt_10 _test_word_slt_10
@@ -42,7 +84,6 @@ extern map<string,double> vm_regs_double;
 #define test_word_ugt_10 _test_word_ugt_10
 #define test_word_neg _test_word_neg
 #define test_word_pos _test_word_pos
-
 #define triangle_up _triangle_up
 #define triangle_down _triangle_down
 #define multiply_u8 _multiply_u8
@@ -63,7 +104,6 @@ extern map<string,double> vm_regs_double;
 void life_universe_everything();
 void initialize_memory();
 void add();
-
 void test_byte_e_10();
 void test_byte_ne_10();
 void test_byte_slt_10();
@@ -76,7 +116,6 @@ void test_byte_sgt_10();
 void test_byte_ugt_10();
 void test_byte_neg();
 void test_byte_pos();
-
 void test_word_e_10();
 void test_word_ne_10();
 void test_word_slt_10();
@@ -89,7 +128,6 @@ void test_word_sgt_10();
 void test_word_ugt_10();
 void test_word_neg();
 void test_word_pos();
-
 void triangle_up();
 void triangle_down();
 void multiply();
@@ -105,7 +143,10 @@ void switch_doubler();
 void factorial();
 void fp_single_add();
 
-/* architecture-specific VM utilities to init stack, set args, return values */
+//-----------------------------------------------------------------------------
+// architecture-specific VM utilities to init stack, set args, return values
+//-----------------------------------------------------------------------------
+
 #ifdef ARCH_X64
 void vm_init_stack() { vm_regs["rsp"] = VM_MEM_SZ; }
 void vm_set_arg0(int a) { vm_regs["rdi"] = a; }
@@ -120,20 +161,41 @@ void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
 void vm_set_arg0(int a) { vm_regs["r0"] = a; }
 void vm_set_arg1(int a) { vm_regs["r1"] = a; }
 void vm_set_arg2(int a) { vm_regs["r2"] = a; }
-void vm_set_arg0_float(int a) { vm_regs["s0"] = a; }
-void vm_set_arg1_float(int a) { vm_regs["s1"] = a; }
-void vm_set_arg2_float(int a) { vm_regs["s2"] = a; }
 void vm_precall() { vm_regs["sp"] -= 4; *(uint32_t *)vm_mem = 0x00C41132; }
 int vm_get_retval() { return vm_regs["r0"]; }
 #endif
 
 #ifdef ARCH_A64
 void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
-void vm_set_arg0(int a) { vm_regs["x0"] = a; }
-void vm_set_arg1(int a) { vm_regs["x1"] = a; }
-void vm_set_arg2(int a) { vm_regs["x2"] = a; }
 void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = 0x00C4113200C41132; }
-int vm_get_retval() { return vm_regs["x0"]; }
+void vm_set_arg(int order, type_val tv)
+{
+	if(tv.type == VM_TYPE_UINT32) {
+		if(order==0) reg_core_set_value("x0", tv.u32);
+		else if(order==1) reg_core_set_value("x1", tv.u32);
+		else if(order==2) reg_core_set_value("x2", tv.u32);
+		else if(order==3) reg_core_set_value("x3", tv.u32);
+	}
+	else if(tv.type == VM_TYPE_UINT64) {
+		if(order==0) reg_core_set_value("x0", tv.u64);
+		else if(order==1) reg_core_set_value("x1", tv.u64);
+		else if(order==2) reg_core_set_value("x2", tv.u64);
+		else if(order==3) reg_core_set_value("x3", tv.u64);
+	}
+	else if(tv.type == VM_TYPE_FLOAT32) {
+		if(order==0) reg_core_set_value("s0", tv.u32);
+		else if(order==1) reg_core_set_value("s1", tv.u32);
+		else if(order==2) reg_core_set_value("s2", tv.u32);
+		else if(order==3) reg_core_set_value("s3", tv.u32);
+	}
+}
+type_val vm_get_retval(int type)
+{
+	if(type == VM_TYPE_UINT32) return {.type=VM_TYPE_UINT32, .u32=(uint32_t)reg_core_get_value("w0")};
+	if(type == VM_TYPE_UINT64) return {.type=VM_TYPE_UINT64, .u64=(uint64_t)reg_core_get_value("x0")};
+	if(type == VM_TYPE_FLOAT32) return {.type=VM_TYPE_FLOAT32, .u32=(uint32_t)reg_core_get_value("s0")};
+	return {.type=VM_TYPE_NONE, .u32=0};
+}
 #endif
 
 #ifdef ARCH_Z80
@@ -145,7 +207,10 @@ void vm_precall() { vm_regs["SP"] -= 2; *(uint16_t *)(vm_mem + vm_regs["SP"]) = 
 int16_t vm_get_retval() { return (int16_t)vm_regs["HL"]; }
 #endif
 
-/* architecture-independent VM utilities */
+//-----------------------------------------------------------------------------
+// architecture-independent VM utilities
+//-----------------------------------------------------------------------------
+
 void vm_reset()
 {
 	memset(vm_mem, 0, VM_MEM_SZ);
@@ -155,125 +220,98 @@ void vm_reset()
 	initialize_memory();
 }
 
-typedef void (*VMFUNC)(void);
+typedef void (*VM_FUNC)(void);
+typedef void (*VM_FUNC_SET_ARG)(type_val tv);
 
-/* call a 1-arg function in the VM */
-int vm_call(VMFUNC pfunc) {
+/* call a function in the vm */
+type_val vm_call(VM_FUNC pfunc, type_val *args, int ret_type) {
 	vm_reset();
 	vm_precall();
+
+	/* set function arguments */
+	for(int i=0; args[i].type != VM_TYPE_NONE; i++)
+		vm_set_arg(i, args[i]);
+
+	/* call the function, return result */
 	pfunc();
-	return vm_get_retval();
+	return vm_get_retval(ret_type);
 }
 
-/* call a 1-arg function in the VM */
-int vm_call(VMFUNC pfunc, int a)
-{
-	vm_reset();
-	vm_set_arg0(a);
-	vm_precall();
-	pfunc();
-	return vm_get_retval();
-}
+//-----------------------------------------------------------------------------
+// testing convenience functions
+//-----------------------------------------------------------------------------
 
-/* call a 2-arg function in the VM */
-int vm_call(VMFUNC pfunc, int a, int b)
+void check(type_val actual, type_val expected)
 {
-	vm_reset();
-	vm_set_arg1(b);
-	vm_set_arg0(a);
-	vm_precall();
-	pfunc();
-	return vm_get_retval();
-}
+	char actual_str[128], expected_str[128];
+	tv_to_str(actual, actual_str);
+	tv_to_str(expected, expected_str);
 
-/* call a 3-arg function in the VM */
-int vm_call(VMFUNC pfunc, int a, int b, int c)
-{
-	vm_reset();
-	vm_set_arg2(c);
-	vm_set_arg1(b);
-	vm_set_arg0(a);
-	vm_precall();
-	pfunc();
-	return vm_get_retval();
-}
-
-void check(int actual, int expected)
-{
-	if(actual == expected)
-		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%d,%d)\n", actual, expected);
+	if(tv_cmp(actual, expected)==0)
+		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%s,%s)\n", actual_str, expected_str);
 	else {
-		printf("   \x1B[31mFAILED\x1B[0m (actual,expected) = (%d,%d)\n", actual, expected);
+		printf("   \x1B[31mFAILED\x1B[0m (actual,expected) = (%s,%s)\n", actual_str, expected_str);
 		exit(-1);
 	}
 }
 
-void fcheck(float actual, float expected)
-{
-	if(actual == expected)
-		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%f,%f)\n", actual, expected);
-	else {
-		printf("   \x1B[31mFAILED\x1B[0m (actual,expected) = (%f,%f)\n", actual, expected);
-		exit(-1);
-	}
-}
-
-/* test functions that take integers */
-void test(const char *sfunc, VMFUNC pfunc, int expected)
-{
-	printf("%s()...\n", sfunc);
-	check(vm_call(pfunc), expected);
-}
-
-void test(const char *sfunc, VMFUNC pfunc, int a, int expected)
-{
-	printf("%s(%d)...\n", sfunc, a);
-	check(vm_call(pfunc, a), expected);
-}
-
-void test(const char *sfunc, VMFUNC pfunc, int a, int b, int expected)
-{
-	printf("%s(%d, %d)...\n", sfunc, a, b);
-	check(vm_call(pfunc, a, b), expected);
-}
-
-void test(const char *sfunc, VMFUNC pfunc, int a, int b, int c, int expected)
-{
-	printf("%s(%d, %d, %d)...\n", sfunc, a, b, c);
-	check(vm_call(pfunc, a, b, c), expected);
-}
-
-/* test functions that take floats */
-void ftest(const char *func_name, VMFUNC pfunc, float expected)
+// u32 foo(void)
+void test(const char *func_name, VM_FUNC pfunc, uint32_t expected)
 {
 	printf("%s()...\n", func_name);
-	fcheck(vm_call(pfunc), expected);
+	type_val args[1] = {{.type=VM_TYPE_NONE, .u32=0}};
+	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
+	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
 }
 
-void ftest(const char *func_name, VMFUNC pfunc, float a, float expected)
+// u32 foo(u32)
+void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t expected)
 {
-	printf("%s(%f)...\n", func_name, a);
-	fcheck(vm_call(pfunc, a), expected);
+	printf("%s()...\n", func_name);
+	type_val args[2] = {{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
+	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
 }
 
-void ftest(const char *func_name, VMFUNC pfunc, float a, float b, float expected)
+// u32 foo(u32, u32)
+void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t arg1, uint32_t expected)
 {
-	printf("%s(%f, %f)...\n", func_name, a, b);
-	fcheck(vm_call(pfunc, a, b), expected);
+	printf("%s()...\n", func_name);
+	type_val args[3] = {{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_UINT32, .u32=arg1}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
+	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
 }
 
-void ftest(const char *func_name, VMFUNC pfunc, float a, float b, float c, float expected)
+// u32 foo(u32, u32, u32)
+void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t expected)
 {
-	printf("%s(%f, %f, %f)...\n", func_name, a, b, c);
-	fcheck(vm_call(pfunc, a, b, c), expected);
+	printf("%s()...\n", func_name);
+	type_val args[4] = {
+		{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_UINT32, .u32=arg1},
+		{.type=VM_TYPE_UINT32, .u32=arg2}, {.type=VM_TYPE_NONE, .u32=0}
+	};
+	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
+	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
 }
 
-/* */
+// u32 foo(u32, u32)
+void test_f(const char *func_name, VM_FUNC pfunc, float arg0, float arg1, float expected)
+{
+	printf("%s()...\n", func_name);
+	type_val args[3] = {{.type=VM_TYPE_FLOAT32, .f32=arg0}, {.type=VM_TYPE_FLOAT32, .f32=arg1}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val result = vm_call(pfunc, args, VM_TYPE_FLOAT32);
+	check(result, {.type=VM_TYPE_FLOAT32, .f32=expected});
+}
+
+//-----------------------------------------------------------------------------
+// main
+//-----------------------------------------------------------------------------
+
 int main(int ac, char **av)
 {
 	int result;
 
-	test("life_universe_everything()", life_universe_everything, 42);
+	test("life_universe_everything", life_universe_everything, 42);
 
 	/* add */
 	test("add", add, 4,7, 11);
@@ -504,10 +542,10 @@ int main(int ac, char **av)
 	test("gcd_recursive", gcd_recursive,51,119, 17);
 
 	/* floating point */
-	ftest("fadd", fp_single_add,1.0,2.0, 3.0);
-	ftest("fadd", fp_single_add,1.5,2.5, 4.0);
-	ftest("fadd", fp_single_add,2.5,3.5, 8.0);
-	ftest("fadd", fp_single_add,2.5,-3.5, -1.5);
+	test_f("fadd", fp_single_add,1.0,2.0, 3.0);
+	test_f("fadd", fp_single_add,1.5,2.5, 4.0);
+	test_f("fadd", fp_single_add,2.5,3.5, 6.0);
+	test_f("fadd", fp_single_add,2.5,-3.5, -1.0);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);

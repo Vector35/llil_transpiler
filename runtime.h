@@ -357,6 +357,12 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 /* LowLevelILOperation.LLIL_FLAG_PHI: [("dest", "flag_ssa"), ("src", "flag_ssa_list")] */
 /* LowLevelILOperation.LLIL_MEM_PHI: [("dest_memory", "int"), ("src_memory", "int_list")] */
 
+
+/* register helpers */
+REGTYPE reg_core_get_value(string regName);
+REGTYPE reg_get_value(string regName);
+void reg_core_set_value(string regName, REGTYPE value);
+void reg_set_value(string regName, REGTYPE value);
 void runtime_comment(const char *msg);
 
 #ifdef ARCH_ARM
