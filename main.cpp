@@ -500,16 +500,15 @@ int main(int ac, char **av)
 	test("gcd_recursive", gcd_recursive,51,77, 1);
 	test("gcd_recursive", gcd_recursive,51,119, 17);
 
-	/* switch statements */
-	test("switch_doubler", switch_doubler,0, 0);
-	test("switch_doubler", switch_doubler,2, 4);
-	test("switch_doubler", switch_doubler,999, -1);
-	test("switch_doubler", switch_doubler,9, 18);
-
 	/* floating point */
 	ftest("fadd", fadd,1.0,2.0, 3.0);
 	ftest("fadd", fadd,1.5,2.5, 4.0);
 	ftest("fadd", fadd,2.5,3.5, 8.0);
 	ftest("fadd", fadd,2.5,-3.5, -1.5);
 
+	/* switch statements */
+	test("switch_doubler", switch_doubler,0, 0);
+	test("switch_doubler", switch_doubler,2, 4);
+	test("switch_doubler", switch_doubler,999, -1);
+	test("switch_doubler", switch_doubler,9, 18);
 }

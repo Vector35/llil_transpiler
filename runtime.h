@@ -1,4 +1,4 @@
-#define VM_MEM_SZ 2048
+#define VM_MEM_SZ (16*1024)
 
 #ifdef ARCH_64BIT
 	#define REGWIDTH 64

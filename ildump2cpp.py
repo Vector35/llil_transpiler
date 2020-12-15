@@ -217,6 +217,8 @@ if __name__ == '__main__':
 	bv = binaryninja.BinaryViewType.get_view_of_file(fpath)
 	bv.update_analysis_and_wait()
 
+	assert bv.end < (16*1024) # VM_MEM_SZ
+
 	print('#include <stdint.h>')
 	print('')
 	print('#include <string>')
@@ -270,8 +272,18 @@ if __name__ == '__main__':
 		print('')
 
 	#
+#	print('const char *bv_image =')
+#	tmp = bv.read(bv.start, bv.end)
+#	while tmp:
+#		chunk_sz = min(16, len(tmp))
+#		print('\t"' + ''.join(['\\x%02x'%b for b in tmp[0:chunk_sz]]) + '"')
+#		tmp = tmp[chunk_sz:]
+#	print(';')
+
 	print('void initialize_memory()')
 	print('{')
+	print('\tmemset(vm_mem, 0, VM_MEM_SZ);')
+#	print('\tmemcpy(vm_mem+0x%X, bv_image, %d);' % (bv.start, bv.end-bv.start))
 	print('\t' + '\n\t'.join(init_mem_lines))
 	print('}\n')
 
