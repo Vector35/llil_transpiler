@@ -365,27 +365,30 @@ int factorial(int n)
 }
 
 /* primitive floating point */
-float fadd(float a, float b)
+float fp_single_add(float a, float b)
 {
 	return a + b;
 }
 
-float fsub(float a, float b)
+float fp_single_sub(float a, float b)
 {
 	return a - b;
 }
 
-float fmul(float a, float b)
+float fp_single_mul(float a, float b)
 {
 	return a * b;
 }
 
-float fdiv(float a, float b)
+float fp_single_div(float a, float b)
 {
 	return a / b;
 }
 
-
+void test()
+{
+	float tmp = fp_single_div(1.0, 2.0);
+}
 
 #ifdef ARCH_Z80
 int main()

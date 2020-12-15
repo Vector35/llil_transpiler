@@ -56,7 +56,7 @@ extern map<string,double> vm_regs_double;
 #define gcd_recursive _gcd_recursive
 #define switch_doubler _switch_doubler
 #define factorial _factorial
-#define fadd _fadd
+#define fp_single_add _fp_single_add
 #endif
 
 /* functions from generated tests_il.o we'll be using */
@@ -103,7 +103,7 @@ void gcd();
 void gcd_recursive();
 void switch_doubler();
 void factorial();
-void fadd();
+void fp_single_add();
 
 /* architecture-specific VM utilities to init stack, set args, return values */
 #ifdef ARCH_X64
@@ -120,6 +120,9 @@ void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
 void vm_set_arg0(int a) { vm_regs["r0"] = a; }
 void vm_set_arg1(int a) { vm_regs["r1"] = a; }
 void vm_set_arg2(int a) { vm_regs["r2"] = a; }
+void vm_set_arg0_float(int a) { vm_regs["s0"] = a; }
+void vm_set_arg1_float(int a) { vm_regs["s1"] = a; }
+void vm_set_arg2_float(int a) { vm_regs["s2"] = a; }
 void vm_precall() { vm_regs["sp"] -= 4; *(uint32_t *)vm_mem = 0x00C41132; }
 int vm_get_retval() { return vm_regs["r0"]; }
 #endif
@@ -501,10 +504,10 @@ int main(int ac, char **av)
 	test("gcd_recursive", gcd_recursive,51,119, 17);
 
 	/* floating point */
-	ftest("fadd", fadd,1.0,2.0, 3.0);
-	ftest("fadd", fadd,1.5,2.5, 4.0);
-	ftest("fadd", fadd,2.5,3.5, 8.0);
-	ftest("fadd", fadd,2.5,-3.5, -1.5);
+	ftest("fadd", fp_single_add,1.0,2.0, 3.0);
+	ftest("fadd", fp_single_add,1.5,2.5, 4.0);
+	ftest("fadd", fp_single_add,2.5,3.5, 8.0);
+	ftest("fadd", fp_single_add,2.5,-3.5, -1.5);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);

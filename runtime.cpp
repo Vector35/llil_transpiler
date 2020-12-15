@@ -990,35 +990,43 @@ REGTYPE UNIMPL(REGTYPE)
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */
 
 /* LowLevelILOperation.LLIL_FADD: [("left", "expr"), ("right", "expr")] */
-float FADD(float a, float b)
+uint32_t FADD(uint32_t a, uint32_t b)
 {
-	float result = a + b;
-	debug("FADD            %f = %f + %f\n", result, a, b);
-	return result;
+	float af = *(float *)&a;
+	float bf = *(float *)&b;
+	float cf = af + bf;
+	debug("FADD            %f = %f + %f\n", cf, af, bf);
+	return *(uint32_t *)&cf;
 }
 
 /* LowLevelILOperation.LLIL_FSUB: [("left", "expr"), ("right", "expr")] */
-float FSUB(float a, float b)
+uint32_t FSUB(uint32_t a, uint32_t b)
 {
-	float result = a - b;
-	debug("FSUB            %f = %f - %f\n", result, a, b);
-	return result;
+	float af = *(float *)&a;
+	float bf = *(float *)&b;
+	float cf = af - bf;
+	debug("FSUB            %f = %f - %f\n", cf, af, bf);
+	return *(uint32_t *)&cf;
 }
 
 /* LowLevelILOperation.LLIL_FMUL: [("left", "expr"), ("right", "expr")] */
-float FMUL(float a, float b)
+uint32_t FMUL(uint32_t a, uint32_t b)
 {
-	float result = a * b;
-	debug("FMUL            %f = %f * %f\n", result, a, b);
-	return result;
+	float af = *(float *)&a;
+	float bf = *(float *)&b;
+	float cf = af * bf;
+	debug("FMUL            %f = %f * %f\n", cf, af, bf);
+	return *(uint32_t *)&cf;
 }
 
 /* LowLevelILOperation.LLIL_FDIV: [("left", "expr"), ("right", "expr")] */
-float FDIV(float a, float b)
+uint32_t FDIV(uint32_t a, uint32_t b)
 {
-	float result = a / b;
-	debug("FDIV            %f = %f / %f\n", result, a, b);
-	return result;
+	float af = *(float *)&a;
+	float bf = *(float *)&b;
+	float cf = af / bf;
+	debug("FDIV            %f = %f / %f\n", cf, af, bf);
+	return *(uint32_t *)&cf;
 }
 
 /* LowLevelILOperation.LLIL_FSQRT: [("src", "expr")] */

@@ -298,16 +298,16 @@ REGTYPE UNIMPL(REGTYPE);
 /* LowLevelILOperation.LLIL_UNIMPL_MEM: [("src", "expr")] */
 
 /* LowLevelILOperation.LLIL_FADD: [("left", "expr"), ("right", "expr")] */
-float FADD(float a, float b);
+uint32_t FADD(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_FSUB: [("left", "expr"), ("right", "expr")] */
-float FSUB(float a, float b);
+uint32_t FSUB(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_FMUL: [("left", "expr"), ("right", "expr")] */
-float FMUL(float a, float b);
+uint32_t FMUL(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_FDIV: [("left", "expr"), ("right", "expr")] */
-float FDIV(float a, float b);
+uint32_t FDIV(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_FSQRT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FNEG: [("src", "expr")] */
