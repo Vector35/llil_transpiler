@@ -44,9 +44,16 @@
 	#define FMT_SREG "%d"
 #endif
 
+
+
+typedef struct tag_reg128 {
+	uint64_t lo;
+	uint64_t hi;
+} reg128;
+
 struct RegisterInfo {
 	int index; /* register index */
-	string full_width_reg; /* index of full-width register */
+	string full_width_reg; /* name of full-width register (same if a full-width reg) */
 	int offset; /* offset within full-width register */
 	int size; /* in bytes */
 	int extend; /* zero or sign */
@@ -56,10 +63,11 @@ struct RegisterInfo {
 void NOP(void);
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG1(string dest, uint8_t src);
-void SET_REG2(string dest, uint16_t src);
-void SET_REG4(string dest, uint32_t src);
-void SET_REG8(string dest, uint64_t src);
+void SET_REG8(string dest, uint8_t src);
+void SET_REG16(string dest, uint16_t src);
+void SET_REG32(string dest, uint32_t src);
+void SET_REG64(string dest, uint64_t src);
+void SET_REG128(string dest, BIGVAL src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
@@ -71,16 +79,16 @@ void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
 void SET_FLAG(string left, bool right);
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
-uint8_t LOAD1(REGTYPE expr);
-uint16_t LOAD2(REGTYPE expr);
-uint32_t LOAD4(REGTYPE expr);
-uint64_t LOAD8(REGTYPE expr);
+uint8_t LOAD8(REGTYPE expr);
+uint16_t LOAD16(REGTYPE expr);
+uint32_t LOAD32(REGTYPE expr);
+uint64_t LOAD64(REGTYPE expr);
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
-void STORE1(REGTYPE dest, uint8_t src);
-void STORE2(REGTYPE dest, uint16_t src);
-void STORE4(REGTYPE dest, uint32_t src);
-void STORE8(REGTYPE dest, uint64_t src);
+void STORE8(REGTYPE dest, uint8_t src);
+void STORE16(REGTYPE dest, uint16_t src);
+void STORE32(REGTYPE dest, uint32_t src);
+void STORE64(REGTYPE dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_PUSH: [("src", "expr")] */
 void PUSH(REGTYPE src);
@@ -109,25 +117,25 @@ bool FLAG(string src);
 
 /* LowLevelILOperation.LLIL_FLAG_BIT: [("src", "flag"), ("bit", "int")] */
 /* LowLevelILOperation.LLIL_ADD: [("left", "expr"), ("right", "expr")] */
-uint8_t ADD1(uint8_t left, uint8_t right);
-uint16_t ADD2(uint16_t left, uint16_t right);
-uint32_t ADD4(uint32_t left, uint32_t right);
-uint64_t ADD8(uint64_t left, uint64_t right);
+uint8_t ADD8(uint8_t left, uint8_t right);
+uint16_t ADD16(uint16_t left, uint16_t right);
+uint32_t ADD32(uint32_t left, uint32_t right);
+uint64_t ADD64(uint64_t left, uint64_t right);
 
 /* LowLevelILOperation.LLIL_ADC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
 SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry);
 
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
-uint8_t SUB1(uint8_t a, uint8_t b);
-uint16_t SUB2(uint16_t a, uint16_t b);
-uint32_t SUB4(uint32_t a, uint32_t b);
-uint64_t SUB8(uint64_t a, uint64_t b);
+uint8_t SUB8(uint8_t a, uint8_t b);
+uint16_t SUB16(uint16_t a, uint16_t b);
+uint32_t SUB32(uint32_t a, uint32_t b);
+uint64_t SUB64(uint64_t a, uint64_t b);
 
 /* LowLevelILOperation.LLIL_SBB: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t SBB1(uint8_t a, uint8_t b, uint8_t c);
-uint16_t SBB2(uint16_t a, uint16_t b, uint16_t c);
-uint32_t SBB4(uint32_t a, uint32_t b, uint32_t c);
-uint64_t SBB8(uint64_t a, uint64_t b, uint64_t c);
+uint8_t SBB8(uint8_t a, uint8_t b, uint8_t c);
+uint16_t SBB16(uint16_t a, uint16_t b, uint16_t c);
+uint32_t SBB32(uint32_t a, uint32_t b, uint32_t c);
+uint64_t SBB64(uint64_t a, uint64_t b, uint64_t c);
 
 /* LowLevelILOperation.LLIL_AND: [("left", "expr"), ("right", "expr")] */
 REGTYPE AND(REGTYPE left, REGTYPE right);
@@ -148,22 +156,22 @@ REGTYPE LSR(REGTYPE left, REGTYPE right);
 SREGTYPE ASR(SREGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_ROL: [("left", "expr"), ("right", "expr")] */
-uint8_t ROL1(uint8_t value, uint8_t amt);
-uint16_t ROL2(uint16_t value, uint16_t amt);
-uint32_t ROL4(uint32_t value, uint32_t amt);
-uint64_t ROL8(uint64_t value, uint64_t amt);
+uint8_t ROL8(uint8_t value, uint8_t amt);
+uint16_t ROL16(uint16_t value, uint16_t amt);
+uint32_t ROL32(uint32_t value, uint32_t amt);
+uint64_t ROL64(uint64_t value, uint64_t amt);
 
 /* LowLevelILOperation.LLIL_RLC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t RLC1(uint8_t value, uint8_t amt, bool carry);
+uint8_t RLC8(uint8_t value, uint8_t amt, bool carry);
 
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
-uint8_t ROR1(uint8_t value, uint8_t amt);
-uint16_t ROR2(uint16_t value, uint16_t amt);
-uint32_t ROR4(uint32_t value, uint32_t amt);
-uint64_t ROR8(uint64_t value, uint64_t amt);
+uint8_t ROR8(uint8_t value, uint8_t amt);
+uint16_t ROR16(uint16_t value, uint16_t amt);
+uint32_t ROR32(uint32_t value, uint32_t amt);
+uint64_t ROR64(uint64_t value, uint64_t amt);
 
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t RRC1(uint8_t value, uint8_t amt, bool carry);
+uint8_t RRC8(uint8_t value, uint8_t amt, bool carry);
 
 SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 
@@ -192,31 +200,31 @@ SREGTYPE MODS(SREGTYPE left, SREGTYPE right);
 SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right);
 
 /* LowLevelILOperation.LLIL_NEG: [("src", "expr")] */
-uint8_t NEG1(uint8_t src);
-uint16_t NEG2(uint16_t src);
-uint32_t NEG4(uint32_t src);
-uint64_t NEG8(uint64_t src);
+uint8_t NEG8(uint8_t src);
+uint16_t NEG16(uint16_t src);
+uint32_t NEG32(uint32_t src);
+uint64_t NEG64(uint64_t src);
 
 /* LowLevelILOperation.LLIL_NOT: [("src", "expr")] */
 uint8_t NOT0(uint8_t left);
-uint8_t NOT1(uint8_t left);
-uint16_t NOT2(uint16_t left);
-uint32_t NOT4(uint32_t left);
-uint64_t NOT8(uint64_t left);
+uint8_t NOT8(uint8_t left);
+uint16_t NOT16(uint16_t left);
+uint32_t NOT32(uint32_t left);
+uint64_t NOT64(uint64_t left);
 
 /* LowLevelILOperation.LLIL_SX: [("src", "expr")] */
-SREGTYPE SX1(int8_t src);
-SREGTYPE SX2(int16_t src);
-SREGTYPE SX4(int32_t src);
+SREGTYPE SX8(int8_t src);
+SREGTYPE SX16(int16_t src);
+SREGTYPE SX32(int32_t src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX4(uint32_t src);
-uint64_t ZX8(uint64_t src);
+uint32_t ZX32(uint32_t src);
+uint64_t ZX64(uint64_t src);
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
-uint8_t LOW_PART1(REGTYPE left);
-uint16_t LOW_PART2(REGTYPE left);
-uint32_t LOW_PART4(REGTYPE left);
+uint8_t LOW_PART8(REGTYPE left);
+uint16_t LOW_PART16(REGTYPE left);
+uint32_t LOW_PART32(REGTYPE left);
 
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 void JUMP(REGTYPE dest);
@@ -244,33 +252,33 @@ bool CMP_E(REGTYPE left, REGTYPE right);
 bool CMP_NE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SLT: [("left", "expr"), ("right", "expr")] */
-bool CMP_SLT1(int8_t left, int8_t right);
-bool CMP_SLT2(int16_t left, int16_t right);
-bool CMP_SLT4(int32_t left, int32_t right);
+bool CMP_SLT8(int8_t left, int8_t right);
+bool CMP_SLT16(int16_t left, int16_t right);
+bool CMP_SLT32(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_ULT: [("left", "expr"), ("right", "expr")] */
 bool CMP_ULT(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SLE1(int8_t left, int8_t right);
-bool CMP_SLE2(int16_t left, int16_t right);
-bool CMP_SLE4(int32_t left, int32_t right);
+bool CMP_SLE8(int8_t left, int8_t right);
+bool CMP_SLE16(int16_t left, int16_t right);
+bool CMP_SLE32(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_ULE: [("left", "expr"), ("right", "expr")] */
 bool CMP_ULE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SGE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGE1(int8_t left, int8_t right);
-bool CMP_SGE2(int16_t left, int16_t right);
-bool CMP_SGE4(int32_t left, int32_t right);
+bool CMP_SGE8(int8_t left, int8_t right);
+bool CMP_SGE16(int16_t left, int16_t right);
+bool CMP_SGE32(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_UGE: [("left", "expr"), ("right", "expr")] */
 bool CMP_UGE(REGTYPE left, REGTYPE right);
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGT1(int8_t left, int8_t right);
-bool CMP_SGT2(int16_t left, int16_t right);
-bool CMP_SGT4(int32_t left, int32_t right);
+bool CMP_SGT8(int8_t left, int8_t right);
+bool CMP_SGT16(int16_t left, int16_t right);
+bool CMP_SGT32(int32_t left, int32_t right);
 
 /* LowLevelILOperation.LLIL_CMP_UGT: [("left", "expr"), ("right", "expr")] */
 bool CMP_UGT(REGTYPE left, REGTYPE right);
@@ -280,9 +288,9 @@ bool TEST_BIT(REGTYPE value, REGTYPE mask);
 
 /* LowLevelILOperation.LLIL_BOOL_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_ADD_OVERFLOW: [("left", "expr"), ("right", "expr")] */
-bool ADD_OVERFLOW1(uint8_t a, uint8_t b);
-bool ADD_OVERFLOW2(uint16_t a, uint16_t b);
-bool ADD_OVERFLOW4(uint32_t a, uint32_t b);
+bool ADD_OVERFLOW8(uint8_t a, uint8_t b);
+bool ADD_OVERFLOW16(uint16_t a, uint16_t b);
+bool ADD_OVERFLOW32(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_SYSCALL: [] */
 /* LowLevelILOperation.LLIL_INTRINSIC: [("output", "reg_or_flag_list"), ("intrinsic", "intrinsic"), ("param", "expr")] */
@@ -359,6 +367,14 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 
 
 /* register helpers */
+
+/* register value generalized over all widths */
+typedef struct tag_BIGVAL
+{
+	int width; /* in BITS: 8, 16, 32, 64, 128, 256 */
+	uint8_t data[64];
+} BIGVAL;
+
 REGTYPE reg_core_get_value(string regName);
 REGTYPE reg_get_value(string regName);
 void reg_core_set_value(string regName, REGTYPE value);

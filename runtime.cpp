@@ -38,6 +38,7 @@ extern map<string,struct RegisterInfo> regInfos;
 uint8_t vm_mem[VM_MEM_SZ];
 map<string,REGTYPE> vm_regs;
 map<string,REGTYPE> vm_regs_temp;
+map<string,reg128> vm_regs_128;
 map<string,int> vm_flags;
 
 /*****************************************************************************/
@@ -70,17 +71,37 @@ REGTYPE reg_core_get_value(string regName)
 	return result;
 }
 
-REGTYPE reg_get_value(string regName)
+REG_VALUE reg_get_value(string regName)
 {
 	REGTYPE result;
 
 	/* temp registers simply come from the temp regs file */
-	if(regName.rfind("temp",0) == 0) {
-		result = vm_regs_temp[regName];
+	if(regName.rfind("temp",0) == 0)
+		return vm_regs_temp[regName];
+	
+	RegisterInfo reg_info = regInfos[regName];
+	/* like xmm0 */
+	if(reg_info.size == 128) {
+		// TODO: how to scale down 128 to REGTYPE
+		result = vm_regs_128[regName];
 	}
 	/* core registers must consider full-width vs. sub registers */
 	else {
-		result = reg_core_get_value(regName);
+		RegisterInfo ri = regInfos[regName];
+		/* full width */
+		if(ri.full_width_reg == regName) {
+			result = vm_regs[regName];
+			//debug("%s(): %s is full-width, value=" FMT_REG "\n", __func__, regName.c_str(), result);
+		}
+		/* sub register */
+		else {
+			REGTYPE fwr = vm_regs[ri.full_width_reg];
+			int shift = 8*ri.offset;
+			REGTYPE mask = ((REGTYPE)1 << 8*(ri.size))-1;
+			result = (fwr >> shift) & mask;
+			//debug("%s(): %s is subreg, (" FMT_REG ">>%d) & " FMT_REG " == " FMT_REG "\n",
+			//	__func__, regName.c_str(), fwr, shift, mask, result);
+		}
 	}
 
 	return result;
@@ -134,28 +155,35 @@ void NOP(void)
 }
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG1(string dest, uint8_t src)
+void SET_REG8(string dest, uint8_t src)
 {
 	reg_set_value(dest, src);
-	debug_set("SET_REG1        %s = 0x%02X\n", dest.c_str(), src);
+	debug_set("SET_REG8        %s = 0x%02X\n", dest.c_str(), *(uint8_t *)src.data);
 }
 
-void SET_REG2(string dest, uint16_t src)
+void SET_REG16(string dest, uint16_t src)
 {
 	reg_set_value(dest, src);
-	debug_set("SET_REG2        %s = 0x%04X\n", dest.c_str(), src);
+	debug_set("SET_REG16       %s = 0x%04X\n", dest.c_str(), *(uint16_t *)src.data);
 }
 
-void SET_REG4(string dest, uint32_t src)
+void SET_REG32(string dest, uint32_t src)
 {
 	reg_set_value(dest, src);
-	debug_set("SET_REG4        %s = 0x%08X\n", dest.c_str(), src);
+	debug_set("SET_REG32       %s = 0x%08X\n", dest.c_str(), *(uint32_t *)src.data);
 }
 
-void SET_REG8(string dest, uint64_t src)
+void SET_REG64(string dest, uint64_t src)
 {
 	reg_set_value(dest, src);
-	debug_set("SET_REG8        %s = 0x%016llX\n", dest.c_str(), src);
+	debug_set("SET_REG64       %s = 0x%016llX\n", dest.c_str(), *(uint64_t *)src.data);
+}
+
+void SET_REG128(string dest, BIGVAL src)
+{
+//	reg_set_value(dest, src);
+//	debug_set("SET_REG128      %s = 0x%016llX%016llX\n",
+//		dest.c_str(), *(uint64_t *)src.data, *(uint64_t *)(src.data + 8));
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
@@ -193,56 +221,56 @@ void SET_FLAG(string left, bool right)
 }
 
 /* LowLevelILOperation.LLIL_LOAD: [("src", "expr")] */
-uint8_t LOAD1(REGTYPE expr)
+uint8_t LOAD8(REGTYPE expr)
 {
 	uint8_t result = vm_mem[expr];
-	debug("LOAD1           0x%X = mem[" FMT_REG "]\n", result, expr);
+	debug("LOAD8           0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
-uint16_t LOAD2(REGTYPE expr)
+uint16_t LOAD16(REGTYPE expr)
 {
 	uint16_t result = *(uint16_t *)(vm_mem + expr);
-	debug("LOAD2           0x%X = mem[" FMT_REG "]\n", result, expr);
+	debug("LOAD16          0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
-uint32_t LOAD4(REGTYPE expr)
+uint32_t LOAD64(REGTYPE expr)
 {
 	uint32_t result = *(uint32_t *)(vm_mem + expr);
-	debug("LOAD4           0x%X = mem[" FMT_REG "]\n", result, expr);
+	debug("LOAD64          0x%X = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
-uint64_t LOAD8(REGTYPE expr)
+uint64_t LOAD128(REGTYPE expr)
 {
 	uint64_t result = *(uint64_t *)(vm_mem + expr);
-	debug("LOAD8           0x%llX = mem[" FMT_REG "]\n", result, expr);
+	debug("LOAD128         0x%llX = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_STORE: [("dest", "expr"), ("src", "expr")] */
-void STORE1(REGTYPE dest, uint8_t src)
+void STORE8(REGTYPE dest, uint8_t src)
 {
-	debug("STORE1          byte[" FMT_REG "] = 0x%02X\n", dest, src);
+	debug("STORE8          byte[" FMT_REG "] = 0x%02X\n", dest, src);
 	*(uint8_t *)(vm_mem + dest) = src;
 }
 
-void STORE2(REGTYPE dest, uint16_t src)
+void STORE16(REGTYPE dest, uint16_t src)
 {
-	debug("STORE2          word[" FMT_REG "] = 0x%04X\n", dest, src);
+	debug("STORE16         word[" FMT_REG "] = 0x%04X\n", dest, src);
 	*(uint16_t *)(vm_mem + dest) = src;
 }
 
-void STORE4(REGTYPE dest, uint32_t src)
+void STORE32(REGTYPE dest, uint32_t src)
 {
-	debug("STORE4          dword[" FMT_REG "] = 0x%08X\n", dest, src);
+	debug("STORE32         dword[" FMT_REG "] = 0x%08X\n", dest, src);
 	*(uint32_t *)(vm_mem + dest) = src;
 }
 
-void STORE8(REGTYPE dest, uint64_t src)
+void STORE64(REGTYPE dest, uint64_t src)
 {
-	debug("STORE8          qword[" FMT_REG "] = 0x%016llX\n", dest, src);
+	debug("STORE64         qword[" FMT_REG "] = 0x%016llX\n", dest, src);
 	*(uint64_t *)(vm_mem + dest) = src;
 }
 
@@ -270,7 +298,7 @@ REGTYPE POP(void)
 }
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
-REGTYPE REG(string src)
+REGVALUE REG8(string src)
 {
 	REGTYPE result = reg_get_value(src);
 	debug("REG             " FMT_REG " = %s\n", result, src.c_str());
@@ -301,31 +329,31 @@ bool FLAG(string src)
 /* LowLevelILOperation.LLIL_FLAG_BIT: [("src", "flag"), ("bit", "int")] */
 
 /* LowLevelILOperation.LLIL_ADD: [("left", "expr"), ("right", "expr")] */
-uint8_t ADD1(uint8_t left, uint8_t right)
+uint8_t ADD8(uint8_t left, uint8_t right)
 {
 	uint8_t result = left + right;
-	debug("ADD1            0x%02X = 0x%02X + 0x%02X\n", result & 0xFF, left & 0xFF, right & 0xFF);
+	debug("ADD8            0x%02X = 0x%02X + 0x%02X\n", result & 0xFF, left & 0xFF, right & 0xFF);
 	return result;
 }
 
-uint16_t ADD2(uint16_t left, uint16_t right)
+uint16_t ADD16(uint16_t left, uint16_t right)
 {
 	uint16_t result = left + right;
-	debug("ADD2            0x%04X = 0x%04X + 0x%04X\n", result & 0xFFFF, left & 0xFFFF, right & 0xFFFF);
+	debug("ADD16           0x%04X = 0x%04X + 0x%04X\n", result & 0xFFFF, left & 0xFFFF, right & 0xFFFF);
 	return result;
 }
 
-uint32_t ADD4(uint32_t left, uint32_t right)
+uint32_t ADD32(uint32_t left, uint32_t right)
 {
 	uint32_t result = left + right;
-	debug("ADD4            0x%08X = 0x%08X + 0x%08X\n", result, left, right);
+	debug("ADD32           0x%08X = 0x%08X + 0x%08X\n", result, left, right);
 	return result;
 }
 
-uint64_t ADD8(uint64_t left, uint64_t right)
+uint64_t ADD64(uint64_t left, uint64_t right)
 {
 	uint64_t result = left + right;
-	debug("ADD8            0x%016llX = 0x%016llX + 0x%016llX\n", result, left, right);
+	debug("ADD64           0x%016llX = 0x%016llX + 0x%016llX\n", result, left, right);
 	return result;
 }
 
@@ -338,28 +366,28 @@ SREGTYPE ADC(SREGTYPE left, SREGTYPE right, bool carry)
 }
 
 /* LowLevelILOperation.LLIL_SUB: [("left", "expr"), ("right", "expr")] */
-uint8_t SUB1(uint8_t a, uint8_t b)
+uint8_t SUB8(uint8_t a, uint8_t b)
 {
 	uint8_t result = a - b;
 	debug("SUB1            0x%02X = 0x%02X - 0x%02X\n", result, a, b);
 	return result;
 }
 
-uint16_t SUB2(uint16_t a, uint16_t b)
+uint16_t SUB16(uint16_t a, uint16_t b)
 {
 	uint16_t result = a - b;
 	debug("SUB2            0x%04X = 0x%04X - 0x%04X\n", result, a, b);
 	return result;
 }
 
-uint32_t SUB4(uint32_t a, uint32_t b)
+uint32_t SUB32(uint32_t a, uint32_t b)
 {
 	uint32_t result = a - b;
 	debug("SUB4            0x%08X = 0x%08X - 0x%08X\n", result, a, b);
 	return result;
 }
 
-uint64_t SUB8(uint64_t a, uint64_t b)
+uint64_t SUB64(uint64_t a, uint64_t b)
 {
 	uint64_t result = a - b;
 	debug("SUB8            0x%016llX = 0x%016llX - 0x%016llX\n", result, a, b);
@@ -367,28 +395,28 @@ uint64_t SUB8(uint64_t a, uint64_t b)
 }
 
 /* LowLevelILOperation.LLIL_SBB: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t SBB1(uint8_t a, uint8_t b, uint8_t c)
+uint8_t SBB8(uint8_t a, uint8_t b, uint8_t c)
 {
 	uint8_t result = a - b - c;
 	debug("SBB1            0x%02X = 0x%02X - 0x%02X - %d\n", result, a, b, c);
 	return result;
 }
 
-uint16_t SBB2(uint16_t a, uint16_t b, uint16_t c)
+uint16_t SBB16(uint16_t a, uint16_t b, uint16_t c)
 {
 	uint16_t result = a - b - c;
 	debug("SBB2            0x%04X = 0x%04X - 0x%04X - %d\n", result, a, b, c);
 	return result;
 }
 
-uint32_t SBB4(uint32_t a, uint32_t b, uint32_t c)
+uint32_t SBB32(uint32_t a, uint32_t b, uint32_t c)
 {
 	uint32_t result = a - b - c;
 	debug("SBB4            0x%08X = 0x%08X - 0x%08X - %d\n", result, a, b, c);
 	return result;
 }
 
-uint64_t SBB8(uint64_t a, uint64_t b, uint64_t c)
+uint64_t SBB64(uint64_t a, uint64_t b, uint64_t c)
 {
 	uint64_t result = a - b - c;
 	debug("SBB8            0x%016llX = 0x%016llX - 0x%016llX - %lld\n", result, a, b, c);
@@ -445,7 +473,7 @@ SREGTYPE ASR(SREGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_ROL: [("left", "expr"), ("right", "expr")] */
-uint8_t ROL1(uint8_t value, uint8_t amt)
+uint8_t ROL8(uint8_t value, uint8_t amt)
 {
 	amt = amt % 8;
 	uint8_t result = (value << amt) | (value >> (8-amt));
@@ -453,7 +481,7 @@ uint8_t ROL1(uint8_t value, uint8_t amt)
 	return result;
 }
 
-uint16_t ROL2(uint16_t value, uint16_t amt)
+uint16_t ROL16(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value << amt) | (value >> (16-amt));
@@ -461,7 +489,7 @@ uint16_t ROL2(uint16_t value, uint16_t amt)
 	return result;
 }
 
-uint32_t ROL4(uint32_t value, uint32_t amt)
+uint32_t ROL32(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value << amt) | (value >> (8-amt));
@@ -469,7 +497,7 @@ uint32_t ROL4(uint32_t value, uint32_t amt)
 	return result;
 }
 
-uint64_t ROL8(uint64_t value, uint64_t amt)
+uint64_t ROL64(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value << amt) | (value >> (8-amt));
@@ -478,7 +506,7 @@ uint64_t ROL8(uint64_t value, uint64_t amt)
 }
 
 /* LowLevelILOperation.LLIL_RLC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
+uint8_t RLC8(uint8_t value, uint8_t amt, bool carry)
 {
 	uint8_t result = value;
 
@@ -498,7 +526,7 @@ uint8_t RLC1(uint8_t value, uint8_t amt, bool carry)
 }
 
 /* LowLevelILOperation.LLIL_ROR: [("left", "expr"), ("right", "expr")] */
-uint8_t ROR1(uint8_t value, uint8_t amt)
+uint8_t ROR8(uint8_t value, uint8_t amt)
 {
 	amt = amt % 8;
 	uint8_t result = (value >> amt) | (value << (8-amt));
@@ -506,32 +534,32 @@ uint8_t ROR1(uint8_t value, uint8_t amt)
 	return result;
 }
 
-uint16_t ROR2(uint16_t value, uint16_t amt)
+uint16_t ROR16(uint16_t value, uint16_t amt)
 {
 	amt = amt % 16;
 	uint16_t result = (value >> amt) | (value << (16-amt));
-	debug("ROR2(0x%04X, %d) returns 0x%04X\n", value, amt, result);
+	debug("ROR16(0x%04X, %d) returns 0x%04X\n", value, amt, result);
 	return result;
 }
 
-uint32_t ROR4(uint32_t value, uint32_t amt)
+uint32_t ROR32(uint32_t value, uint32_t amt)
 {
 	amt = amt % 32;
 	uint32_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR4(0x%08X, %d) returns 0x%08X\n", value, amt, result);
+	debug("ROR32(0x%08X, %d) returns 0x%08X\n", value, amt, result);
 	return result;
 }
 
-uint64_t ROR8(uint64_t value, uint64_t amt)
+uint64_t ROR64(uint64_t value, uint64_t amt)
 {
 	amt = amt % 64;
 	uint64_t result = (value >> amt) | (value << (8-amt));
-	debug("ROR8(0x%016llX, %lld) returns 0x%016llX\n", value, amt, result);
+	debug("ROR64(0x%016llX, %lld) returns 0x%016llX\n", value, amt, result);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_RRC: [("left", "expr"), ("right", "expr"), ("carry", "expr")] */
-uint8_t RRC1(uint8_t value, uint8_t amt, bool carry)
+uint8_t RRC8(uint8_t value, uint8_t amt, bool carry)
 {
 	uint8_t result = value;
 
@@ -544,7 +572,7 @@ uint8_t RRC1(uint8_t value, uint8_t amt, bool carry)
 		result = a | b | c;
 	}
 
-	debug("RRC1            0x%X = 0x%X >>> %d and carry = %d\n", result, value, amt, carry);
+	debug("RRC8            0x%X = 0x%X >>> %d and carry = %d\n", result, value, amt, carry);
 	return result;
 }
 
@@ -612,31 +640,31 @@ SREGTYPE MODS_DP(SREGTYPE left, SREGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_NEG: [("src", "expr")] */
-uint8_t NEG1(uint8_t src)
+uint8_t NEG8(uint8_t src)
 {
     uint8_t result = (src ^ 0xFF) + 1;
-	debug("NEG              0x%02X = neg(0x%02X)\n", result, src);
+	debug("NEG8            0x%02X = neg(0x%02X)\n", result, src);
     return result;
 }
 
-uint16_t NEG2(uint16_t src)
+uint16_t NEG16(uint16_t src)
 {
     uint16_t result = (src ^ 0xFFFF) + 1;
-	debug("NEG              0x%04X = neg(0x%04X)\n", result, src);
+	debug("NEG16            0x%04X = neg(0x%04X)\n", result, src);
     return result;
 }
 
-uint32_t NEG4(uint32_t src)
+uint32_t NEG32(uint32_t src)
 {
     uint32_t result = (src ^ 0xFFFFFFFF) + 1;
-	debug("NEG              0x%08X = neg(0x%08X)\n", result, src);
+	debug("NEG32            0x%08X = neg(0x%08X)\n", result, src);
     return result;
 }
 
-uint64_t NEG8(uint64_t src)
+uint64_t NEG64(uint64_t src)
 {
     uint64_t result = (src ^ 0xFFFFFFFFFFFFFFFF) + 1;
-	debug("NEG              0x%016llX = neg(0x%016llX)\n", result, src);
+	debug("NEG64            0x%016llX = neg(0x%016llX)\n", result, src);
     return result;
 }
 
@@ -652,90 +680,90 @@ uint8_t NOT0(uint8_t left)
 	return result;
 }
 
-uint8_t NOT1(uint8_t left)
+uint8_t NOT8(uint8_t left)
 {
 	uint8_t result = ~left;
-	debug("NOT1            0x%02X = ~0x%02X\n", result, left);
+	debug("NOT8            0x%02X = ~0x%02X\n", result, left);
 	return result;
 }
 
-uint16_t NOT2(uint16_t left)
+uint16_t NOT16(uint16_t left)
 {
 	uint16_t result = ~left;
-	debug("NOT2            0x%04X = ~0x%04X\n", result, left);
+	debug("NOT16           0x%04X = ~0x%04X\n", result, left);
 	return result;
 }
 
-uint32_t NOT4(uint32_t left)
+uint32_t NOT32(uint32_t left)
 {
 	uint32_t result = ~left;
-	debug("NOT4            0x%08X = ~0x%08X\n", result, left);
+	debug("NOT32           0x%08X = ~0x%08X\n", result, left);
 	return result;
 }
 
-uint64_t NOT8(uint64_t left)
+uint64_t NOT64(uint64_t left)
 {
 	uint64_t result = ~left;
-	debug("NOT8            0x%016llX = ~0x%016llX\n", result, left);
+	debug("NOT64           0x%016llX = ~0x%016llX\n", result, left);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_SX: [("src", "expr")] */
-SREGTYPE SX1(int8_t src)
+SREGTYPE SX8(int8_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> " FMT_SREG "\n", src, result);
+	debug("SX8             %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
-SREGTYPE SX2(int16_t src)
+SREGTYPE SX16(int16_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> " FMT_SREG "\n", src, result);
+	debug("SX16            %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
-SREGTYPE SX4(int32_t src)
+SREGTYPE SX32(int32_t src)
 {
 	SREGTYPE result = src;
-	debug("SX              %d -> " FMT_SREG "\n", src, result);
+	debug("SX32            %d -> " FMT_SREG "\n", src, result);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX4(uint32_t src)
+uint32_t ZX32(uint32_t src)
 {
 	uint32_t result = src;
-	debug("ZX4             0x%08X -> 0x%08X\n", src, result);
+	debug("ZX32            0x%08X -> 0x%08X\n", src, result);
 	return result;
 }
 
-uint64_t ZX8(uint64_t src)
+uint64_t ZX64(uint64_t src)
 {
 	uint64_t result = src;
-	debug("ZX8             0x%016llX -> 0x%016llX\n", src, result);
+	debug("ZX64            0x%016llX -> 0x%016llX\n", src, result);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
-uint8_t LOW_PART1(REGTYPE left)
+uint8_t LOW_PART8(REGTYPE left)
 {
 	uint8_t result = left & 0xFF;
-	debug("LOW_PART1       " FMT_REG " -> 0x%02X\n", left, result);
+	debug("LOW_PART8       " FMT_REG " -> 0x%02X\n", left, result);
 	return result;
 }
 
-uint16_t LOW_PART2(REGTYPE left)
+uint16_t LOW_PART16(REGTYPE left)
 {
 	uint16_t result = left & 0xFFFF;
-	debug("LOW_PART2       " FMT_REG " -> 0x%04X\n", left, result);
+	debug("LOW_PART16      " FMT_REG " -> 0x%04X\n", left, result);
 	return result;
 }
 
-uint32_t LOW_PART4(REGTYPE left)
+uint32_t LOW_PART32(REGTYPE left)
 {
 	uint32_t result = left & 0xFFFF;
-	debug("LOW_PART4       " FMT_REG " -> 0x%08X\n", left, result);
+	debug("LOW_PART32      " FMT_REG " -> 0x%08X\n", left, result);
 	return result;
 }
 
@@ -845,24 +873,24 @@ bool CMP_ULT(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SLE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SLE1(int8_t left, int8_t right)
+bool CMP_SLE8(int8_t left, int8_t right)
 {
 	bool result = left <= right;
-	debug("CMP_SLE1        %d = %d <= %d\n", result, left, right);
+	debug("CMP_SLE8        %d = %d <= %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SLE2(int16_t left, int16_t right)
+bool CMP_SLE16(int16_t left, int16_t right)
 {
 	bool result = left <= right;
-	debug("CMP_SLE2        %d = %d <= %d\n", result, left, right);
+	debug("CMP_SLE16        %d = %d <= %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SLE4(int32_t left, int32_t right)
+bool CMP_SLE32(int32_t left, int32_t right)
 {
 	bool result = left <= right;
-	debug("CMP_SLE4        %d = %d <= %d\n", result, left, right);
+	debug("CMP_SLE32        %d = %d <= %d\n", result, left, right);
 	return result;
 }
 
@@ -875,24 +903,24 @@ bool CMP_ULE(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SGE: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGE1(int8_t left, int8_t right)
+bool CMP_SGE8(int8_t left, int8_t right)
 {
 	bool result = left >= right;
-	debug("CMP_SGE1        %d = %d >= %d\n", result, left, right);
+	debug("CMP_SGE8        %d = %d >= %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SGE2(int16_t left, int16_t right)
+bool CMP_SGE16(int16_t left, int16_t right)
 {
 	bool result = left >= right;
-	debug("CMP_SGE2        %d = %d >= %d\n", result, left, right);
+	debug("CMP_SGE16        %d = %d >= %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SGE4(int32_t left, int32_t right)
+bool CMP_SGE32(int32_t left, int32_t right)
 {
 	bool result = left >= right;
-	debug("CMP_SGE4        %d = %d >= %d\n", result, left, right);
+	debug("CMP_SGE32        %d = %d >= %d\n", result, left, right);
 	return result;
 }
 
@@ -905,24 +933,24 @@ bool CMP_UGE(REGTYPE left, REGTYPE right)
 }
 
 /* LowLevelILOperation.LLIL_CMP_SGT: [("left", "expr"), ("right", "expr")] */
-bool CMP_SGT1(int8_t left, int8_t right)
+bool CMP_SGT8(int8_t left, int8_t right)
 {
 	bool result = left > right;
-	debug("CMP_SGT1        %d = %d > %d\n", result, left, right);
+	debug("CMP_SGT8        %d = %d > %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SGT2(int16_t left, int16_t right)
+bool CMP_SGT16(int16_t left, int16_t right)
 {
 	bool result = left > right;
-	debug("CMP_SGT2        %d = %d > %d\n", result, left, right);
+	debug("CMP_SGT16        %d = %d > %d\n", result, left, right);
 	return result;
 }
 
-bool CMP_SGT4(int32_t left, int32_t right)
+bool CMP_SGT32(int32_t left, int32_t right)
 {
 	bool result = left > right;
-	debug("CMP_SGT4        %d = %d > %d\n", result, left, right);
+	debug("CMP_SGT32        %d = %d > %d\n", result, left, right);
 	return result;
 }
 
@@ -944,24 +972,24 @@ bool TEST_BIT(REGTYPE value, REGTYPE mask)
 
 /* LowLevelILOperation.LLIL_BOOL_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_ADD_OVERFLOW: [("left", "expr"), ("right", "expr")] */
-bool ADD_OVERFLOW1(uint8_t a, uint8_t b)
+bool ADD_OVERFLOW8(uint8_t a, uint8_t b)
 {
 	bool result = a >= 256 - b;
-	debug("ADD_OVERFLOW1   %d (when %d + %d)\n", result, a, b);
+	debug("ADD_OVERFLOW8   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 
-bool ADD_OVERFLOW2(uint16_t a, uint16_t b)
+bool ADD_OVERFLOW16(uint16_t a, uint16_t b)
 {
 	bool result = a >= 65536 - b;
-	debug("ADD_OVERFLOW2   %d (when %d + %d)\n", result, a, b);
+	debug("ADD_OVERFLOW16   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 
-bool ADD_OVERFLOW4(uint32_t a, uint32_t b)
+bool ADD_OVERFLOW32(uint32_t a, uint32_t b)
 {
 	bool result = a >= 4294967296 - b;
-	debug("ADD_OVERFLOW4   %d (when %d + %d)\n", result, a, b);
+	debug("ADD_OVERFLOW32   %d (when %d + %d)\n", result, a, b);
 	return result;
 }
 

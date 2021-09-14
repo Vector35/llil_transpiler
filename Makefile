@@ -36,3 +36,6 @@ main: tests_il.cpp runtime.cpp main.cpp
 	g++ -g -O0 --std=c++11 -DARCH_A64 -DARCH_64BIT tests_il.cpp main.cpp runtime.cpp -o main
 
 a64: tests.o tests_il.cpp main
+
+clean:
+	rm -f *.o main

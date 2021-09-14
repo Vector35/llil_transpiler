@@ -385,10 +385,13 @@ float fp_single_div(float a, float b)
 	return a / b;
 }
 
+/*
 void test()
 {
 	float tmp = fp_single_div(1.0, 2.0);
+	tmp = fp_single_div(3.57, 11.13);
 }
+*/
 
 #ifdef ARCH_Z80
 int main()
