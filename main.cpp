@@ -15,43 +15,73 @@ extern map<string,double> vm_regs_double;
 
 /* arguments */
 #define VM_TYPE_NONE 0
-#define VM_TYPE_UINT16 1
-#define VM_TYPE_UINT32 2
-#define VM_TYPE_UINT64 3
-#define VM_TYPE_FLOAT32 4
+#define VM_TYPE_UINT8 1
+#define VM_TYPE_UINT16 2
+#define VM_TYPE_UINT32 3
+#define VM_TYPE_UINT64 4
+#define VM_TYPE_FLOAT32 5
 
 //-----------------------------------------------------------------------------
 // type/value definition, helpers
 //-----------------------------------------------------------------------------
 
+// this is needed because some architecture return values in different locations
+// depending on the type of the data, eg: arm ... TODO
+
 typedef struct type_val_
 {
 	int type; // VM_TYPE_
-	uint16_t u16;
-	union {
-		uint32_t u32;
-		float f32;
-	};
-	uint64_t u64;
-
+	uint8_t data[16];
 } type_val;
+
+type_val tv_init(int type) { type_val tv = {.type = VM_TYPE_NONE, .data={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; tv.type = type; return tv; }
+
+type_val tv_new_uint8(uint8_t val) { type_val tv = tv_init(VM_TYPE_UINT8); *(uint8_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint16(uint16_t val) { type_val tv = tv_init(VM_TYPE_UINT16); *(uint16_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint32(uint32_t val) { type_val tv = tv_init(VM_TYPE_UINT32); *(uint32_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint64(uint64_t val) { type_val tv = tv_init(VM_TYPE_UINT64); *(uint64_t *)(tv.data) = val; return tv; }
+type_val tv_new_float(float val) { type_val tv = tv_init(VM_TYPE_FLOAT32); *(float *)(tv.data) = val; return tv; }
+type_val tv_new_none() { type_val tv = tv_init(VM_TYPE_NONE);; return tv; }
+
+uint8_t tv_get_uint8(type_val tv) { return *(uint8_t *)(tv.data); }
+uint16_t tv_get_uint16(type_val tv) { return *(uint16_t *)(tv.data); }
+uint32_t tv_get_uint32(type_val tv) { return *(uint32_t *)(tv.data); }
+uint64_t tv_get_uint64(type_val tv) { return *(uint64_t *)(tv.data); }
+float tv_get_float32(type_val tv) { return *(float *)(tv.data); }
+
+void tv_set_uint8(type_val tv, uint8_t val) { tv.type = VM_TYPE_UINT8; *(uint8_t *)(tv.data) = val; }
+void tv_set_uint16(type_val tv, uint16_t val) { tv.type = VM_TYPE_UINT16; *(uint16_t *)(tv.data) = val; }
+void tv_set_uint32(type_val tv, uint32_t val) { tv.type = VM_TYPE_UINT32; *(uint32_t *)(tv.data) = val; }
+void tv_set_uint64(type_val tv, uint64_t val) { tv.type = VM_TYPE_UINT64; *(uint64_t *)(tv.data) = val; }
 
 void tv_to_str(type_val tv, char *str)
 {
-	if(tv.type == VM_TYPE_UINT32) sprintf(str, "0x%08X", tv.u32);
-	else if(tv.type == VM_TYPE_FLOAT32) sprintf(str, "%f", tv.f32);
-	else strcpy(str, "None");
+	switch(tv.type) {
+		case VM_TYPE_UINT8:
+			sprintf(str, "0x%02X", tv_get_uint8(tv));
+			break;
+		case VM_TYPE_UINT16:
+			sprintf(str, "0x%04X", tv_get_uint16(tv));
+			break;
+		case VM_TYPE_UINT32:
+			sprintf(str, "0x%08X", tv_get_uint32(tv));
+			break;
+		case VM_TYPE_UINT64:
+			sprintf(str, "0x%016llX", tv_get_uint64(tv));
+			break;
+		case VM_TYPE_FLOAT32:
+			sprintf(str, "%f", tv_get_float32(tv));
+			break;
+		default:
+			str[0] = '\0';
+	}
 }
 
 int tv_cmp(type_val a, type_val b)
 {
-	if(a.type != b.type) return -1;
-	if(a.type == VM_TYPE_UINT16 && a.u16 == b.u16) return 0;
-	if(a.type == VM_TYPE_UINT32 && a.u32 == b.u32) return 0;
-	if(a.type == VM_TYPE_UINT64 && a.u64 == b.u64) return 0;
-	if(a.type == VM_TYPE_FLOAT32 && a.f32 == b.f32) return 0;
-	return -1;
+	return memcmp(a.data, b.data, 8);
 }
+
 
 //-----------------------------------------------------------------------------
 // functions from tests_il.o
@@ -98,9 +128,9 @@ int tv_cmp(type_val a, type_val b)
 #define switch_doubler _switch_doubler
 #define factorial _factorial
 #define fp_single_add _fp_single_add
-#define fp_single_add _fp_single_sub
-#define fp_single_add _fp_single_mul
-#define fp_single_add _fp_single_div
+#define fp_single_sub _fp_single_sub
+#define fp_single_mul _fp_single_mul
+#define fp_single_div _fp_single_div
 #endif
 
 /* functions from generated tests_il.o we'll be using */
@@ -154,12 +184,64 @@ void fp_single_div();
 //-----------------------------------------------------------------------------
 
 #ifdef ARCH_X64
-void vm_init_stack() { vm_regs["rsp"] = VM_MEM_SZ; }
-void vm_set_arg0(int a) { vm_regs["rdi"] = a; }
-void vm_set_arg1(int a) { vm_regs["rsi"] = a; }
-void vm_set_arg2(int a) { vm_regs["rdx"] = a; }
-void vm_precall() { vm_regs["rsp"] -= 8; *(uint64_t *)vm_mem = 0x00C4113200C41132; }
-int vm_get_retval() { return vm_regs["rax"]; }
+void vm_init_stack() { reg_set_uint64("rsp", VM_MEM_SZ); }
+void vm_set_arg0(int a) { reg_set_uint64("rdi", a); }
+void vm_set_arg1(int a) { reg_set_uint64("rsi", a); }
+void vm_set_arg2(int a) { reg_set_uint64("rdx", a); }
+void vm_precall()
+{
+	// synthesize a push of "CALLERCALLER"
+	reg_set_uint64("rsp", reg_get_uint64("rsp")-8);
+	*(uint64_t *)(vm_mem + reg_get_uint64("rsp")) = 0x00C4113200C41132;
+}
+
+type_val vm_get_retval()
+{
+	return tv_new_uint32(reg_get_uint32("eax"));
+}
+
+void vm_set_arg(int order, type_val tv)
+{
+	// System V AMD64 ABI
+	// The first six integer or pointer arguments are passed in registers RDI, RSI, RDX, RCX, R8, R9
+	if(tv.type == VM_TYPE_UINT64) {
+		switch(order) {
+			case 0: reg_set_uint64("rdi", tv_get_uint64(tv)); break;
+			case 1: reg_set_uint64("rsi", tv_get_uint64(tv)); break;
+			case 2: reg_set_uint64("rdx", tv_get_uint64(tv)); break;
+			case 3: reg_set_uint64("rcx", tv_get_uint64(tv)); break;
+			case 4: reg_set_uint64("r8", tv_get_uint64(tv)); break;
+			case 5: reg_set_uint64("r9", tv_get_uint64(tv)); break;
+			break;
+		}
+	}
+	else if(tv.type == VM_TYPE_UINT32) {
+		switch(order) {
+			case 0: reg_set_uint64("rdi", tv_get_uint32(tv)); break;
+			case 1: reg_set_uint64("rsi", tv_get_uint32(tv)); break;
+			case 2: reg_set_uint64("rdx", tv_get_uint32(tv)); break;
+			case 3: reg_set_uint64("rcx", tv_get_uint32(tv)); break;
+			case 4: reg_set_uint64("r8", tv_get_uint32(tv)); break;
+			case 5: reg_set_uint64("r9", tv_get_uint32(tv)); break;
+			break;
+		}
+	}
+	// ...while XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6 and XMM7 are used for the first floating point arguments
+	else if(tv.type == VM_TYPE_FLOAT32) {
+		switch(order) {
+			case 0: reg_set_float32("xmm0", tv_get_float32(tv)); break;
+			case 1: reg_set_float32("xmm1", tv_get_float32(tv)); break;
+			case 2: reg_set_float32("xmm2", tv_get_float32(tv)); break;
+			case 3: reg_set_float32("xmm3", tv_get_float32(tv)); break;
+			case 4: reg_set_float32("xmm4", tv_get_float32(tv)); break;
+			case 5: reg_set_float32("xmm5", tv_get_float32(tv)); break;
+			case 6: reg_set_float32("xmm6", tv_get_float32(tv)); break;
+			case 7: reg_set_float32("xmm7", tv_get_float32(tv)); break;
+			case 8: reg_set_float32("xmm8", tv_get_float32(tv)); break;
+			break;
+		}
+	}
+}
 #endif
 
 #ifdef ARCH_ARM
@@ -177,22 +259,22 @@ void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = 0x00C4113200C41132
 void vm_set_arg(int order, type_val tv)
 {
 	if(tv.type == VM_TYPE_UINT32) {
-		if(order==0) reg_core_set_value("x0", tv.u32);
-		else if(order==1) reg_core_set_value("x1", tv.u32);
-		else if(order==2) reg_core_set_value("x2", tv.u32);
-		else if(order==3) reg_core_set_value("x3", tv.u32);
+		if(order==0) reg_core_set_value("x0", tv_get_uint32(tv));
+		else if(order==1) reg_core_set_value("x1", tv_get_uint32(tv));
+		else if(order==2) reg_core_set_value("x2", tv_get_uint32(tv));
+		else if(order==3) reg_core_set_value("x3", tv_get_uint32(tv));
 	}
 	else if(tv.type == VM_TYPE_UINT64) {
-		if(order==0) reg_core_set_value("x0", tv.u64);
-		else if(order==1) reg_core_set_value("x1", tv.u64);
-		else if(order==2) reg_core_set_value("x2", tv.u64);
-		else if(order==3) reg_core_set_value("x3", tv.u64);
+		if(order==0) reg_core_set_value("x0", tv_get_uint64(tv));
+		else if(order==1) reg_core_set_value("x1", tv_get_uint64(tv));
+		else if(order==2) reg_core_set_value("x2", tv_get_uint64(tv));
+		else if(order==3) reg_core_set_value("x3", tv_get_uint64(tv));
 	}
 	else if(tv.type == VM_TYPE_FLOAT32) {
-		if(order==0) reg_core_set_value("s0", tv.u32);
-		else if(order==1) reg_core_set_value("s1", tv.u32);
-		else if(order==2) reg_core_set_value("s2", tv.u32);
-		else if(order==3) reg_core_set_value("s3", tv.u32);
+		if(order==0) reg_core_set_value("s0", tv_get_uint32(tv));
+		else if(order==1) reg_core_set_value("s1", tv_get_uint32(tv));
+		else if(order==2) reg_core_set_value("s2", tv_get_uint32(tv));
+		else if(order==3) reg_core_set_value("s3", tv_get_uint32(tv));
 	}
 }
 type_val vm_get_retval(int type)
@@ -240,7 +322,7 @@ type_val vm_call(VM_FUNC pfunc, type_val *args, int ret_type) {
 
 	/* call the function, return result */
 	pfunc();
-	return vm_get_retval(ret_type);
+	return vm_get_retval();
 }
 
 //-----------------------------------------------------------------------------
@@ -252,6 +334,16 @@ void check(type_val actual, type_val expected)
 	char actual_str[128], expected_str[128];
 	tv_to_str(actual, actual_str);
 	tv_to_str(expected, expected_str);
+
+	printf("actual: ");
+	for(int i=0; i<16; i++)
+		printf("%02X ", actual.data[i]);
+	printf("\n");
+
+	printf("expect: ");
+	for(int i=0; i<16; i++)
+		printf("%02X ", expected.data[i]);
+	printf("\n");
 
 	if(tv_cmp(actual, expected)==0)
 		printf("   \x1B[32mPASSED\x1B[0m (actual,expected) = (%s,%s)\n", actual_str, expected_str);
@@ -265,48 +357,63 @@ void check(type_val actual, type_val expected)
 void test(const char *func_name, VM_FUNC pfunc, uint32_t expected)
 {
 	printf("%s()...\n", func_name);
-	type_val args[1] = {{.type=VM_TYPE_NONE, .u32=0}};
+	type_val args[1];
+	args[0] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
-	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
+	type_val expected_tv = tv_new_uint32(expected);
+	check(result, expected_tv);
 }
 
 // u32 foo(u32)
 void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t expected)
 {
 	printf("%s()...\n", func_name);
-	type_val args[2] = {{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val args[2];
+	args[0] = tv_new_uint32(arg0);
+	args[1] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
-	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
+	type_val expected_tv = tv_new_uint32(expected);
+	check(result, expected_tv);
 }
 
 // u32 foo(u32, u32)
 void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t arg1, uint32_t expected)
 {
 	printf("%s()...\n", func_name);
-	type_val args[3] = {{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_UINT32, .u32=arg1}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val args[3];
+	args[0] = tv_new_uint32(arg0);
+	args[1] = tv_new_uint32(arg1);
+	args[2] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
-	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
+	type_val expected_tv = tv_new_uint32(expected);
+	check(result, expected_tv);
 }
 
 // u32 foo(u32, u32, u32)
 void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t expected)
 {
 	printf("%s()...\n", func_name);
-	type_val args[4] = {
-		{.type=VM_TYPE_UINT32, .u32=arg0}, {.type=VM_TYPE_UINT32, .u32=arg1},
-		{.type=VM_TYPE_UINT32, .u32=arg2}, {.type=VM_TYPE_NONE, .u32=0}
-	};
+	type_val args[4];
+	args[0] = tv_new_uint32(arg0);
+	args[1] = tv_new_uint32(arg1);
+	args[2] = tv_new_uint32(arg2);
+	args[3] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_UINT32);
-	check(result, {.type=VM_TYPE_UINT32, .u32=expected});
+	type_val expected_tv = tv_new_uint32(expected);
+	check(result, expected_tv);
 }
 
-// u32 foo(u32, u32)
+// u32 foo(float32, float32)
 void test_f(const char *func_name, VM_FUNC pfunc, float arg0, float arg1, float expected)
 {
 	printf("%s()...\n", func_name);
-	type_val args[3] = {{.type=VM_TYPE_FLOAT32, .f32=arg0}, {.type=VM_TYPE_FLOAT32, .f32=arg1}, {.type=VM_TYPE_NONE, .u32=0}};
+	type_val args[3];
+	args[0] = tv_new_float(arg0);
+	args[1] = tv_new_float(arg1);
+	args[2] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_FLOAT32);
-	check(result, {.type=VM_TYPE_FLOAT32, .f32=expected});
+	type_val expected_tv = tv_new_float(expected);
+	check(result, expected_tv);
 }
 
 //-----------------------------------------------------------------------------
@@ -548,25 +655,25 @@ int main(int ac, char **av)
 	test("gcd_recursive", gcd_recursive,51,119, 17);
 
 	/* floating point */
-	test_f("fadd", fp_single_add,1.0,2.0, 3.0);
-	test_f("fadd", fp_single_add,1.5,2.5, 4.0);
-	test_f("fadd", fp_single_add,2.5,3.5, 6.0);
-	test_f("fadd", fp_single_add,2.5,-3.5, -1.0);
+	test_f("fp_single_add", fp_single_add,1.0,2.0, 3.0);
+	test_f("fp_single_add", fp_single_add,1.5,2.5, 4.0);
+	test_f("fp_single_add", fp_single_add,2.5,3.5, 6.0);
+	test_f("fp_single_add", fp_single_add,2.5,-3.5, -1.0);
 
-	test_f("fsub", fp_single_sub,1.0,2.0, -1.0);
-	test_f("fsub", fp_single_sub,1.5,2.5, -1.0);
-	test_f("fsub", fp_single_sub,2.5,3.5, -1.0);
-	test_f("fsub", fp_single_sub,2.5,-3.5, 6.0);
+	test_f("fp_single_sub", fp_single_sub,1.0,2.0, -1.0);
+	test_f("fp_single_sub", fp_single_sub,1.5,2.5, -1.0);
+	test_f("fp_single_sub", fp_single_sub,2.5,3.5, -1.0);
+	test_f("fp_single_sub", fp_single_sub,2.5,-3.5, 6.0);
 
-	test_f("fmul", fp_single_mul,1.0,2.0, 2.0);
-	test_f("fmul", fp_single_mul,1.5,2.5, 3.75);
-	test_f("fmul", fp_single_mul,2.5,3.5, 8.75);
-	test_f("fmul", fp_single_mul,2.5,-3.5, -8.75);
+	test_f("fp_single_mul", fp_single_mul,1.0,2.0, 2.0);
+	test_f("fp_single_mul", fp_single_mul,1.5,2.5, 3.75);
+	test_f("fp_single_mul", fp_single_mul,2.5,3.5, 8.75);
+	test_f("fp_single_mul", fp_single_mul,2.5,-3.5, -8.75);
 
-	test_f("fdiv", fp_single_div,1.0,2.0, 0.5);
-	test_f("fdiv", fp_single_div,1.5,2.5, 0.6);
-	test_f("fdiv", fp_single_div,2.5,4.0, 0.625);
-	test_f("fdiv", fp_single_div,2.5,-4.0, -0.625);
+	test_f("fp_single_div", fp_single_div,1.0,2.0, 0.5);
+	test_f("fp_single_div", fp_single_div,1.5,2.5, 0.6);
+	test_f("fp_single_div", fp_single_div,2.5,4.0, 0.625);
+	test_f("fp_single_div", fp_single_div,2.5,-4.0, -0.625);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);

@@ -54,12 +54,15 @@ def traverse_IL(il, depth=0):
         'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
 
     # these operations have foo1(), foo2(), etc. depending on their operand(s) size(s)
-    sz_from_input = ['ADD_OVERFLOW', 'SX', 'REG']
+    sz_from_input = ['ADD_OVERFLOW', 'SX', 'REG', 'FLOAT_CONV']
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
             opname = opname[5:]
+
+        #if opname == 'FLOAT_CONV':
+        #    breakpoint()
 
         if opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')

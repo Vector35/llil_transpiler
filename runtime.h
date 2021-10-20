@@ -3,9 +3,12 @@
 #ifdef ARCH_64BIT
 	#define REGWIDTH 64
 	#define REGTYPE uint64_t /* register type */
+	#define ADDRTYPE REGTYPE
 	#define SREGTYPE int64_t /* signed register type */
 	#define REGTYPE_HALF uint32_t /* half register type */
 	#define SREGTYPE_HALF int32_t
+	#define REG_GET_ADDR reg_get_uint64
+	#define REG_SET_ADDR reg_set_uint64
 #endif
 
 #ifdef ARCH_32BIT
@@ -14,6 +17,8 @@
 	#define SREGTYPE int32_t /* signed register type */
 	#define REGTYPE_HALF uint16_t /* half register type */
 	#define SREGTYPE_HALF int16_t
+	#define REG_GET_ADDR reg_get_uint32
+	#define REG_SET_ADDR reg_set_uint32
 #endif
 
 #ifdef ARCH_16BIT
@@ -22,8 +27,11 @@
 	#define SREGTYPE int32_t /* signed register type */
 	#define REGTYPE_HALF uint8_t /* half register type */
 	#define SREGTYPE_HALF int8_t
+	#define REG_GET_ADDR reg_get_uint16
+	#define REG_SET_ADDR reg_set_uint16
 #endif
-	
+
+#define ADDRTYPE REGTYPE
 #define PREGTYPE (REGTYPE *) /* pointer to register type */
 #define REGMASK (~0) /* eg: 0xFFFF */
 #define REGMASKLOHALF (( (REGTYPE)1 << (REGWIDTH/2) )-1)	/* eg: 0x00FF */
@@ -44,12 +52,12 @@
 	#define FMT_SREG "%d"
 #endif
 
+#define FMT_ADDR FMT_REG
 
-
-typedef struct tag_reg128 {
-	uint64_t lo;
-	uint64_t hi;
-} reg128;
+typedef struct Storage_
+{
+	uint8_t data[16];
+} Storage;
 
 struct RegisterInfo {
 	int index; /* register index */
@@ -67,7 +75,7 @@ void SET_REG8(string dest, uint8_t src);
 void SET_REG16(string dest, uint16_t src);
 void SET_REG32(string dest, uint32_t src);
 void SET_REG64(string dest, uint64_t src);
-void SET_REG128(string dest, BIGVAL src);
+void SET_REG128(string dest, __uint128_t src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
@@ -97,7 +105,11 @@ void PUSH(REGTYPE src);
 REGTYPE POP(void);
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
-REGTYPE REG(string src);
+uint8_t REG8(string src);
+uint16_t REG16(string src);
+uint32_t REG32(string src);
+uint64_t REG64(string src);
+__uint128_t REG128(string src);
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
 REGTYPE REG_SPLIT(string hi, string lo);
@@ -323,6 +335,7 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 /* LowLevelILOperation.LLIL_FLOAT_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_INT_TO_FLOAT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOAT_CONV: [("src", "expr")] */
+float FLOAT_CONV32(uint32_t input);
 /* LowLevelILOperation.LLIL_ROUND_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOOR: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_CEIL: [("src", "expr")] */
@@ -368,18 +381,19 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 
 /* register helpers */
 
-/* register value generalized over all widths */
-typedef struct tag_BIGVAL
-{
-	int width; /* in BITS: 8, 16, 32, 64, 128, 256 */
-	uint8_t data[64];
-} BIGVAL;
-
-REGTYPE reg_core_get_value(string regName);
-REGTYPE reg_get_value(string regName);
-void reg_core_set_value(string regName, REGTYPE value);
-void reg_set_value(string regName, REGTYPE value);
 void runtime_comment(const char *msg);
+
+uint8_t reg_get_uint8(string name);
+uint16_t reg_get_uint16(string name);
+uint32_t reg_get_uint32(string name);
+uint64_t reg_get_uint64(string name);
+__uint128_t reg_get_uint128(string name);
+void reg_set_uint8(string name, uint8_t val);
+void reg_set_uint16(string name, uint16_t val);
+void reg_set_uint32(string name, uint32_t val);
+void reg_set_uint64(string name, uint64_t val);
+void reg_set_uint128(string name, __uint128_t val);
+void reg_set_float32(string name, float val);
 
 #ifdef ARCH_ARM
 void __aeabi_idiv();
