@@ -340,7 +340,7 @@ if __name__ == '__main__':
 
     # emit register info (so runtime can know that (for example) writes to eax affect rax)
     # see definition of RegisterInfo in il_runtime.h
-    print('map<string,struct RegisterInfo> regInfos = {')
+    print('map<string,struct RegisterInfo> reg_infos = {')
     for (regName,regInfo) in bv.arch.regs.items():
         print('\t{"%s", {%d, "%s", %d, %d, %d}}, /* %s */' % \
             (regName, int(regInfo.index), regInfo.full_width_reg, regInfo.offset, regInfo.size, regInfo.extend, repr(regInfo))
@@ -349,12 +349,12 @@ if __name__ == '__main__':
     print('')
 
     # emit stack register name
-    print('string stackRegName = "%s";' % bv.arch.stack_pointer)
+    print('string stack_reg_name = "%s";' % bv.arch.stack_pointer)
     # emit whether architecture uses a link register
     if bv.arch.link_reg:
-        print('bool isLinkRegArch = true;')
-        print('string linkRegName = "%s";' % bv.arch.link_reg)
+        print('bool is_link_reg_arch = true;')
+        print('string link_reg_name = "%s";' % bv.arch.link_reg)
     else:
-        print('bool isLinkRegArch = false;')
-        print('string linkRegName = "(error)";')
+        print('bool is_link_reg_arch = false;')
+        print('string link_reg_name = "(error)";')
 

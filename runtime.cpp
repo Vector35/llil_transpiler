@@ -27,10 +27,10 @@ using namespace std;
 #endif
 
 /* the foo_il.c must export this, else we can't implement PUSH */
-extern string stackRegName;
-extern bool isLinkRegArch;
-extern string linkRegName;
-extern map<string,struct RegisterInfo> regInfos;
+extern string stack_reg_name;
+extern bool is_link_reg_arch;
+extern string link_reg_name;
+extern map<string,struct RegisterInfo> reg_infos;
 
 /* VM components */
 uint8_t vm_mem[VM_MEM_SZ];
@@ -57,7 +57,7 @@ Storage reg_get_storage(string reg_name)
 		return vm_regs[reg_name];
 
 	/* otherwise we need to resolve sub-register relationships */
-	RegisterInfo reg_info = regInfos[reg_name];
+	RegisterInfo reg_info = reg_infos[reg_name];
 
 	/* full width */
 	if(reg_info.full_width_reg == reg_name)
@@ -75,7 +75,7 @@ void reg_set_storage(string reg_name, Storage store)
 	if(is_temp_reg(reg_name))
 		vm_regs[reg_name] = store;
 
-	RegisterInfo reg_info = regInfos[reg_name];
+	RegisterInfo reg_info = reg_infos[reg_name];
 
 	if(reg_info.full_width_reg == reg_name)
 		vm_regs[reg_name] = store;
@@ -93,14 +93,14 @@ int reg_get_storage_offset(string reg_name)
 	if(is_temp_reg(reg_name))
 		return 0;
 
-	RegisterInfo reg_info = regInfos[reg_name];
+	RegisterInfo reg_info = reg_infos[reg_name];
 
 	if(reg_info.full_width_reg == reg_name) {
 		assert(reg_info.offset == 0);
 		return 0;
 	}
 
-	return regInfos[reg_info.full_width_reg].offset;
+	return reg_infos[reg_info.full_width_reg].offset;
 }
 
 /* internal register getters */
@@ -114,7 +114,7 @@ float reg_get_float32_nocheck(string name)
 
 uint8_t reg_get_uint8(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 1);
+	assert(is_temp_reg(name) || reg_infos[name].size == 1);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	return *(uint8_t *)(store.data + offset);
@@ -122,7 +122,7 @@ uint8_t reg_get_uint8(string name)
 
 uint16_t reg_get_uint16(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 2);
+	assert(is_temp_reg(name) || reg_infos[name].size == 2);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	return *(uint16_t *)(store.data + offset);
@@ -130,7 +130,7 @@ uint16_t reg_get_uint16(string name)
 
 uint32_t reg_get_uint32(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 4);
+	assert(is_temp_reg(name) || reg_infos[name].size == 4);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	return *(uint32_t *)(store.data + offset);
@@ -138,7 +138,7 @@ uint32_t reg_get_uint32(string name)
 
 uint64_t reg_get_uint64(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 8);
+	assert(is_temp_reg(name) || reg_infos[name].size == 8);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	return *(uint64_t *)(store.data + offset);
@@ -146,7 +146,7 @@ uint64_t reg_get_uint64(string name)
 
 __uint128_t reg_get_uint128(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 16);
+	assert(is_temp_reg(name) || reg_infos[name].size == 16);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	return *(__uint128_t *)(store.data + offset);
@@ -154,7 +154,7 @@ __uint128_t reg_get_uint128(string name)
 
 float reg_get_float32(string name)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 32);
+	assert(is_temp_reg(name) || reg_infos[name].size == 32);
 	return reg_get_float32_nocheck(name);
 }
 
@@ -202,31 +202,31 @@ void reg_set_uint128_nocheck(string name, __uint128_t val)
 
 void reg_set_uint8(string name, uint8_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 1);
+	assert(is_temp_reg(name) || reg_infos[name].size == 1);
 	reg_set_uint8_nocheck(name, val);
 }
 
 void reg_set_uint16(string name, uint16_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 2);
+	assert(is_temp_reg(name) || reg_infos[name].size == 2);
 	reg_set_uint16_nocheck(name, val);
 }
 
 void reg_set_uint32(string name, uint32_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 4);
+	assert(is_temp_reg(name) || reg_infos[name].size == 4);
 	reg_set_uint32_nocheck(name, val);
 }
 
 void reg_set_uint64(string name, uint64_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 8);
+	assert(is_temp_reg(name) || reg_infos[name].size == 8);
 	reg_set_uint64_nocheck(name, val);
 }
 
 void reg_set_uint128(string name, __uint128_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 16);
+	assert(is_temp_reg(name) || reg_infos[name].size == 16);
 	reg_set_uint128_nocheck(name, val);
 }
 
@@ -236,7 +236,7 @@ void reg_set_float32(string name, float val)
 	// are reserved for smaller float types, eg: 128-bit xmm0 can have low 32
 	// bits for a normal single precision float
 
-	//assert(is_temp_reg(name) || regInfos[name].size == 32);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 32);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(float *)(store.data + offset) = val;
@@ -337,14 +337,14 @@ void SET_REG128(string reg_name, __uint128_t value)
 
 void SET_REG64_D(string reg_name, uint32_t value)
 {
-	assert(is_temp_reg(reg_name) || regInfos[reg_name].size == 64);
+	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 64);
 	reg_set_uint32_nocheck(reg_name, value);
 	debug_set("SET_REG64_D     %s = 0x%08X\n", reg_name.c_str(), value);
 }
 
 void SET_REG128_D(string reg_name, uint32_t value)
 {
-	assert(is_temp_reg(reg_name) || regInfos[reg_name].size == 16);
+	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 16);
 	reg_set_uint32_nocheck(reg_name, value);
 	debug_set("SET_REG128_D    %s = 0x%08X\n", reg_name.c_str(), value);
 }
@@ -448,9 +448,9 @@ void STORE64(REGTYPE dest, uint64_t src)
 void PUSH(REGTYPE src)
 {
 	/* decrement stack pointer */
-	REG_SET_ADDR(stackRegName, REG_GET_ADDR(stackRegName) - sizeof(REGTYPE));
+	REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) - sizeof(REGTYPE));
 	/* store on stack */
-	ADDRTYPE ea = REG_GET_ADDR(stackRegName);
+	ADDRTYPE ea = REG_GET_ADDR(stack_reg_name);
 	debug_stack("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
 	*(REGTYPE *)(vm_mem + ea) = src;
 }
@@ -459,11 +459,11 @@ void PUSH(REGTYPE src)
 REGTYPE POP(void)
 {
 	/* retrieve from stack */
-	ADDRTYPE ea = REG_GET_ADDR(stackRegName);
+	ADDRTYPE ea = REG_GET_ADDR(stack_reg_name);
 	REGTYPE val = *(ADDRTYPE *)(vm_mem + ea);
 	debug_stack("POP             " FMT_ADDR " = mem[" FMT_ADDR "]\n", val, ea);
 	/* increment stack pointer */
-	REG_SET_ADDR(stackRegName, REG_GET_ADDR(stackRegName) + sizeof(REGTYPE));
+	REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) + sizeof(REGTYPE));
 	return val;
 }
 
@@ -943,20 +943,20 @@ void CALL(REGTYPE dest, void (*pfunc)(void), const char *func_name)
 	#define RUNTIME_CALLER_ADDR_DUMMY ((REGTYPE)0xAAAAAAAA)
 	#define BN_INVALID_REGISTER 0xFFFFFFFF
 
-	if(isLinkRegArch) {
+	if(is_link_reg_arch) {
 		/* this is a link register style of architecture, so set the LR */
-		REG_SET_ADDR(linkRegName, RUNTIME_CALLER_ADDR_DUMMY);
-		debug_set("SET             %s = " FMT_REG "\n", linkRegName.c_str(), RUNTIME_CALLER_ADDR_DUMMY);
+		REG_SET_ADDR(link_reg_name, RUNTIME_CALLER_ADDR_DUMMY);
+		debug_set("SET             %s = " FMT_REG "\n", link_reg_name.c_str(), RUNTIME_CALLER_ADDR_DUMMY);
 	}
 	else {
 		/* this is a push-the-return-address style of architecture
 			so push a dummy return address */
-		REG_SET_ADDR(stackRegName, REG_GET_ADDR(stackRegName) - sizeof(ADDRTYPE));
+		REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) - sizeof(ADDRTYPE));
 
-		*(ADDRTYPE *)(vm_mem + REG_GET_ADDR(stackRegName)) = (ADDRTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
+		*(ADDRTYPE *)(vm_mem + REG_GET_ADDR(stack_reg_name)) = (ADDRTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
 
 		debug_stack("CALL            " FMT_REG "   mem[" FMT_REG "] = " FMT_REG " %s()\n",
-			dest, REG_GET_ADDR(stackRegName), RUNTIME_CALLER_ADDR_DUMMY, func_name);
+			dest, REG_GET_ADDR(stack_reg_name), RUNTIME_CALLER_ADDR_DUMMY, func_name);
 	}
 
 	return pfunc();
@@ -981,7 +981,7 @@ void RET(REGTYPE dest)
 		an arm style ret might be RET(REG("lr")) */
 
 	// DO NOT:
-	// vm_regs[stackRegName] += sizeof(REGTYPE);
+	// vm_regs[stack_reg_name] += sizeof(REGTYPE);
 	debug_stack("RET             " FMT_REG "\n", dest);
 }
 
