@@ -341,7 +341,7 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 /* LowLevelILOperation.LLIL_FLOAT_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_INT_TO_FLOAT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOAT_CONV: [("src", "expr")] */
-float FLOAT_CONV32(uint32_t input);
+uint32_t FLOAT_CONV32(uint32_t input);
 /* LowLevelILOperation.LLIL_ROUND_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOOR: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_CEIL: [("src", "expr")] */

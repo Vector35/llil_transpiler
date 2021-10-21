@@ -1227,10 +1227,12 @@ uint32_t FDIV(uint32_t a, uint32_t b)
 /* LowLevelILOperation.LLIL_FLOAT_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_INT_TO_FLOAT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOAT_CONV: [("src", "expr")] */
-float FLOAT_CONV32(uint32_t input)
+uint32_t FLOAT_CONV32(uint32_t input)
 {
-	float result = *(float *)&input;
-	debug("FCONV           %f = 0x%08X\n", result, input);
+	//float result = *(float *)&input;
+	//debug("FCONV32         %f = 0x%08X\n", result, input);
+	uint32_t result = input;
+	debug("FCONV32         0x%08X = 0x%08X\n", result, input);
 	return result;
 }
 
