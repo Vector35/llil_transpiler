@@ -932,15 +932,8 @@ uint32_t LOW_PART32(REGTYPE left)
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 RETURN_ACTION JUMP(REGTYPE dest)
 {
-	#ifdef ARCH_32BIT
-	if(dest == MAGIC_RETURN_ADDR_32)
+	if(dest == RETURN_ADDRESS_CANARY)
 		return RETURN_TRUE;
-	#endif
-
-	#ifdef ARCH_64BIT
-	if(dest == MAGIC_RETURN_ADDR_64)
-		return RETURN_TRUE;
-	#endif
 
 	printf("ERROR: JUMP to " FMT_REG " is out of LLIL land, something went wrong in transpilation\n", dest);
 	exit(-1);
@@ -951,23 +944,20 @@ RETURN_ACTION JUMP(REGTYPE dest)
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */
 void CALL(REGTYPE dest, void (*pfunc)(void), const char *func_name)
 {
-	#define RUNTIME_CALLER_ADDR_DUMMY ((REGTYPE)0xAAAAAAAA)
-	#define BN_INVALID_REGISTER 0xFFFFFFFF
-
 	if(is_link_reg_arch) {
 		/* this is a link register style of architecture, so set the LR */
-		REG_SET_ADDR(link_reg_name, RUNTIME_CALLER_ADDR_DUMMY);
-		debug_set("SET             %s = " FMT_REG "\n", link_reg_name.c_str(), RUNTIME_CALLER_ADDR_DUMMY);
+		REG_SET_ADDR(link_reg_name, RETURN_ADDRESS_CANARY);
+		debug_set("SET             %s = " FMT_REG "\n", link_reg_name.c_str(), RETURN_ADDRESS_CANARY);
 	}
 	else {
 		/* this is a push-the-return-address style of architecture
 			so push a dummy return address */
 		REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) - sizeof(ADDRTYPE));
 
-		*(ADDRTYPE *)(vm_mem + REG_GET_ADDR(stack_reg_name)) = (ADDRTYPE)(RUNTIME_CALLER_ADDR_DUMMY & REGMASK);
+		*(ADDRTYPE *)(vm_mem + REG_GET_ADDR(stack_reg_name)) = RETURN_ADDRESS_CANARY;
 
 		debug_stack("CALL            " FMT_REG "   mem[" FMT_REG "] = " FMT_REG " %s()\n",
-			dest, REG_GET_ADDR(stack_reg_name), RUNTIME_CALLER_ADDR_DUMMY, func_name);
+			dest, REG_GET_ADDR(stack_reg_name), RETURN_ADDRESS_CANARY, func_name);
 	}
 
 	return pfunc();

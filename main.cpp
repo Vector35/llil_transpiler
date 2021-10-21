@@ -191,7 +191,7 @@ void vm_precall()
 {
 	// synthesize a push of "CALLERCALLER"
 	reg_set_uint64("rsp", reg_get_uint64("rsp")-8);
-	*(uint64_t *)(vm_mem + reg_get_uint64("rsp")) = MAGIC_RETURN_ADDR_64;
+	*(uint64_t *)(vm_mem + reg_get_uint64("rsp")) = RETURN_ADDRESS_CANARY;
 }
 
 void vm_set_arg(int order, type_val tv)
@@ -273,7 +273,7 @@ void vm_set_arg(int order, type_val tv)
 
 void vm_precall()
 {
-	reg_set_uint32("lr", MAGIC_RETURN_ADDR_32);
+	reg_set_uint32("lr", RETURN_ADDRESS_CANARY);
 }
 
 type_val vm_get_retval(int ret_type)
@@ -295,7 +295,7 @@ type_val vm_get_retval(int ret_type)
 
 #ifdef ARCH_A64
 void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
-void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = MAGIC_RETURN_ADDR_64; }
+void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = RETURN_ADDRESS_CANARY; }
 void vm_set_arg(int order, type_val tv)
 {
 	if(tv.type == VM_TYPE_UINT32) {
