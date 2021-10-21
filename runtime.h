@@ -1,5 +1,8 @@
 #define VM_MEM_SZ (16*1024)
 
+#define MAGIC_RETURN_ADDR_32 0x00C41132 /* "CALLER" */
+#define MAGIC_RETURN_ADDR_64 0x00C4113200C41132 /* "CALLERCALLER" */
+
 #ifdef ARCH_64BIT
 	#define REGWIDTH 64
 	#define REGTYPE uint64_t /* register type */
@@ -66,6 +69,12 @@ struct RegisterInfo {
 	int size; /* in bytes */
 	int extend; /* zero or sign */
 };
+
+typedef enum _RETURN_ACTION
+{
+	RETURN_FALSE = 0,
+	RETURN_TRUE = 1
+} RETURN_ACTION;
 
 /* LowLevelILOperation.LLIL_NOP: [] */
 void NOP(void);
@@ -245,7 +254,8 @@ uint16_t LOW_PART16(REGTYPE left);
 uint32_t LOW_PART32(REGTYPE left);
 
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
-void JUMP(REGTYPE dest);
+/* bool is whether or not this JUMP implements a return */
+RETURN_ACTION JUMP(REGTYPE dest);
 
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
 /* LowLevelILOperation.LLIL_CALL: [("dest", "expr")] */

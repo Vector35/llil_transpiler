@@ -930,10 +930,21 @@ uint32_t LOW_PART32(REGTYPE left)
 }
 
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
-void JUMP(REGTYPE dest)
+RETURN_ACTION JUMP(REGTYPE dest)
 {
+	#ifdef ARCH_32BIT
+	if(dest == MAGIC_RETURN_ADDR_32)
+		return RETURN_TRUE;
+	#endif
+
+	#ifdef ARCH_64BIT
+	if(dest == MAGIC_RETURN_ADDR_64)
+		return RETURN_TRUE;
+	#endif
+
 	printf("ERROR: JUMP to " FMT_REG " is out of LLIL land, something went wrong in transpilation\n", dest);
 	exit(-1);
+	return RETURN_FALSE;
 }
 
 /* LowLevelILOperation.LLIL_JUMP_TO: [("dest", "expr"), ("targets", "int_list")] */
@@ -1290,8 +1301,8 @@ void runtime_comment(const char *msg)
 #ifdef ARCH_ARM
 void __aeabi_idiv()
 {
-    SREGTYPE a = reg_get_value("r0");
-    SREGTYPE b = reg_get_value("r1");
+    SREGTYPE a = reg_get_uint32("r0");
+    SREGTYPE b = reg_get_uint32("r1");
     SREGTYPE result = a / b;
     REG_SET_ADDR("r0", result);
 	debug("__aeabi_idiv() returns " FMT_SREG " = " FMT_SREG " / " FMT_SREG "\n", result, a, b);
@@ -1299,8 +1310,8 @@ void __aeabi_idiv()
 
 void __aeabi_idivmod()
 {
-    SREGTYPE a = reg_get_value("r0");
-    SREGTYPE b = reg_get_value("r1");
+    SREGTYPE a = reg_get_uint32("r0");
+    SREGTYPE b = reg_get_uint32("r1");
     SREGTYPE q = a / b;
     SREGTYPE r = a % b;
     REG_SET_ADDR("r0", q);

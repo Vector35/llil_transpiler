@@ -166,17 +166,9 @@ def traverse_IL(il, depth=0):
             semi = False
 
         elif opname == 'JUMP':
-            if arch == 'arm' and \
-              il.operands[0].operation == LowLevelILOperation.LLIL_REG and \
-              il.operands[0].src.name == 'lr':
-                  print('return', end='')
-            elif arch == 'arm' and \
-              il.operands[0].operation == LowLevelILOperation.LLIL_POP:
-                  print('return', end='')
-            else:
-                print('JUMP(', end='')
-                traverse_IL(il.operands[0], depth+1)
-                print(')', end='')
+            print('if(JUMP(', end='')
+            traverse_IL(il.operands[0], depth+1)
+            print(') == RETURN_TRUE) return', end='')
 
         elif opname == 'JUMP_TO':
             print('\tswitch(', end='')
