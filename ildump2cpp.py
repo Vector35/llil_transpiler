@@ -50,11 +50,11 @@ def traverse_IL(il, depth=0):
     # these operations have foo1(), foo2(), foo4(), foo8() versions depending on
     # their LowLevelILInstruction.size
     sz_from_output = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD',
-        'SET_REG', 'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
+        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
         'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
 
     # these operations have foo1(), foo2(), etc. depending on their operand(s) size(s)
-    sz_from_input = ['ADD_OVERFLOW', 'SX', 'REG', 'FLOAT_CONV']
+    sz_from_input = ['ADD_OVERFLOW', 'SX', 'FLOAT_CONV']
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
@@ -95,6 +95,29 @@ def traverse_IL(il, depth=0):
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
 
+            print(')', end='')
+
+        elif opname in ['REG', 'SET_REG']: # LLIL_REG
+            reg = il.operands[0] # ILRegister
+            reg_size = 8 if reg.name.startswith('temp') else reg.info.size
+
+            # simple register access
+            if il.size == reg_size:
+                print('%s%d(' % (opname, il.size * 8), end='')
+            # requested register data is a _PORTION_ of the full register width
+            # eg:
+            #     REG128_d("xmm0") gets 32-bit low dword of 128-bit register xmm0
+            elif il.size < reg_size:
+                suffix_lookup = {1:'B', 2:'W', 4:'D', 8:'Q', 16:'O'}
+                print('%s%d_%s(' % (opname, reg_size * 8, suffix_lookup[il.size]), end='')
+            # ERROR: requesting _MORE_ than the register width
+            else:
+                assert False, 'expected il.size:%d <= reg_size:%d' % (il.size, reg_size)
+
+            for (i,o) in enumerate(il.operands):
+                traverse_IL(o, depth+1)
+                if i < len(il.operands)-1:
+                    print(', ', end='')
             print(')', end='')
 
         elif opname == 'CONST':

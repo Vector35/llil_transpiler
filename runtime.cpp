@@ -105,6 +105,13 @@ int reg_get_storage_offset(string reg_name)
 
 /* internal register getters */
 
+float reg_get_float32_nocheck(string name)
+{
+	Storage store = reg_get_storage(name);
+	int offset = reg_get_storage_offset(name);
+	return *(float *)(store.data + offset);
+}
+
 uint8_t reg_get_uint8(string name)
 {
 	assert(is_temp_reg(name) || regInfos[name].size == 1);
@@ -145,56 +152,91 @@ __uint128_t reg_get_uint128(string name)
 	return *(__uint128_t *)(store.data + offset);
 }
 
+float reg_get_float32(string name)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 32);
+	return reg_get_float32_nocheck(name);
+}
+
 /* internal register setters */
 
-void reg_set_uint8(string name, uint8_t val)
+void reg_set_uint8_nocheck(string name, uint8_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 1);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(uint8_t *)(store.data + offset) = val;
 	reg_set_storage(name, store);
 }
 
-void reg_set_uint16(string name, uint16_t val)
+void reg_set_uint16_nocheck(string name, uint16_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 2);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(uint16_t *)(store.data + offset) = val;
 	reg_set_storage(name, store);
 }
 
-void reg_set_uint32(string name, uint32_t val)
+void reg_set_uint32_nocheck(string name, uint32_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 4);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(uint32_t *)(store.data + offset) = val;
 	reg_set_storage(name, store);
 }
 
-void reg_set_uint64(string name, uint64_t val)
+void reg_set_uint64_nocheck(string name, uint64_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 8);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(uint64_t *)(store.data + offset) = val;
 	reg_set_storage(name, store);
 }
 
-void reg_set_uint128(string name, __uint128_t val)
+void reg_set_uint128_nocheck(string name, __uint128_t val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 16);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(__uint128_t *)(store.data + offset) = val;
 	reg_set_storage(name, store);
 }
 
+void reg_set_uint8(string name, uint8_t val)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 1);
+	reg_set_uint8_nocheck(name, val);
+}
+
+void reg_set_uint16(string name, uint16_t val)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 2);
+	reg_set_uint16_nocheck(name, val);
+}
+
+void reg_set_uint32(string name, uint32_t val)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 4);
+	reg_set_uint32_nocheck(name, val);
+}
+
+void reg_set_uint64(string name, uint64_t val)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 8);
+	reg_set_uint64_nocheck(name, val);
+}
+
+void reg_set_uint128(string name, __uint128_t val)
+{
+	assert(is_temp_reg(name) || regInfos[name].size == 16);
+	reg_set_uint128_nocheck(name, val);
+}
+
 void reg_set_float32(string name, float val)
 {
-	assert(is_temp_reg(name) || regInfos[name].size == 32);
+	// do not force size check: often the low-bits of a floating point register
+	// are reserved for smaller float types, eg: 128-bit xmm0 can have low 32
+	// bits for a normal single precision float
+
+	//assert(is_temp_reg(name) || regInfos[name].size == 32);
 	Storage store = reg_get_storage(name);
 	int offset = reg_get_storage_offset(name);
 	*(float *)(store.data + offset) = val;
@@ -247,36 +289,64 @@ __uint128_t REG128(string name)
 	return result;
 }
 
+uint32_t REG64_D(string name)
+{
+	uint32_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
+	debug("REG64_D         0x%04X (value of %s)\n", (uint32_t)result, name.c_str());
+	return result;
+}
+
+uint32_t REG128_D(string name)
+{
+	__uint128_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
+	debug("REG128_D        0x%04X (value of %s)\n", (uint32_t)result, name.c_str());
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG8(string dest, uint8_t src)
+void SET_REG8(string reg_name, uint8_t value)
 {
-	reg_set_uint8(dest, src);
-	debug_set("SET_REG8        %s = 0x%02X\n", dest.c_str(), src);
+	reg_set_uint8(reg_name, value);
+	debug_set("SET_REG8        %s = 0x%02X\n", reg_name.c_str(), value);
 }
 
-void SET_REG16(string dest, uint16_t src)
+void SET_REG16(string reg_name, uint16_t value)
 {
-	reg_set_uint16(dest, src);
-	debug_set("SET_REG16       %s = 0x%04X\n", dest.c_str(), src);
+	reg_set_uint16(reg_name, value);
+	debug_set("SET_REG16       %s = 0x%04X\n", reg_name.c_str(), value);
 }
 
-void SET_REG32(string dest, uint32_t src)
+void SET_REG32(string reg_name, uint32_t value)
 {
-	reg_set_uint32(dest, src);
-	debug_set("SET_REG32       %s = 0x%08X\n", dest.c_str(), src);
+	reg_set_uint32(reg_name, value);
+	debug_set("SET_REG32       %s = 0x%08X\n", reg_name.c_str(), value);
 }
 
-void SET_REG64(string dest, uint64_t src)
+void SET_REG64(string reg_name, uint64_t value)
 {
-	reg_set_uint64(dest, src);
-	debug_set("SET_REG64       %s = 0x%016llX\n", dest.c_str(), src);
+	reg_set_uint64(reg_name, value);
+	debug_set("SET_REG64       %s = 0x%016llX\n", reg_name.c_str(), value);
 }
 
-void SET_REG128(string dest, __uint128_t src)
+void SET_REG128(string reg_name, __uint128_t value)
 {
-	reg_set_uint128(dest, src);
+	reg_set_uint128(reg_name, value);
 	debug_set("SET_REG128      %s = 0x%016llX%016llX\n",
-		dest.c_str(), (uint64_t)(src >> 64), (uint64_t)src);
+		reg_name.c_str(), (uint64_t)(value >> 64), (uint64_t)value);
+}
+
+void SET_REG64_D(string reg_name, uint32_t value)
+{
+	assert(is_temp_reg(reg_name) || regInfos[reg_name].size == 64);
+	reg_set_uint32_nocheck(reg_name, value);
+	debug_set("SET_REG64_D     %s = 0x%08X\n", reg_name.c_str(), value);
+}
+
+void SET_REG128_D(string reg_name, uint32_t value)
+{
+	assert(is_temp_reg(reg_name) || regInfos[reg_name].size == 16);
+	reg_set_uint32_nocheck(reg_name, value);
+	debug_set("SET_REG128_D    %s = 0x%08X\n", reg_name.c_str(), value);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */

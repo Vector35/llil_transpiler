@@ -77,6 +77,9 @@ void SET_REG32(string dest, uint32_t src);
 void SET_REG64(string dest, uint64_t src);
 void SET_REG128(string dest, __uint128_t src);
 
+void SET_REG64_D(string dest, uint32_t src);
+void SET_REG128_D(string dest, uint32_t src);
+
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
 
@@ -110,6 +113,9 @@ uint16_t REG16(string src);
 uint32_t REG32(string src);
 uint64_t REG64(string src);
 __uint128_t REG128(string src);
+
+uint32_t REG64_D(string src);
+uint32_t REG128_D(string src);
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
 REGTYPE REG_SPLIT(string hi, string lo);
@@ -388,6 +394,7 @@ uint16_t reg_get_uint16(string name);
 uint32_t reg_get_uint32(string name);
 uint64_t reg_get_uint64(string name);
 __uint128_t reg_get_uint128(string name);
+
 void reg_set_uint8(string name, uint8_t val);
 void reg_set_uint16(string name, uint16_t val);
 void reg_set_uint32(string name, uint32_t val);

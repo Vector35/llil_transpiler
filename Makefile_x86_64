@@ -3,7 +3,7 @@ all: main
 tests.o: tests.c
 	gcc tests.c -c -o tests.o
 
-tests_il.cpp: tests.o
+tests_il.cpp: tests.o ildump2cpp.py
 	ildump2cpp.py tests.o > tests_il.cpp
 
 main: tests_il.cpp runtime.cpp main.cpp

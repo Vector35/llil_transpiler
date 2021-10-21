@@ -40,7 +40,7 @@ type_val tv_new_uint8(uint8_t val) { type_val tv = tv_init(VM_TYPE_UINT8); *(uin
 type_val tv_new_uint16(uint16_t val) { type_val tv = tv_init(VM_TYPE_UINT16); *(uint16_t *)(tv.data) = val; return tv; }
 type_val tv_new_uint32(uint32_t val) { type_val tv = tv_init(VM_TYPE_UINT32); *(uint32_t *)(tv.data) = val; return tv; }
 type_val tv_new_uint64(uint64_t val) { type_val tv = tv_init(VM_TYPE_UINT64); *(uint64_t *)(tv.data) = val; return tv; }
-type_val tv_new_float(float val) { type_val tv = tv_init(VM_TYPE_FLOAT32); *(float *)(tv.data) = val; return tv; }
+type_val tv_new_float32(float val) { type_val tv = tv_init(VM_TYPE_FLOAT32); *(float *)(tv.data) = val; return tv; }
 type_val tv_new_none() { type_val tv = tv_init(VM_TYPE_NONE);; return tv; }
 
 uint8_t tv_get_uint8(type_val tv) { return *(uint8_t *)(tv.data); }
@@ -195,9 +195,23 @@ void vm_precall()
 	*(uint64_t *)(vm_mem + reg_get_uint64("rsp")) = 0x00C4113200C41132;
 }
 
-type_val vm_get_retval()
+type_val vm_get_retval(int ret_type)
 {
-	return tv_new_uint32(reg_get_uint32("eax"));
+	switch(ret_type)
+	{
+		case VM_TYPE_UINT8: return tv_new_uint8(reg_get_uint8("al"));
+		case VM_TYPE_UINT16: return tv_new_uint16(reg_get_uint16("ax"));
+		case VM_TYPE_UINT32: return tv_new_uint32(reg_get_uint32("eax"));
+		case VM_TYPE_UINT64: return tv_new_uint64(reg_get_uint64("rax"));
+		case VM_TYPE_FLOAT32:
+		{
+			__uint128_t tmp = reg_get_uint128("xmm0");
+			type_val tv = tv_new_float32(*(float *)(&tmp));
+			return tv;
+		}
+		default:
+			return tv_new_none();
+	}
 }
 
 void vm_set_arg(int order, type_val tv)
@@ -322,7 +336,7 @@ type_val vm_call(VM_FUNC pfunc, type_val *args, int ret_type) {
 
 	/* call the function, return result */
 	pfunc();
-	return vm_get_retval();
+	return vm_get_retval(ret_type);
 }
 
 //-----------------------------------------------------------------------------
@@ -408,11 +422,11 @@ void test_f(const char *func_name, VM_FUNC pfunc, float arg0, float arg1, float 
 {
 	printf("%s()...\n", func_name);
 	type_val args[3];
-	args[0] = tv_new_float(arg0);
-	args[1] = tv_new_float(arg1);
+	args[0] = tv_new_float32(arg0);
+	args[1] = tv_new_float32(arg1);
 	args[2] = tv_new_none();
 	type_val result = vm_call(pfunc, args, VM_TYPE_FLOAT32);
-	type_val expected_tv = tv_new_float(expected);
+	type_val expected_tv = tv_new_float32(expected);
 	check(result, expected_tv);
 }
 
