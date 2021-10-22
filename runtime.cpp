@@ -72,13 +72,22 @@ void reg_set_storage(string reg_name, Storage store)
 {
 	REGTYPE result;
 
-	if(is_temp_reg(reg_name))
+	//printf("setting %s to ", reg_name.c_str());
+	//for(int i=0; i<16; i++)
+	//	printf("%02X ", store.data[i]&0xFF);
+	//printf("\n");
+
+	if(is_temp_reg(reg_name)) {
 		vm_regs[reg_name] = store;
+		return;
+	}
 
 	RegisterInfo reg_info = reg_infos[reg_name];
 
-	if(reg_info.full_width_reg == reg_name)
+	if(reg_info.full_width_reg == reg_name) {
 		vm_regs[reg_name] = store;
+		return;
+	}
 
 	vm_regs[reg_info.full_width_reg] = store;
 }
@@ -95,12 +104,9 @@ int reg_get_storage_offset(string reg_name)
 
 	RegisterInfo reg_info = reg_infos[reg_name];
 
-	if(reg_info.full_width_reg == reg_name) {
-		assert(reg_info.offset == 0);
-		return 0;
-	}
+	assert((reg_info.full_width_reg != reg_name) || reg_info.offset==0);
 
-	return reg_infos[reg_info.full_width_reg].offset;
+	return reg_info.offset;
 }
 
 /* internal register getters */
@@ -154,7 +160,7 @@ __uint128_t reg_get_uint128(string name)
 
 float reg_get_float32(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 32);
+	assert(is_temp_reg(name) || reg_infos[name].size == 4);
 	return reg_get_float32_nocheck(name);
 }
 
@@ -1169,7 +1175,6 @@ bool ADD_OVERFLOW32(uint32_t a, uint32_t b)
 REGTYPE UNIMPL()
 {
 	debug("UNIMPL");
-	printf("UNIMPLEMENTED!\n");
 	exit(-1);
 	return 0;
 }

@@ -261,7 +261,7 @@ type_val vm_get_retval(int ret_type)
 void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
 void vm_set_arg(int order, type_val tv)
 {
-	if(tv.type == VM_TYPE_UINT32) {
+	if(tv.type == VM_TYPE_UINT32 || tv.type == VM_TYPE_FLOAT32) {
 		switch(order) {
 			case 0: reg_set_uint32("r0", tv_get_uint32(tv)); break;
 			case 1: reg_set_uint32("r1", tv_get_uint32(tv)); break;
@@ -280,13 +280,10 @@ type_val vm_get_retval(int ret_type)
 {
 	switch(ret_type)
 	{
-		case VM_TYPE_UINT32: return tv_new_uint32(reg_get_uint32("r0"));
-//		case VM_TYPE_FLOAT32:
-//		{
-//			__uint128_t tmp = reg_get_uint128("xmm0");
-//			type_val tv = tv_new_float32(*(float *)(&tmp));
-//			return tv;
-//		}
+		case VM_TYPE_UINT32:
+			return tv_new_uint32(reg_get_uint32("r0"));
+		case VM_TYPE_FLOAT32:
+			return tv_new_float32(reg_get_float32("r0"));
 		default:
 			return tv_new_none();
 	}

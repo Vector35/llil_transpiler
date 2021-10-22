@@ -409,6 +409,7 @@ uint16_t reg_get_uint16(string name);
 uint32_t reg_get_uint32(string name);
 uint64_t reg_get_uint64(string name);
 __uint128_t reg_get_uint128(string name);
+float reg_get_float32(string name);
 
 void reg_set_uint8(string name, uint8_t val);
 void reg_set_uint16(string name, uint16_t val);
