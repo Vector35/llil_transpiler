@@ -6,6 +6,10 @@
 #include <map>
 using namespace std;
 
+#ifndef assert
+#define assert(cond) if(!(cond)) __builtin_debugtrap();
+#endif
+
 /* VM components */
 #include "runtime.h"
 extern vector<REGTYPE> vm_stack;
@@ -282,6 +286,12 @@ void vm_set_arg(int order, type_val tv)
 		else if(order==2) reg_set_float32("s2", tv_get_float32(tv));
 		else if(order==3) reg_set_float32("s3", tv_get_float32(tv));
 	}
+	else if(tv.type == TV_TYPE_FLOAT64) {
+		if(order==0) reg_set_float64("d0", tv_get_float64(tv));
+		else if(order==1) reg_set_float64("d1", tv_get_float64(tv));
+		else if(order==2) reg_set_float64("d2", tv_get_float64(tv));
+		else if(order==3) reg_set_float64("d3", tv_get_float64(tv));
+	}
 	else {
 		assert(false);
 	}
@@ -293,14 +303,23 @@ type_val vm_get_retval(enum TV_TYPE type)
 	switch(type)
 	{
 		case TV_TYPE_UINT32:
-			result = reg_get_type_val("w0");
+		{
+			uint32_t temp = reg_get_uint32("w0");
+			result = tv_new_uint32(temp);
 			break;
+		}
 		case TV_TYPE_UINT64:
-			result = reg_get_type_val("x0");
+		{
+			uint32_t temp = reg_get_uint32("x0");
+			result = tv_new_uint64(temp);
 			break;
+		}
 		case TV_TYPE_FLOAT32:
-			result = reg_get_type_val("s0");
+		{
+			float temp = reg_get_float32("s0");
+			result = tv_new_float32(temp);
 			break;
+		}
 		default:
 			assert(false);
 	}

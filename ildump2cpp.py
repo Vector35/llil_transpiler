@@ -36,6 +36,8 @@ def get_il_size(il):
             return il.info.size * 8
     elif type(il) == int:
         return 0
+    elif type(il) == float:
+        return 0
     else:
         return il.size * 8
 
@@ -45,7 +47,7 @@ def traverse_IL(il, depth=0):
     # LowLevelILRegister
     # LowLevelILFlag
 
-    sz_toks_int = {1:'B', 2:'W', 4:'D', 8:'Q', 10:'T', 16:'O'}
+    sz_toks_int = {1:'B', 2:'H', 4:'D', 8:'Q', 10:'T', 16:'O'}
     sz_toks_float = {2: 'H', 4:'S', 8:'D', 16:'T'}
 
     global bv

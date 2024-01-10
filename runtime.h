@@ -146,6 +146,8 @@ REGTYPE REG_SPLIT(string hi, string lo);
 SREGTYPE EXTERN_PTR(SREGTYPE constant, SREGTYPE offset);
 
 /* LowLevelILOperation.LLIL_FLOAT_CONST: [("constant", "float")] */
+uint32_t FLOAT_CONST_D(float input);
+
 /* LowLevelILOperation.LLIL_FLAG: [("src", "flag")] */
 bool FLAG(string src);
 
@@ -216,7 +218,7 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right);
 /* LowLevelILOperation.LLIL_DIVU_DP: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_DIVS: [("left", "expr"), ("right", "expr")] */
-SREGTYPE DIVS(SREGTYPE left, SREGTYPE_HALF right);
+uint32_t DIVS32_D(uint32_t left, uint32_t right);
 
 /* LowLevelILOperation.LLIL_DIVS_DP: [("left", "expr"), ("right", "expr")] */
 SREGTYPE DIVS_DP(SREGTYPE left, SREGTYPE_HALF right);
@@ -378,6 +380,10 @@ uint32_t FLOAT_CONV64_S(uint64_t input);
 /* LowLevelILOperation.LLIL_FCMP_GT: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FCMP_O: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FCMP_UO: [("left", "expr"), ("right", "expr")] */
+bool FCMP_E32_D(float left, float right);
+bool FCMP_NE32_D(float left, float right);
+bool FCMP_GE32_D(float left, float right);
+
 /* LowLevelILOperation.LLIL_SET_REG_SSA: [("dest", "reg_ssa"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_SET_REG_SSA_PARTIAL: [("full_reg", "reg_ssa"), ("dest", "reg"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT_SSA: [("hi", "expr"), ("lo", "expr"), ("src", "expr")] */

@@ -8,7 +8,9 @@ using namespace std;
 
 #include "runtime.h"
 
+#ifndef assert
 #define assert(cond) if(!(cond)) __builtin_debugtrap();
+#endif
 
 #define DEBUG_RUNTIME_ALL
 #define DEBUG_RUNTIME_SETS
@@ -581,11 +583,18 @@ SREGTYPE EXTERN_PTR(SREGTYPE constant, SREGTYPE offset)
 }
 
 /* LowLevelILOperation.LLIL_FLOAT_CONST: [("constant", "float")] */
+uint32_t FLOAT_CONST_D(float input)
+{
+	uint32_t result = *(uint32_t *)&input;
+	debug("FLOAT_CONST_D   0x%08X (%f)\n", result, input);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_FLAG: [("src", "flag")] */
 bool FLAG(string src)
 {
 	bool result = vm_flags[src];
-	debug("FLAG            " "%d = vm_flags[%s]\n", result, src.c_str());
+	debug("FLAG            %d = vm_flags[%s]\n", result, src.c_str());
 	return result;
 }
 
@@ -852,10 +861,13 @@ SREGTYPE MUL(SREGTYPE left, SREGTYPE right)
 /* LowLevelILOperation.LLIL_DIVU_DP: [("left", "expr"), ("right", "expr")] */
 
 /* LowLevelILOperation.LLIL_DIVS: [("left", "expr"), ("right", "expr")] */
-SREGTYPE DIVS(SREGTYPE left, SREGTYPE_HALF right)
+uint32_t DIVS32_D(uint32_t left, uint32_t right)
 {
-	SREGTYPE result = left / right;
-	debug("DIVS_DP         " FMT_SREG " = " FMT_SREG " / " FMT_REG_HALF "\n", result, left, right);
+	int32_t ai = *(int32_t *)&left;
+	int32_t bi = *(int32_t *)&right;
+	int32_t ci = ai / bi;
+	uint32_t result = *(uint32_t *)&ci;
+	debug("DIVS32_D        0x%08X (%d) = 0x%08X (%d) / 0x%08X (%d)\n", result, ci, left, ai, right, bi);
 	return result;
 }
 
@@ -1389,6 +1401,28 @@ uint32_t FLOAT_CONV64_S(uint64_t input)
 /* LowLevelILOperation.LLIL_FCMP_GT: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FCMP_O: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FCMP_UO: [("left", "expr"), ("right", "expr")] */
+
+bool FCMP_E32_D(float left, float right)
+{
+	bool result = left == right;
+	debug("FCMP_E32_D      %d = %f == %f\n", result, left, right);
+	return result;
+}
+
+bool FCMP_NE32_D(float left, float right)
+{
+	bool result = left != right;
+	debug("FCMP_NE32_D     %d = %f != %f\n", result, left, right);
+	return result;
+}
+
+bool FCMP_GE32_D(float left, float right)
+{
+	bool result = left >= right;
+	debug("FCMP_GE32_D     %d = %f >= %f\n", result, left, right);
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_SET_REG_SSA: [("dest", "reg_ssa"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_SET_REG_SSA_PARTIAL: [("full_reg", "reg_ssa"), ("dest", "reg"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT_SSA: [("hi", "expr"), ("lo", "expr"), ("src", "expr")] */
