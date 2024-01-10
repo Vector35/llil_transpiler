@@ -1,0 +1,13 @@
+all: main
+
+tests.o: tests.c
+	gcc tests.c -c -o tests.o
+
+tests_il.cpp: tests.o ildump2cpp.py
+	ildump2cpp.py tests.o > tests_il.cpp
+
+main: tests_il.cpp runtime.cpp main.cpp
+	g++ -g -O0 --std=c++11 -DARCH_A64 -DARCH_64BIT -DLEADING_UNDERSCORE tests_il.cpp main.cpp runtime.cpp -o main
+
+clean:
+	rm -f *.o main tests_il.cpp

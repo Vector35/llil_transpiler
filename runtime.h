@@ -249,6 +249,9 @@ SREGTYPE SX8(int8_t src);
 SREGTYPE SX16(int16_t src);
 SREGTYPE SX32(int32_t src);
 
+/* LowLevelILOperation.LLIL_TRAP: [("vector", "int")] */
+void TRAP(int32_t src);
+
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
 uint32_t ZX32(uint32_t src);
 uint64_t ZX64(uint64_t src);
@@ -399,10 +402,53 @@ uint32_t FLOAT_CONV32(uint32_t input);
 /* LowLevelILOperation.LLIL_FLAG_PHI: [("dest", "flag_ssa"), ("src", "flag_ssa_list")] */
 /* LowLevelILOperation.LLIL_MEM_PHI: [("dest_memory", "int"), ("src_memory", "int_list")] */
 
+/* type_val stuff */
+
+enum TV_TYPE
+{
+	TV_TYPE_NONE = 0, /* must be 0, so memset() sets TYPE_NONE */
+	TV_TYPE_UINT8,
+	TV_TYPE_UINT16,
+	TV_TYPE_UINT32,
+	TV_TYPE_UINT64,
+	TV_TYPE_UINT128,
+	TV_TYPE_FLOAT32
+};
+
+typedef struct type_val_
+{
+	enum TV_TYPE type;
+	uint8_t data[16];
+} type_val;
+
+type_val tv_init(enum TV_TYPE type);
+type_val tv_new_none();
+type_val tv_new_uint8(uint8_t val);
+type_val tv_new_uint16(uint16_t val);
+type_val tv_new_uint32(uint32_t val);
+type_val tv_new_uint64(uint64_t val);
+type_val tv_new_float32(float val);
+
+uint8_t tv_get_uint8(type_val tv);
+uint16_t tv_get_uint16(type_val tv);
+uint32_t tv_get_uint32(type_val tv);
+uint64_t tv_get_uint64(type_val tv);
+float tv_get_float32(type_val tv);
+
+void tv_set_uint8(type_val tv, uint8_t val);
+void tv_set_uint16(type_val tv, uint16_t val);
+void tv_set_uint32(type_val tv, uint32_t val);
+void tv_set_uint64(type_val tv, uint64_t val);
+
+void tv_to_str(type_val tv, char *str, int buflen);
+int tv_cmp(type_val a, type_val b);
 
 /* register helpers */
 
 void runtime_comment(const char *msg);
+
+type_val reg_get_type_val(string reg_name);
+void reg_set_type_val(string reg_name, type_val tv);
 
 uint8_t reg_get_uint8(string name);
 uint16_t reg_get_uint16(string name);

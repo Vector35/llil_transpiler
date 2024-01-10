@@ -8,6 +8,8 @@ using namespace std;
 
 #include "runtime.h"
 
+#define assert(cond) if(!(cond)) __builtin_debugtrap();
+
 #define DEBUG_RUNTIME_ALL
 #define DEBUG_RUNTIME_SETS
 #define DEBUG_RUNTIME_STACK
@@ -34,8 +36,62 @@ extern map<string,struct RegisterInfo> reg_infos;
 
 /* VM components */
 uint8_t vm_mem[VM_MEM_SZ];
-map<string, Storage> vm_regs;
+map<string, type_val> vm_regs;
 map<string, int> vm_flags;
+
+// this is needed because some architecture return values in different locations
+// depending on the type of the data, eg: arm ... TODO
+
+/*****************************************************************************/
+/* type_val and helpers */
+/*****************************************************************************/
+
+type_val tv_init(enum TV_TYPE type) { type_val tv; tv.type = type; memset(tv.data, 0, sizeof(tv.data)); return tv; };
+type_val tv_new_uint8(uint8_t val) { type_val tv = tv_init(TV_TYPE_UINT8); *(uint8_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint16(uint16_t val) { type_val tv = tv_init(TV_TYPE_UINT16); *(uint16_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint32(uint32_t val) { type_val tv = tv_init(TV_TYPE_UINT32); *(uint32_t *)(tv.data) = val; return tv; }
+type_val tv_new_uint64(uint64_t val) { type_val tv = tv_init(TV_TYPE_UINT64); *(uint64_t *)(tv.data) = val; return tv; }
+type_val tv_new_float32(float val) { type_val tv = tv_init(TV_TYPE_FLOAT32); *(float *)(tv.data) = val; return tv; }
+type_val tv_new_none() { type_val tv = tv_init(TV_TYPE_NONE); memset(tv.data, 0, sizeof(tv.data));  return tv; }
+
+uint8_t tv_get_uint8(type_val tv) { return *(uint8_t *)(tv.data); }
+uint16_t tv_get_uint16(type_val tv) { return *(uint16_t *)(tv.data); }
+uint32_t tv_get_uint32(type_val tv) { return *(uint32_t *)(tv.data); }
+uint64_t tv_get_uint64(type_val tv) { return *(uint64_t *)(tv.data); }
+float tv_get_float32(type_val tv) { return *(float *)(tv.data); }
+
+void tv_set_uint8(type_val tv, uint8_t val) { tv.type = TV_TYPE_UINT8; *(uint8_t *)(tv.data) = val; }
+void tv_set_uint16(type_val tv, uint16_t val) { tv.type = TV_TYPE_UINT16; *(uint16_t *)(tv.data) = val; }
+void tv_set_uint32(type_val tv, uint32_t val) { tv.type = TV_TYPE_UINT32; *(uint32_t *)(tv.data) = val; }
+void tv_set_uint64(type_val tv, uint64_t val) { tv.type = TV_TYPE_UINT64; *(uint64_t *)(tv.data) = val; }
+
+void tv_to_str(type_val tv, char *str, int buflen)
+{
+	switch(tv.type) {
+		case TV_TYPE_UINT8:
+			snprintf(str, buflen, "0x%02X", tv_get_uint8(tv));
+			break;
+		case TV_TYPE_UINT16:
+			snprintf(str, buflen, "0x%04X", tv_get_uint16(tv));
+			break;
+		case TV_TYPE_UINT32:
+			snprintf(str, buflen, "0x%08X", tv_get_uint32(tv));
+			break;
+		case TV_TYPE_UINT64:
+			snprintf(str, buflen, "0x%016llX", tv_get_uint64(tv));
+			break;
+		case TV_TYPE_FLOAT32:
+			snprintf(str, buflen, "%f", tv_get_float32(tv));
+			break;
+		default:
+			str[0] = '\0';
+	}
+}
+
+int tv_cmp(type_val a, type_val b)
+{
+	return memcmp(a.data, b.data, sizeof(a.data));
+}
 
 /*****************************************************************************/
 /* register setting/getting */
@@ -46,58 +102,70 @@ bool is_temp_reg(string reg_name)
 	return reg_name.rfind("temp", 0) == 0;
 }
 
-// return the register's storage (possibly in a parent register)
+// return the register's ENTIRE type_val (possibly a larger parent register)
 //
-Storage reg_get_storage(string reg_name)
+type_val reg_get_type_val(string reg_name)
 {
-	REGTYPE result;
+	type_val result;
 
 	/* temp registers simply come from the temp regs file */
 	if(is_temp_reg(reg_name))
-		return vm_regs[reg_name];
+		result = vm_regs[reg_name];
+	else
+	{
+		/* otherwise we need to resolve sub-register relationships */
+		RegisterInfo reg_info = reg_infos[reg_name];
 
-	/* otherwise we need to resolve sub-register relationships */
-	RegisterInfo reg_info = reg_infos[reg_name];
+		/* full width */
+		if(reg_info.full_width_reg == reg_name)
+			result = vm_regs[reg_name];
+		/* sub register */
+		else
+			result = vm_regs[reg_info.full_width_reg];
 
-	/* full width */
-	if(reg_info.full_width_reg == reg_name)
-		return vm_regs[reg_name];
+		/* returned registers retain type indicating their size */
+		switch(reg_info.size)
+		{
+			case 1: result.type = TV_TYPE_UINT8;
+			case 2: result.type = TV_TYPE_UINT16;
+			case 4: result.type = TV_TYPE_UINT32;
+			case 8: result.type = TV_TYPE_UINT64;
+			case 16: result.type = TV_TYPE_UINT128;
+		}
+	}
 
-	/* sub register */
-	return vm_regs[reg_info.full_width_reg];
+	return result;
 }
 
-// set the register's storage (possibly in a parent register)
-void reg_set_storage(string reg_name, Storage store)
+// set the register's type_val (possibly in a parent register)
+void reg_set_type_val(string reg_name, type_val tv)
 {
-	REGTYPE result;
-
 	//printf("setting %s to ", reg_name.c_str());
 	//for(int i=0; i<16; i++)
-	//	printf("%02X ", store.data[i]&0xFF);
+	//	printf("%02X ", tv.data[i]&0xFF);
 	//printf("\n");
 
 	if(is_temp_reg(reg_name)) {
-		vm_regs[reg_name] = store;
+		vm_regs[reg_name] = tv;
 		return;
 	}
 
 	RegisterInfo reg_info = reg_infos[reg_name];
 
 	if(reg_info.full_width_reg == reg_name) {
-		vm_regs[reg_name] = store;
+		vm_regs[reg_name] = tv;
 		return;
 	}
 
-	vm_regs[reg_info.full_width_reg] = store;
+	vm_regs[reg_info.full_width_reg] = tv;
 }
 
-// return the register's offset into storage of its parent register
+// return the register's offset into type_val.data of its parent register
 // eg:
 //    rax is offset 0 into rax, return 0
 //    eax is offset 0 into rax, return 1
 //     ah is offset 1 into rax, return 1
-int reg_get_storage_offset(string reg_name)
+int reg_get_type_val_offset(string reg_name)
 {
 	if(is_temp_reg(reg_name))
 		return 0;
@@ -113,49 +181,49 @@ int reg_get_storage_offset(string reg_name)
 
 float reg_get_float32_nocheck(string name)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(float *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(float *)(tv.data + offset);
 }
 
 uint8_t reg_get_uint8(string name)
 {
 	assert(is_temp_reg(name) || reg_infos[name].size == 1);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(uint8_t *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(uint8_t *)(tv.data + offset);
 }
 
 uint16_t reg_get_uint16(string name)
 {
 	assert(is_temp_reg(name) || reg_infos[name].size == 2);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(uint16_t *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(uint16_t *)(tv.data + offset);
 }
 
 uint32_t reg_get_uint32(string name)
 {
 	assert(is_temp_reg(name) || reg_infos[name].size == 4);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(uint32_t *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(uint32_t *)(tv.data + offset);
 }
 
 uint64_t reg_get_uint64(string name)
 {
 	assert(is_temp_reg(name) || reg_infos[name].size == 8);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(uint64_t *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(uint64_t *)(tv.data + offset);
 }
 
 __uint128_t reg_get_uint128(string name)
 {
 	assert(is_temp_reg(name) || reg_infos[name].size == 16);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	return *(__uint128_t *)(store.data + offset);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	return *(__uint128_t *)(tv.data + offset);
 }
 
 float reg_get_float32(string name)
@@ -168,42 +236,42 @@ float reg_get_float32(string name)
 
 void reg_set_uint8_nocheck(string name, uint8_t val)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(uint8_t *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(uint8_t *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 void reg_set_uint16_nocheck(string name, uint16_t val)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(uint16_t *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(uint16_t *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 void reg_set_uint32_nocheck(string name, uint32_t val)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(uint32_t *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(uint32_t *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 void reg_set_uint64_nocheck(string name, uint64_t val)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(uint64_t *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(uint64_t *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 void reg_set_uint128_nocheck(string name, __uint128_t val)
 {
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(__uint128_t *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(__uint128_t *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 void reg_set_uint8(string name, uint8_t val)
@@ -243,10 +311,10 @@ void reg_set_float32(string name, float val)
 	// bits for a normal single precision float
 
 	//assert(is_temp_reg(name) || reg_infos[name].size == 32);
-	Storage store = reg_get_storage(name);
-	int offset = reg_get_storage_offset(name);
-	*(float *)(store.data + offset) = val;
-	reg_set_storage(name, store);
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(float *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
 }
 
 /*****************************************************************************/
@@ -896,6 +964,12 @@ SREGTYPE SX32(int32_t src)
 	SREGTYPE result = src;
 	debug("SX32            %d -> " FMT_SREG "\n", src, result);
 	return result;
+}
+
+/* LowLevelILOperation.LLIL_TRAP: [("vector", "int")] */
+void TRAP(int32_t src)
+{
+	debug("TRAP            0n%d, 0x%X", src, src);
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
