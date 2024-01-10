@@ -10,16 +10,7 @@ using namespace std;
 #include "runtime.h"
 extern vector<REGTYPE> vm_stack;
 extern uint8_t vm_mem[VM_MEM_SZ];
-extern map<string,REGTYPE> vm_regs;
-extern map<string,double> vm_regs_double;
-
-/* arguments */
-
-
-//-----------------------------------------------------------------------------
-// type/value definition, helpers
-//-----------------------------------------------------------------------------
-
+extern map<string,type_val> vm_regs;
 
 //-----------------------------------------------------------------------------
 // functions from tests_il.o
@@ -234,13 +225,11 @@ void vm_init_stack()
 {
 	reg_set_uint64("sp", VM_MEM_SZ);
 }
-
 void vm_precall()
 {
 	reg_set_uint64("sp", reg_get_uint64("sp") - 8);
-	*(uint64_t *)(vm_mem + reg_get_uint64("sp")) = RETURN_ADDRESS_CANARY;
+	*(uint64_t *)vm_mem = RETURN_ADDRESS_CANARY;
 }
-
 void vm_set_arg(int order, type_val tv)
 {
 	if(tv.type == TV_TYPE_UINT32) {
