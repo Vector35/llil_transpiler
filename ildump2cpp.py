@@ -171,7 +171,7 @@ def traverse_IL(il, depth=0):
             print(') == RETURN_TRUE) return', end='')
 
         elif opname == 'JUMP_TO':
-            print('\tswitch(', end='')
+            print('switch(', end='')
             traverse_IL(il.operands[0], depth+1)
             print(')', end='')
             print('\t{')
@@ -179,7 +179,7 @@ def traverse_IL(il, depth=0):
                 print('\t\t// val=%s target_il=%s' % (str(val), str(target_il)))
                 target_native = current_llil[target_il].address
                 print('\t\tcase 0x%X: goto loc_%d;' % (target_native, target_il))
-            print('\t\tdefault: printf("switch fucked\\n"); while(1);')
+            print('\t\tdefault: printf("switch fucked\\n"); __builtin_debugtrap();')
             print('\t}', end='')
             semi = False
 
