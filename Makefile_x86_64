@@ -9,5 +9,8 @@ tests_il.cpp: tests.o ildump2cpp.py
 main: tests_il.cpp runtime.cpp main.cpp
 	g++ -g -O0 --std=c++11 -DARCH_X64 -DARCH_64BIT -DLEADING_UNDERSCORE tests_il.cpp main.cpp runtime.cpp -o main
 
+disasm:
+	objdump -d ./tests.o --x86-asm-syntax=intel
+
 clean:
 	rm -f *.o main tests_il.cpp
