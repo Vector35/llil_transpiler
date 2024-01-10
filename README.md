@@ -1,22 +1,33 @@
 # LLIL Transpiler
 
-Convert LLIL to C++ so that it can be compiled and executed.
+Convert LLIL to compileable and executable C++.
 
-quick start: `make x64` `./main`
+**GOALS**:
 
-The main motivation is to run tests that, when passed, increase confidence that lifting is accurate.
+* test lifting: accurate LLIL should compute like native code
+* provide LLIL semantics - [runtime.cpp](./runtime.cpp) contains a C/C++ implementation for many LLIL operations
+
+**QUICK START**: `make -f Makefile_x86_x64` `./main`
+
+**EXAMPLE**: [transpiled A64](./assets/tests_il_A64.cpp)
 
 ## How does it work?
 
-* LLIL operations become function calls, like LLIL\_REG becomes REG(), LLIL\_PUSH becomes PUSH()
-* LLIL_IF becomes C++'s if
-* LLIL_GOTO becomes C++'s goto, and labels are generated for every block
-* LLIL_CALL becomes a C++ function invocation
-* LLIL_JUMP_TO becomes a C++ switch statement
-* return is generated architecture dependent, like LLIL_RET in X64 LLIL_JUMP(LLIL_REG('lr')) in ARM
-* all functions implementing LLIL ops are in runtime.cpp
+The LLIL gets mapped to C/C++ code:
 
-So how do you actually do it?
+| LLIL         | C/C++                                      |
+| ------------ | ------------------------------------------ |
+| LLIL_IF      | if                                         |
+| LLIL_GOTO    | goto, with labels generated at every block |
+| LLIL_CALL    | function call                              |
+| LLIL_JUMP_TO | switch                                     |
+| LLIL_REG     | `REG16()`, `REG32()`, `REG64()`, etc.      |
+| LLIL_ADD     | `ADD16()`, `ADD32()`, `ADD64()`, etc.      |
+| LLIL_XXX     | `XXX()`                                    |
+
+See [ildump2cpp.py](./ildump2cpp.py) for the mapper, and [runtime.cpp](./runtime.cpp) for the C/C++ implementation of the LLIL operations.
+
+## Workflow
 
 1. compile tests.cpp into tests.o with the architecture you want to lift
 2. extract the llil into tests\_il.cpp using ildump2cpp.py
@@ -29,7 +40,7 @@ Using make: `make x64` or `make arm` then `./main`
 
 1. atop runtime.h, do an `#ifdef ARCH_XXX` and inside define your arch's register types, etc.
 2. in main.cpp, do an `#ifdef ARCH_XXX` and inside define `vm_init_stack()`, `vm_set_arg0()`, etc.
-3. in the Makefile, create a new target that calls your arch's compiler to produce tests.o and passes -DARCH\_XXX
+3. create a Makefile, being sure to pass `-DARCH_XXX`
 4. run `./main`
 
 ## What else?

@@ -385,6 +385,35 @@ float fp_single_div(float a, float b)
 	return a / b;
 }
 
+float test_float_e_10(float a)
+{
+	if(a == 10) return 7;
+	return 13;
+}
+
+float test_float_ne_10(float a)
+{
+	if(a != 10) return 7;
+	return 13;
+}
+
+float test_float_slt_10(float a)
+{
+	if(a < 10)
+		return 7;
+	else
+		return 13;
+}
+
+float test_float_ult_10(float a)
+{
+	if(a < 10)
+		return 7;
+	else
+		return 13;
+}
+
+
 /*
 void test()
 {

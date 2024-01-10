@@ -258,7 +258,7 @@ type_val vm_get_retval(int ret_type)
 #endif
 
 #ifdef ARCH_ARM
-void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
+void vm_init_stack() { reg_set_uint32("sp", VM_MEM_SZ); }
 void vm_set_arg(int order, type_val tv)
 {
 	if(tv.type == VM_TYPE_UINT32 || tv.type == VM_TYPE_FLOAT32) {
@@ -291,35 +291,52 @@ type_val vm_get_retval(int ret_type)
 #endif
 
 #ifdef ARCH_A64
-void vm_init_stack() { vm_regs["sp"] = VM_MEM_SZ; }
-void vm_precall() { vm_regs["sp"] -= 8; *(uint64_t *)vm_mem = RETURN_ADDRESS_CANARY; }
+void vm_init_stack()
+{
+	reg_set_uint64("sp", VM_MEM_SZ);
+}
+
+void vm_precall()
+{
+	reg_set_uint64("sp", reg_get_uint64("sp") - 8);
+	*(uint64_t *)(vm_mem + reg_get_uint64("sp")) = RETURN_ADDRESS_CANARY;
+}
+
 void vm_set_arg(int order, type_val tv)
 {
 	if(tv.type == VM_TYPE_UINT32) {
-		if(order==0) reg_core_set_value("x0", tv_get_uint32(tv));
-		else if(order==1) reg_core_set_value("x1", tv_get_uint32(tv));
-		else if(order==2) reg_core_set_value("x2", tv_get_uint32(tv));
-		else if(order==3) reg_core_set_value("x3", tv_get_uint32(tv));
+		if(order==0) reg_set_uint64("x0", tv_get_uint32(tv));
+		else if(order==1) reg_set_uint64("x1", tv_get_uint32(tv));
+		else if(order==2) reg_set_uint64("x2", tv_get_uint32(tv));
+		else if(order==3) reg_set_uint64("x3", tv_get_uint32(tv));
 	}
 	else if(tv.type == VM_TYPE_UINT64) {
-		if(order==0) reg_core_set_value("x0", tv_get_uint64(tv));
-		else if(order==1) reg_core_set_value("x1", tv_get_uint64(tv));
-		else if(order==2) reg_core_set_value("x2", tv_get_uint64(tv));
-		else if(order==3) reg_core_set_value("x3", tv_get_uint64(tv));
+		if(order==0) reg_set_uint64("x0", tv_get_uint64(tv));
+		else if(order==1) reg_set_uint64("x1", tv_get_uint64(tv));
+		else if(order==2) reg_set_uint64("x2", tv_get_uint64(tv));
+		else if(order==3) reg_set_uint64("x3", tv_get_uint64(tv));
 	}
 	else if(tv.type == VM_TYPE_FLOAT32) {
-		if(order==0) reg_core_set_value("s0", tv_get_uint32(tv));
-		else if(order==1) reg_core_set_value("s1", tv_get_uint32(tv));
-		else if(order==2) reg_core_set_value("s2", tv_get_uint32(tv));
-		else if(order==3) reg_core_set_value("s3", tv_get_uint32(tv));
+		if(order==0) reg_set_uint32("s0", tv_get_uint32(tv));
+		else if(order==1) reg_set_uint32("s1", tv_get_uint32(tv));
+		else if(order==2) reg_set_uint32("s2", tv_get_uint32(tv));
+		else if(order==3) reg_set_uint32("s3", tv_get_uint32(tv));
 	}
 }
-type_val vm_get_retval(int type)
+
+type_val vm_get_retval(int ret_type)
 {
-	if(type == VM_TYPE_UINT32) return {.type=VM_TYPE_UINT32, .u32=(uint32_t)reg_core_get_value("w0")};
-	if(type == VM_TYPE_UINT64) return {.type=VM_TYPE_UINT64, .u64=(uint64_t)reg_core_get_value("x0")};
-	if(type == VM_TYPE_FLOAT32) return {.type=VM_TYPE_FLOAT32, .u32=(uint32_t)reg_core_get_value("s0")};
-	return {.type=VM_TYPE_NONE, .u32=0};
+	switch(ret_type)
+	{
+		case VM_TYPE_UINT32:
+			return tv_new_uint32(reg_get_uint32("w0"));
+		case VM_TYPE_UINT64:
+			return tv_new_uint64(reg_get_uint64("x0"));
+		case VM_TYPE_FLOAT32:
+			return tv_new_float32(reg_get_float32("s0"));
+		default:
+			return tv_new_none();
+	}
 }
 #endif
 

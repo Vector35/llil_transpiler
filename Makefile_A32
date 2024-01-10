@@ -3,9 +3,12 @@ all: main
 # get ndk-r21d toolchain at https://developer.android.com/ndk/downloads, unzip
 # from android/build/tools run `./make_standalone_toolchain.py --arch arm --api 21 --install-dir /tmp/my-android-toolchain`
 # now mv /tmp/my-android-toolchain ~/android_arm_api21_toolchain
-#
+
+BUILT_TOOLCHAIN ?= $(HOME)/android_arm_api21_toolchain
+GCC = $(BUILT_TOOLCHAIN)/bin/arm-linux-androideabi-gcc
+
 tests.o: tests.c
-	$(HOME)/android_arm_api21_toolchain/bin/arm-linux-androideabi-gcc -O0 -c tests.c -o tests.o
+	$(GCC) -O0 -c tests.c -o tests.o
 
 tests_il.cpp: tests.o ildump2cpp.py
 	ildump2cpp.py tests.o arm > tests_il.cpp
@@ -14,4 +17,4 @@ main: tests_il.cpp runtime.cpp main.cpp
 	g++ -g -O0 --std=c++11 -DARCH_ARM -DARCH_32BIT tests_il.cpp main.cpp runtime.cpp -o main
 
 clean:
-	rm -f *.o main
+	rm -f *.o main tests_il.cpp
