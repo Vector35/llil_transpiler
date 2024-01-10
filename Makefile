@@ -33,4 +33,4 @@ main: tests_il.cpp runtime.cpp main.cpp
 a64: tests.o tests_il.cpp main
 
 clean:
-	rm -f *.o main
+	rm -f *.o main tests_il.cpp
