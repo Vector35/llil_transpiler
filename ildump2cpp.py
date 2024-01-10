@@ -34,6 +34,8 @@ def get_il_size(il):
             return 64
         else:
             return il.info.size * 8
+    elif isinstance(il, lowlevelil.ILFlag):
+        return 0
     elif type(il) == int:
         return 0
     elif type(il) == float:

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cmath> // for isnan()
 using namespace std;
 
 #include <stdint.h>
@@ -1402,24 +1403,38 @@ uint32_t FLOAT_CONV64_S(uint64_t input)
 /* LowLevelILOperation.LLIL_FCMP_O: [("left", "expr"), ("right", "expr")] */
 /* LowLevelILOperation.LLIL_FCMP_UO: [("left", "expr"), ("right", "expr")] */
 
-bool FCMP_E32_D(float left, float right)
+bool FCMP_E32_D(double left, double right)
 {
 	bool result = left == right;
 	debug("FCMP_E32_D      %d = %f == %f\n", result, left, right);
 	return result;
 }
 
-bool FCMP_NE32_D(float left, float right)
+bool FCMP_NE32_D(double left, double right)
 {
 	bool result = left != right;
 	debug("FCMP_NE32_D     %d = %f != %f\n", result, left, right);
 	return result;
 }
 
-bool FCMP_GE32_D(float left, float right)
+bool FCMP_GE32_D(double left, double right)
 {
 	bool result = left >= right;
 	debug("FCMP_GE32_D     %d = %f >= %f\n", result, left, right);
+	return result;
+}
+
+bool FCMP_LE32_D(double left, double right)
+{
+	bool result = left <= right;
+	debug("FCMP_GE32_D     %d = %f <= %f\n", result, left, right);
+	return result;
+}
+
+bool FCMP_UO32_D(double left, double right)
+{
+	bool result = !(isnan(left) || isnan(right));
+	debug("FCMP_UO32_D     %d = %f <= %f\n", result, left, right);
 	return result;
 }
 
