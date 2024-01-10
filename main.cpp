@@ -60,6 +60,8 @@ extern map<string,type_val> vm_regs;
 #define fp_single_sub _fp_single_sub
 #define fp_single_mul _fp_single_mul
 #define fp_single_div _fp_single_div
+#define fp_convert_double_to_single _fp_convert_double_to_single
+#define fp_convert_double_product_to_single _fp_convert_double_product_to_single
 #endif
 
 /* functions from generated tests_il.o we'll be using */
@@ -107,6 +109,8 @@ void fp_single_add();
 void fp_single_sub();
 void fp_single_mul();
 void fp_single_div();
+void fp_convert_double_to_single();
+void fp_convert_double_product_to_single();
 
 //-----------------------------------------------------------------------------
 // architecture-specific VM utilities to init stack, set args, return values
@@ -165,6 +169,24 @@ void vm_set_arg(int order, type_val tv)
 			break;
 		}
 	}
+	else if(tv.type == TV_TYPE_FLOAT64) {
+		switch(order) {
+			case 0: reg_set_float64("xmm0", tv_get_float64(tv)); break;
+			case 1: reg_set_float64("xmm1", tv_get_float64(tv)); break;
+			case 2: reg_set_float64("xmm2", tv_get_float64(tv)); break;
+			case 3: reg_set_float64("xmm3", tv_get_float64(tv)); break;
+			case 4: reg_set_float64("xmm4", tv_get_float64(tv)); break;
+			case 5: reg_set_float64("xmm5", tv_get_float64(tv)); break;
+			case 6: reg_set_float64("xmm6", tv_get_float64(tv)); break;
+			case 7: reg_set_float64("xmm7", tv_get_float64(tv)); break;
+			case 8: reg_set_float64("xmm8", tv_get_float64(tv)); break;
+			break;
+		}
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 type_val vm_get_retval(enum TV_TYPE ret_type)
@@ -181,8 +203,14 @@ type_val vm_get_retval(enum TV_TYPE ret_type)
 			type_val tv = tv_new_float32(*(float *)(&tmp));
 			return tv;
 		}
+		case TV_TYPE_FLOAT64:
+		{
+			__uint128_t tmp = reg_get_uint128("xmm0");
+			type_val tv = tv_new_float64(*(double *)(&tmp));
+			return tv;
+		}
 		default:
-			return tv_new_none();
+			assert(false);
 	}
 }
 #endif
@@ -198,6 +226,10 @@ void vm_set_arg(int order, type_val tv)
 			case 2: reg_set_uint32("r2", tv_get_uint32(tv)); break;
 			break;
 		}
+	}
+	else
+	{
+		assert(false);
 	}
 }
 
@@ -215,7 +247,7 @@ type_val vm_get_retval(enum TV_TYPE ret_type)
 		case TV_TYPE_FLOAT32:
 			return tv_new_float32(reg_get_float32("r0"));
 		default:
-			return tv_new_none();
+			assert(false);
 	}
 }
 #endif
@@ -250,6 +282,9 @@ void vm_set_arg(int order, type_val tv)
 		else if(order==2) reg_set_float32("s2", tv_get_float32(tv));
 		else if(order==3) reg_set_float32("s3", tv_get_float32(tv));
 	}
+	else {
+		assert(false);
+	}
 }
 type_val vm_get_retval(enum TV_TYPE type)
 {
@@ -267,7 +302,7 @@ type_val vm_get_retval(enum TV_TYPE type)
 			result = reg_get_type_val("s0");
 			break;
 		default:
-			__builtin_debugtrap();
+			assert(false);
 	}
 
 	result.type = type;
@@ -393,13 +428,38 @@ void test(const char *func_name, VM_FUNC pfunc, uint32_t arg0, uint32_t arg1, ui
 	check(result, expected_tv);
 }
 
-// u32 foo(float32, float32)
-void test_f(const char *func_name, VM_FUNC pfunc, float arg0, float arg1, float expected)
+// float32 foo(float32, float32)
+void test_s(const char *func_name, VM_FUNC pfunc, float arg0, float arg1, float expected)
 {
 	printf("%s()...\n", func_name);
 	type_val args[3];
 	args[0] = tv_new_float32(arg0);
 	args[1] = tv_new_float32(arg1);
+	args[2] = tv_new_none();
+	type_val result = vm_call(pfunc, args, TV_TYPE_FLOAT32);
+	type_val expected_tv = tv_new_float32(expected);
+	check(result, expected_tv);
+}
+
+// float32 foo(float64)
+void test_s_d(const char *func_name, VM_FUNC pfunc, double arg0, float expected)
+{
+	printf("%s()...\n", func_name);
+	type_val args[2];
+	args[0] = tv_new_float64(arg0);
+	args[1] = tv_new_none();
+	type_val result = vm_call(pfunc, args, TV_TYPE_FLOAT32);
+	type_val expected_tv = tv_new_float32(expected);
+	check(result, expected_tv);
+}
+
+// float32 foo(float64, float64)
+void test_s_d_d(const char *func_name, VM_FUNC pfunc, double arg0, double arg1, float expected)
+{
+	printf("%s()...\n", func_name);
+	type_val args[3];
+	args[0] = tv_new_float64(arg0);
+	args[1] = tv_new_float64(arg1);
 	args[2] = tv_new_none();
 	type_val result = vm_call(pfunc, args, TV_TYPE_FLOAT32);
 	type_val expected_tv = tv_new_float32(expected);
@@ -645,25 +705,36 @@ int main(int ac, char **av)
 	test("gcd_recursive", gcd_recursive,51,119, 17);
 
 	/* floating point */
-	test_f("fp_single_add", fp_single_add,1.0,2.0, 3.0);
-	test_f("fp_single_add", fp_single_add,1.5,2.5, 4.0);
-	test_f("fp_single_add", fp_single_add,2.5,3.5, 6.0);
-	test_f("fp_single_add", fp_single_add,2.5,-3.5, -1.0);
+	test_s("fp_single_add", fp_single_add,1.0,2.0, 3.0);
+	test_s("fp_single_add", fp_single_add,1.5,2.5, 4.0);
+	test_s("fp_single_add", fp_single_add,2.5,3.5, 6.0);
+	test_s("fp_single_add", fp_single_add,2.5,-3.5, -1.0);
 
-	test_f("fp_single_sub", fp_single_sub,1.0,2.0, -1.0);
-	test_f("fp_single_sub", fp_single_sub,1.5,2.5, -1.0);
-	test_f("fp_single_sub", fp_single_sub,2.5,3.5, -1.0);
-	test_f("fp_single_sub", fp_single_sub,2.5,-3.5, 6.0);
+	test_s("fp_single_sub", fp_single_sub,1.0,2.0, -1.0);
+	test_s("fp_single_sub", fp_single_sub,1.5,2.5, -1.0);
+	test_s("fp_single_sub", fp_single_sub,2.5,3.5, -1.0);
+	test_s("fp_single_sub", fp_single_sub,2.5,-3.5, 6.0);
 
-	test_f("fp_single_mul", fp_single_mul,1.0,2.0, 2.0);
-	test_f("fp_single_mul", fp_single_mul,1.5,2.5, 3.75);
-	test_f("fp_single_mul", fp_single_mul,2.5,3.5, 8.75);
-	test_f("fp_single_mul", fp_single_mul,2.5,-3.5, -8.75);
+	test_s("fp_single_mul", fp_single_mul,1.0,2.0, 2.0);
+	test_s("fp_single_mul", fp_single_mul,1.5,2.5, 3.75);
+	test_s("fp_single_mul", fp_single_mul,2.5,3.5, 8.75);
+	test_s("fp_single_mul", fp_single_mul,2.5,-3.5, -8.75);
 
-	test_f("fp_single_div", fp_single_div,1.0,2.0, 0.5);
-	test_f("fp_single_div", fp_single_div,1.5,2.5, 0.6);
-	test_f("fp_single_div", fp_single_div,2.5,4.0, 0.625);
-	test_f("fp_single_div", fp_single_div,2.5,-4.0, -0.625);
+	test_s("fp_single_div", fp_single_div,1.0,2.0, 0.5);
+	test_s("fp_single_div", fp_single_div,1.5,2.5, 0.6);
+	test_s("fp_single_div", fp_single_div,2.5,4.0, 0.625);
+	test_s("fp_single_div", fp_single_div,2.5,-4.0, -0.625);
+
+	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.1, 0.1);
+	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.5, 0.5);
+	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.6, 0.6);
+	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.625, 0.625);
+
+	/* 2.0*1.5 = 3.0 */
+	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 2.0, 1.5, 3.0);
+	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 3.0, 3.0, 9.0);
+	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 1.2, 4.0, 4.8);
+	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 1.5, 0.5, 0.75);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);

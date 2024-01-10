@@ -393,6 +393,16 @@ void test()
 }
 */
 
+float fp_convert_double_to_single(double a)
+{
+	return a;
+}
+
+float fp_convert_double_product_to_single(double a, double b)
+{
+	return a * b;
+}
+
 #ifdef ARCH_Z80
 int main()
 {

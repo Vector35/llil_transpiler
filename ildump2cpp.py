@@ -34,6 +34,8 @@ def get_il_size(il):
             return 64
         else:
             return il.info.size * 8
+    elif type(il) == int:
+        return 0
     else:
         return il.size * 8
 
@@ -43,26 +45,51 @@ def traverse_IL(il, depth=0):
     # LowLevelILRegister
     # LowLevelILFlag
 
+    sz_toks_int = {1:'B', 2:'W', 4:'D', 8:'Q', 10:'T', 16:'O'}
+    sz_toks_float = {2: 'H', 4:'S', 8:'D', 16:'T'}
+
     global bv
     global init_mem_lines
     semi = True
 
     # these operations have foo1(), foo2(), foo4(), foo8() versions depending on
     # their LowLevelILInstruction.size
-    sz_from_output = ['LOAD', 'NEG', 'ZX', 'RLC', 'ROR', 'STORE', 'ADD',
+    sz_from_output = ['LOAD', 'NEG', 'RLC', 'ROR', 'STORE', 'ADD',
         'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
-        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC', 'LOW_PART']
+        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC']
 
     # these operations have foo1(), foo2(), etc. depending on their operand(s) size(s)
-    sz_from_input = ['ADD_OVERFLOW', 'SX', 'FLOAT_CONV']
+    sz_from_input = ['ADD_OVERFLOW', 'SX']
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
             opname = opname[5:]
 
-        #if opname == 'FLOAT_CONV':
-        #    breakpoint()
+        # do size token, if it exists
+        size_token = ''
+        if il.size:
+            if opname in ['FLOAT_CONV']:
+                size_token = sz_toks_float[il.size]
+            else:
+                size_token = sz_toks_int[il.size]
+
+        input_size = 0
+        if il.operands:
+            input_size = get_il_size(il.operands[0])
+            # check that all operands are same size
+            if 0:
+                for oper in il.operands:
+                    if not get_il_size(oper) == input_size:
+                        breakpoint()
+
+        # put no clues for these instructions
+        if opname in ['MUL', 'CMP_E', 'CMP_NE', 'SET_REG_SPLIT', 'REG_SPLIT', 'DIVS_DP', 'MODS_DP', 'AND', 'ASR', 'CMP_UGT', 'LSL', 'FADD', 'FSUB', 'FDIV']:
+            input_size = 0
+            size_token = ''
+        # do not put extra size clue for these opcodes
+        if opname in ['PUSH', 'ZX', 'LOW_PART']:
+            input_size = 0
 
         if opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')
@@ -108,8 +135,7 @@ def traverse_IL(il, depth=0):
             # eg:
             #     REG128_d("xmm0") gets 32-bit low dword of 128-bit register xmm0
             elif il.size < reg_size:
-                suffix_lookup = {1:'B', 2:'W', 4:'D', 8:'Q', 16:'O'}
-                print('%s%d_%s(' % (opname, reg_size * 8, suffix_lookup[il.size]), end='')
+                print('%s%d_%s(' % (opname, reg_size * 8, sz_toks_int[il.size]), end='')
             # ERROR: requesting _MORE_ than the register width
             else:
                 assert False, 'expected il.size:%d <= reg_size:%d' % (il.size, reg_size)
@@ -192,12 +218,16 @@ def traverse_IL(il, depth=0):
             if opname in sz_from_output:
                 print('%s%d(' % (opname, get_il_size(il)), end='')
             elif opname in sz_from_input:
-                size = get_il_size(il.operands[0])
-                for oper in il.operands:
-                    assert(get_il_size(oper) == size)
-                print('%s%d(' % (opname, size), end='')
+                print('%s%d(' % (opname, input_size), end='')
             else:
-                print('%s(' % (opname), end='')
+                if size_token and input_size:
+                    print('%s%d_%s(' % (opname, input_size, size_token), end='')
+                elif size_token and not input_size:
+                    print('%s_%s(' % (opname, size_token), end='')
+                elif not size_token and input_size:
+                    print('%s%d(' % (opname, input_size), end='')
+                else:
+                    print('%s(' % (opname), end='')
 
             for (i,o) in enumerate(il.operands):
                 traverse_IL(o, depth+1)

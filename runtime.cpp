@@ -52,6 +52,7 @@ type_val tv_new_uint16(uint16_t val) { type_val tv = tv_init(TV_TYPE_UINT16); *(
 type_val tv_new_uint32(uint32_t val) { type_val tv = tv_init(TV_TYPE_UINT32); *(uint32_t *)(tv.data) = val; return tv; }
 type_val tv_new_uint64(uint64_t val) { type_val tv = tv_init(TV_TYPE_UINT64); *(uint64_t *)(tv.data) = val; return tv; }
 type_val tv_new_float32(float val) { type_val tv = tv_init(TV_TYPE_FLOAT32); *(float *)(tv.data) = val; return tv; }
+type_val tv_new_float64(double val) { type_val tv = tv_init(TV_TYPE_FLOAT64); *(double *)(tv.data) = val; return tv; }
 type_val tv_new_none() { type_val tv = tv_init(TV_TYPE_NONE); memset(tv.data, 0, sizeof(tv.data));  return tv; }
 
 uint8_t tv_get_uint8(type_val tv) { return *(uint8_t *)(tv.data); }
@@ -59,6 +60,7 @@ uint16_t tv_get_uint16(type_val tv) { return *(uint16_t *)(tv.data); }
 uint32_t tv_get_uint32(type_val tv) { return *(uint32_t *)(tv.data); }
 uint64_t tv_get_uint64(type_val tv) { return *(uint64_t *)(tv.data); }
 float tv_get_float32(type_val tv) { return *(float *)(tv.data); }
+double tv_get_float64(type_val tv) { return *(double *)(tv.data); }
 
 void tv_set_uint8(type_val tv, uint8_t val) { tv.type = TV_TYPE_UINT8; *(uint8_t *)(tv.data) = val; }
 void tv_set_uint16(type_val tv, uint16_t val) { tv.type = TV_TYPE_UINT16; *(uint16_t *)(tv.data) = val; }
@@ -317,6 +319,14 @@ void reg_set_float32(string name, float val)
 	reg_set_type_val(name, tv);
 }
 
+void reg_set_float64(string name, double val)
+{
+	type_val tv = reg_get_type_val(name);
+	int offset = reg_get_type_val_offset(name);
+	*(double *)(tv.data + offset) = val;
+	reg_set_type_val(name, tv);
+}
+
 /*****************************************************************************/
 /* operations */
 /*****************************************************************************/
@@ -351,7 +361,7 @@ uint32_t REG32(string name)
 
 uint64_t REG64(string name)
 {
-	__uint64_t result = reg_get_uint64(name);
+	uint64_t result = reg_get_uint64(name);
 	debug("REG64           0x%016llX (value of %s)\n", result, name.c_str());
 	return result;
 }
@@ -363,6 +373,7 @@ __uint128_t REG128(string name)
 	return result;
 }
 
+/* 64-bit register value -> low 32-bits */
 uint32_t REG64_D(string name)
 {
 	uint32_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
@@ -370,10 +381,19 @@ uint32_t REG64_D(string name)
 	return result;
 }
 
+/* 128-bit register value -> low 32-bits */
 uint32_t REG128_D(string name)
 {
 	__uint128_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
 	debug("REG128_D        0x%04X (value of %s)\n", (uint32_t)result, name.c_str());
+	return result;
+}
+
+/* 128-bit register value -> low 64-bits */
+uint64_t REG128_Q(string name)
+{
+	uint64_t result = (reg_get_uint128(name) & 0xFFFFFFFFFFFFFFFF);
+	debug("REG128_Q        0x%016llX (value of %s)\n", (uint64_t)result, name.c_str());
 	return result;
 }
 
@@ -411,7 +431,7 @@ void SET_REG128(string reg_name, __uint128_t value)
 
 void SET_REG64_D(string reg_name, uint32_t value)
 {
-	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 64);
+	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 8);
 	reg_set_uint32_nocheck(reg_name, value);
 	debug_set("SET_REG64_D     %s = 0x%08X\n", reg_name.c_str(), value);
 }
@@ -421,6 +441,13 @@ void SET_REG128_D(string reg_name, uint32_t value)
 	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 16);
 	reg_set_uint32_nocheck(reg_name, value);
 	debug_set("SET_REG128_D    %s = 0x%08X\n", reg_name.c_str(), value);
+}
+
+void SET_REG128_Q(string reg_name, uint64_t value)
+{
+	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 16);
+	reg_set_uint64_nocheck(reg_name, value);
+	debug_set("SET_REG128_Q    %s = 0x%016llX\n", reg_name.c_str(), value);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
@@ -481,8 +508,8 @@ uint32_t LOAD32(REGTYPE expr)
 
 uint64_t LOAD64(REGTYPE expr)
 {
-	uint32_t result = *(uint64_t *)(vm_mem + expr);
-	debug("LOAD64          0x%X = mem[" FMT_REG "]\n", result, expr);
+	uint64_t result = *(uint64_t *)(vm_mem + expr);
+	debug("LOAD64          0x%llX = mem[" FMT_REG "]\n", result, expr);
 	return result;
 }
 
@@ -519,23 +546,23 @@ void STORE64(REGTYPE dest, uint64_t src)
 }
 
 /* LowLevelILOperation.LLIL_PUSH: [("src", "expr")] */
-void PUSH(REGTYPE src)
+void PUSH_Q(REGTYPE src)
 {
 	/* decrement stack pointer */
 	REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) - sizeof(REGTYPE));
 	/* store on stack */
 	ADDRTYPE ea = REG_GET_ADDR(stack_reg_name);
-	debug_stack("PUSH            mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
+	debug_stack("PUSH_Q          mem[" FMT_REG "] = " FMT_REG "\n", ea, src);
 	*(REGTYPE *)(vm_mem + ea) = src;
 }
 
 /* LowLevelILOperation.LLIL_POP: [] */
-REGTYPE POP(void)
+REGTYPE POP_Q(void)
 {
 	/* retrieve from stack */
 	ADDRTYPE ea = REG_GET_ADDR(stack_reg_name);
 	REGTYPE val = *(ADDRTYPE *)(vm_mem + ea);
-	debug_stack("POP             " FMT_ADDR " = mem[" FMT_ADDR "]\n", val, ea);
+	debug_stack("POP_Q           " FMT_ADDR " = mem[" FMT_ADDR "]\n", val, ea);
 	/* increment stack pointer */
 	REG_SET_ADDR(stack_reg_name, REG_GET_ADDR(stack_reg_name) + sizeof(REGTYPE));
 	return val;
@@ -973,39 +1000,53 @@ void TRAP(int32_t src)
 }
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX32(uint32_t src)
+uint32_t ZX_D(uint32_t src)
 {
 	uint32_t result = src;
-	debug("ZX32            0x%08X -> 0x%08X\n", src, result);
+	debug("ZX_D            0x%08X -> 0x%08X\n", src, result);
 	return result;
 }
 
-uint64_t ZX64(uint64_t src)
+uint64_t ZX_Q(uint64_t src)
 {
 	uint64_t result = src;
-	debug("ZX64            0x%016llX -> 0x%016llX\n", src, result);
+	debug("ZX_Q            0x%016llX -> 0x%016llX\n", src, result);
+	return result;
+}
+
+__uint128_t ZX_O(__uint128_t src)
+{
+	__uint128_t result = src;
+	debug("ZX_O            0x%016llX%016llX -> 0x%016llX%016llX\n", (uint64_t)(src>>64), (uint64_t)src, (uint64_t)(result>>64), (uint64_t)result);
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
-uint8_t LOW_PART8(REGTYPE left)
+uint8_t LOW_PART_B(REGTYPE left)
 {
 	uint8_t result = left & 0xFF;
-	debug("LOW_PART8       " FMT_REG " -> 0x%02X\n", left, result);
+	debug("LOW_PART_B       " FMT_REG " -> 0x%02X\n", left, result);
 	return result;
 }
 
-uint16_t LOW_PART16(REGTYPE left)
+uint16_t LOW_PART_H(REGTYPE left)
 {
 	uint16_t result = left & 0xFFFF;
-	debug("LOW_PART16      " FMT_REG " -> 0x%04X\n", left, result);
+	debug("LOW_PART_H      " FMT_REG " -> 0x%04X\n", left, result);
 	return result;
 }
 
-uint32_t LOW_PART32(REGTYPE left)
+uint32_t LOW_PART_D(REGTYPE left)
 {
-	uint32_t result = left & 0xFFFF;
-	debug("LOW_PART32      " FMT_REG " -> 0x%08X\n", left, result);
+	uint32_t result = left & 0xFFFFFFFF;
+	debug("LOW_PART_D      " FMT_REG " -> 0x%08X\n", left, result);
+	return result;
+}
+
+uint64_t LOW_PART_Q(REGTYPE left)
+{
+	uint64_t result = left & 0xFFFFFFFFFFFFFFFF;
+	debug("LOW_PART_Q      " FMT_REG " -> 0x%016llX\n", left, result);
 	return result;
 }
 
@@ -1282,13 +1323,22 @@ uint32_t FSUB(uint32_t a, uint32_t b)
 }
 
 /* LowLevelILOperation.LLIL_FMUL: [("left", "expr"), ("right", "expr")] */
-uint32_t FMUL(uint32_t a, uint32_t b)
+uint32_t FMUL32_D(uint32_t a, uint32_t b)
 {
 	float af = *(float *)&a;
 	float bf = *(float *)&b;
 	float cf = af * bf;
-	debug("FMUL            %f = %f * %f\n", cf, af, bf);
+	debug("FMUL32_D        %f = %f * %f\n", cf, af, bf);
 	return *(uint32_t *)&cf;
+}
+
+uint64_t FMUL64_Q(uint64_t a, uint64_t b)
+{
+	double af = *(double *)&a;
+	double bf = *(double *)&b;
+	double cf = af * bf;
+	debug("FMUL64_D        %f = %f * %f\n", cf, af, bf);
+	return *(uint64_t *)&cf;
 }
 
 /* LowLevelILOperation.LLIL_FDIV: [("left", "expr"), ("right", "expr")] */
@@ -1306,6 +1356,7 @@ uint32_t FDIV(uint32_t a, uint32_t b)
 /* LowLevelILOperation.LLIL_FABS: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOAT_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_INT_TO_FLOAT: [("src", "expr")] */
+
 /* LowLevelILOperation.LLIL_FLOAT_CONV: [("src", "expr")] */
 uint32_t FLOAT_CONV32(uint32_t input)
 {
@@ -1314,6 +1365,16 @@ uint32_t FLOAT_CONV32(uint32_t input)
 	uint32_t result = input;
 	debug("FCONV32         0x%08X = 0x%08X\n", result, input);
 	return result;
+}
+
+/* convert 64-bit double-precision float to single-precision 32-bit float */
+uint32_t FLOAT_CONV64_S(uint64_t input)
+{
+	double input_f = *(double *)&input;
+	float output_f = input_f;
+	uint32_t output = *(uint32_t *)&output_f;
+	debug("FLOAT_CONV64_S  0x%08X (%f) = 0x%016llX (%f)\n", output, output_f, input, input_f);
+	return output;
 }
 
 /* LowLevelILOperation.LLIL_ROUND_TO_INT: [("src", "expr")] */

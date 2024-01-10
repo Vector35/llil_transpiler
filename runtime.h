@@ -93,6 +93,7 @@ void SET_REG128(string dest, __uint128_t src);
 
 void SET_REG64_D(string dest, uint32_t src);
 void SET_REG128_D(string dest, uint32_t src);
+void SET_REG128_Q(string dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
@@ -116,10 +117,10 @@ void STORE32(REGTYPE dest, uint32_t src);
 void STORE64(REGTYPE dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_PUSH: [("src", "expr")] */
-void PUSH(REGTYPE src);
+void PUSH_Q(REGTYPE src);
 
 /* LowLevelILOperation.LLIL_POP: [] */
-REGTYPE POP(void);
+REGTYPE POP_Q(void);
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
 uint8_t REG8(string src);
@@ -130,6 +131,7 @@ __uint128_t REG128(string src);
 
 uint32_t REG64_D(string src);
 uint32_t REG128_D(string src);
+uint64_t REG128_Q(string src);
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
 REGTYPE REG_SPLIT(string hi, string lo);
@@ -253,13 +255,15 @@ SREGTYPE SX32(int32_t src);
 void TRAP(int32_t src);
 
 /* LowLevelILOperation.LLIL_ZX: [("src", "expr")] */
-uint32_t ZX32(uint32_t src);
-uint64_t ZX64(uint64_t src);
+uint32_t ZX_D(uint32_t src);
+uint64_t ZX_Q(uint64_t src);
+__uint128_t ZX_O(__uint128_t src);
 
 /* LowLevelILOperation.LLIL_LOW_PART: [("src", "expr")] */
-uint8_t LOW_PART8(REGTYPE left);
-uint16_t LOW_PART16(REGTYPE left);
-uint32_t LOW_PART32(REGTYPE left);
+uint8_t LOW_PART_B(REGTYPE left);
+uint16_t LOW_PART_H(REGTYPE left);
+uint32_t LOW_PART_D(REGTYPE left);
+uint64_t LOW_PART_Q(REGTYPE left);
 
 /* LowLevelILOperation.LLIL_JUMP: [("dest", "expr")] */
 /* bool is whether or not this JUMP implements a return */
@@ -348,7 +352,8 @@ uint32_t FADD(uint32_t a, uint32_t b);
 uint32_t FSUB(uint32_t a, uint32_t b);
 
 /* LowLevelILOperation.LLIL_FMUL: [("left", "expr"), ("right", "expr")] */
-uint32_t FMUL(uint32_t a, uint32_t b);
+uint32_t FMUL32_D(uint32_t a, uint32_t b);
+uint64_t FMUL64_Q(uint64_t a, uint64_t b);
 
 /* LowLevelILOperation.LLIL_FDIV: [("left", "expr"), ("right", "expr")] */
 uint32_t FDIV(uint32_t a, uint32_t b);
@@ -360,6 +365,7 @@ uint32_t FDIV(uint32_t a, uint32_t b);
 /* LowLevelILOperation.LLIL_INT_TO_FLOAT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOAT_CONV: [("src", "expr")] */
 uint32_t FLOAT_CONV32(uint32_t input);
+uint32_t FLOAT_CONV64_S(uint64_t input);
 /* LowLevelILOperation.LLIL_ROUND_TO_INT: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_FLOOR: [("src", "expr")] */
 /* LowLevelILOperation.LLIL_CEIL: [("src", "expr")] */
@@ -412,7 +418,9 @@ enum TV_TYPE
 	TV_TYPE_UINT32,
 	TV_TYPE_UINT64,
 	TV_TYPE_UINT128,
-	TV_TYPE_FLOAT32
+	TV_TYPE_FLOAT16, /* half-precision */
+	TV_TYPE_FLOAT32, /* single-precision */
+	TV_TYPE_FLOAT64 /* double-precision */
 };
 
 typedef struct type_val_
@@ -428,12 +436,14 @@ type_val tv_new_uint16(uint16_t val);
 type_val tv_new_uint32(uint32_t val);
 type_val tv_new_uint64(uint64_t val);
 type_val tv_new_float32(float val);
+type_val tv_new_float64(double val);
 
 uint8_t tv_get_uint8(type_val tv);
 uint16_t tv_get_uint16(type_val tv);
 uint32_t tv_get_uint32(type_val tv);
 uint64_t tv_get_uint64(type_val tv);
 float tv_get_float32(type_val tv);
+double tv_get_float64(type_val tv);
 
 void tv_set_uint8(type_val tv, uint8_t val);
 void tv_set_uint16(type_val tv, uint16_t val);
@@ -463,6 +473,7 @@ void reg_set_uint32(string name, uint32_t val);
 void reg_set_uint64(string name, uint64_t val);
 void reg_set_uint128(string name, __uint128_t val);
 void reg_set_float32(string name, float val);
+void reg_set_float64(string name, double val);
 
 #ifdef ARCH_ARM
 void __aeabi_idiv();
