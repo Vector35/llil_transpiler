@@ -193,7 +193,7 @@ float reg_get_float32_nocheck(string name)
 
 uint8_t reg_get_uint8(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 1);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 1);
 	type_val tv = reg_get_type_val(name);
 	int offset = reg_get_type_val_offset(name);
 	return *(uint8_t *)(tv.data + offset);
@@ -201,7 +201,7 @@ uint8_t reg_get_uint8(string name)
 
 uint16_t reg_get_uint16(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 2);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 2);
 	type_val tv = reg_get_type_val(name);
 	int offset = reg_get_type_val_offset(name);
 	return *(uint16_t *)(tv.data + offset);
@@ -209,7 +209,7 @@ uint16_t reg_get_uint16(string name)
 
 uint32_t reg_get_uint32(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 4);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 4);
 	type_val tv = reg_get_type_val(name);
 	int offset = reg_get_type_val_offset(name);
 	return *(uint32_t *)(tv.data + offset);
@@ -217,7 +217,7 @@ uint32_t reg_get_uint32(string name)
 
 uint64_t reg_get_uint64(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 8);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 8);
 	type_val tv = reg_get_type_val(name);
 	int offset = reg_get_type_val_offset(name);
 	return *(uint64_t *)(tv.data + offset);
@@ -225,7 +225,7 @@ uint64_t reg_get_uint64(string name)
 
 __uint128_t reg_get_uint128(string name)
 {
-	assert(is_temp_reg(name) || reg_infos[name].size == 16);
+	//assert(is_temp_reg(name) || reg_infos[name].size == 16);
 	type_val tv = reg_get_type_val(name);
 	int offset = reg_get_type_val_offset(name);
 	return *(__uint128_t *)(tv.data + offset);
@@ -342,7 +342,23 @@ void NOP(void)
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
 
-/* register value -> low 32-bits */
+/* get an 8-bit register, or the 8-bit low bits of a register */
+uint8_t REG_B(string name)
+{
+	uint8_t result = reg_get_uint8(name);
+	debug("REG_B           0x%02X (value of %s)\n", result, name.c_str());
+	return result;
+}
+
+/* get a 16-bit register, or the 16-bit low bits of a register */
+uint16_t REG_W(string name)
+{
+	uint16_t result = reg_get_uint16(name);
+	debug("REG_W           0x%04X (value of %s)\n", result, name.c_str());
+	return result;
+}
+
+/* get a 32-bit register, or the 32-bit low bits of a register */
 uint32_t REG_D(string name)
 {
 	uint32_t result = reg_get_uint32(name);
@@ -351,7 +367,7 @@ uint32_t REG_D(string name)
 	return result;
 }
 
-/* register value -> low 64-bits */
+/* get a 64-bit register, or the 64-bit low bits of a register */
 uint64_t REG_Q(string name)
 {
 	uint64_t result = reg_get_uint64(name);
@@ -359,7 +375,27 @@ uint64_t REG_Q(string name)
 	return result;
 }
 
+/* get a 128-bit register */
+__uint128_t REG_O(string name)
+{
+	__uint128_t result = reg_get_uint128(name);
+	debug("REG_O           0x%016llX%016llX (value of %s)\n", (uint64_t)(result>>64), (uint64_t)result, name.c_str());
+	return result;
+}
+
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
+void SET_REG_B(string reg_name, uint8_t value)
+{
+	reg_set_uint8_nocheck(reg_name, value);
+	debug_set("SET_REG_B       %s = 0x%02X\n", reg_name.c_str(), value);
+}
+
+void SET_REG_W(string reg_name, uint16_t value)
+{
+	reg_set_uint16_nocheck(reg_name, value);
+	debug_set("SET_REG_W       %s = 0x%04X\n", reg_name.c_str(), value);
+}
+
 void SET_REG_D(string reg_name, uint32_t value)
 {
 	reg_set_uint32_nocheck(reg_name, value);
@@ -372,28 +408,35 @@ void SET_REG_Q(string reg_name, uint64_t value)
 	debug_set("SET_REG_Q       %s = 0x%016llX\n", reg_name.c_str(), value);
 }
 
-/* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
-void SET_REG_SPLIT(string hi, string lo, REGTYPE src_val)
+void SET_REG_O(string reg_name, __uint128_t value)
 {
-	REGTYPE dst_val_hi = (REGTYPE) (src_val & REGMASKHIHALF) >> (REGWIDTH/2);
-	REGTYPE dst_val_lo = (REGTYPE) (src_val & REGMASKLOHALF);
-	REG_SET_ADDR(hi, dst_val_hi);
-	REG_SET_ADDR(lo, dst_val_lo);
-	debug_set("SET_REG_SPLIT   " FMT_REG " -> %s = " FMT_REG ", %s = " FMT_REG "\n",
-		src_val, hi.c_str(), dst_val_hi, lo.c_str(), dst_val_lo);
+	reg_set_uint128_nocheck(reg_name, value);
+	debug_set("SET_REG_O       %s = 0x%016llX%016llX\n", reg_name.c_str(), (uint64_t)(value>>64), (uint64_t)value);
+}
+
+/* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
+
+/* split a 64-bit value into two 32-bit registers, eg:
+ * edx:eax = 0xDEADBEEF:0xCAFEBABE = 0xDEADBEEFCAFEBABE */
+void SET_REG_SPLIT_D(string reg_hi, string reg_lo, uint64_t src_val)
+{
+	uint32_t dst_val_hi = (src_val >> 32) & 0xFFFFFFFF;
+	uint32_t dst_val_lo = src_val & 0xFFFFFFFF;
+	reg_set_uint32(reg_hi, dst_val_hi);
+	reg_set_uint32(reg_lo, dst_val_lo);
+	debug_set("SET_REG_SPLIT_D   %s:%s = 0x%08X:0x%08X = 0x%016llX\n",
+		reg_hi.c_str(), reg_lo.c_str(), dst_val_hi, dst_val_lo, src_val);
 }
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
-/* better called "join" */
-REGTYPE REG_SPLIT(string hi, string lo)
+
+/* join two 32-bit values into a 64-bit value */
+uint64_t REG_SPLIT_D(string reg_hi, string reg_lo)
 {
-	REGTYPE src_hi = REG_GET_ADDR(hi);
-	REGTYPE src_lo = REG_GET_ADDR(lo);
-	REGTYPE result = (src_hi << (REGWIDTH/2)) | (src_lo & REGMASKLOHALF);
-
-	debug("REG_SPLIT       " FMT_REG " join " FMT_REG " -> " FMT_REG "\n",
-		src_hi, src_lo, result);
-
+	uint32_t src_hi = reg_get_uint32(reg_hi);
+	uint32_t src_lo = reg_get_uint32(reg_lo);
+	uint64_t result = ((uint64_t)src_hi << 32) | src_lo;
+	debug("REG_SPLIT_D     0x%016llX = 0x%08X:0x%08X = %s:%s\n", result, src_hi, src_lo, reg_hi.c_str(), reg_lo.c_str());
 	return result;
 }
 
@@ -438,7 +481,7 @@ uint64_t LOAD_Q(REGTYPE expr)
 __uint128_t LOAD_O(REGTYPE expr)
 {
 	__uint128_t result = *(__uint128_t *)(vm_mem + expr);
-	debug("LOAD_O         0x%llX%llX = mem[" FMT_REG "]\n", (uint64_t)(result>>64), (uint64_t)result, expr);
+	debug("LOAD_O         0x%llX%08llX = mem[" FMT_REG "]\n", (uint64_t)(result>>64), (uint64_t)result, expr);
 	return result;
 }
 

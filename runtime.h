@@ -91,11 +91,14 @@ void SET_REG(string dest, uint32_t src);
 void SET_REG(string dest, uint64_t src);
 void SET_REG(string dest, __uint128_t src);
 
+void SET_REG_B(string dest, uint8_t src);
+void SET_REG_W(string dest, uint16_t src);
 void SET_REG_D(string dest, uint32_t src);
 void SET_REG_Q(string dest, uint64_t src);
+void SET_REG_O(string dest, __uint128_t src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
-void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
+void SET_REG_SPLIT_D(string hi, string lo, uint64_t src); /* "D" size destinations, source is "Q" */
 
 /* LowLevelILOperation.LLIL_SET_REG_STACK_REL: [("stack", "reg_stack"), ("dest", "expr"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_REG_STACK_PUSH: [("stack", "reg_stack"), ("src", "expr")] */
@@ -122,11 +125,14 @@ void PUSH_Q(REGTYPE src);
 REGTYPE POP_Q(void);
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
+uint8_t REG_B(string src);
+uint16_t REG_W(string src);
 uint32_t REG_D(string src);
 uint64_t REG_Q(string src);
+__uint128_t REG_O(string src);
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
-REGTYPE REG_SPLIT(string hi, string lo);
+REGTYPE REG_SPLIT_D(string hi, string lo);
 
 /* LowLevelILOperation.LLIL_REG_STACK_REL: [("stack", "reg_stack"), ("src", "expr")] */
 /* LowLevelILOperation.LLIL_REG_STACK_POP: [("stack", "reg_stack")] */

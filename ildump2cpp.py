@@ -168,6 +168,8 @@ def traverse_IL(il, depth=0):
 
         else:
             size_token = get_il_size_token(il, '_')
+            if opname in ['DIVS_DP', 'MODS_DP']:
+                size_token = ''
 
             extra_size_clue = ''
             if opname in ['SX']:
