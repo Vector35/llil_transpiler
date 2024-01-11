@@ -341,116 +341,34 @@ void NOP(void)
 }
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
-uint8_t REG8(string name)
-{
-	uint8_t result = reg_get_uint8(name);
-	debug("REG8            0x%02X (value of %s)\n", result, name.c_str());
-	return result;
-}
 
-uint16_t REG16(string name)
-{
-	uint16_t result = reg_get_uint16(name);
-	debug("REG16           0x%04X (value of %s)\n", result, name.c_str());
-	return result;
-}
-
-uint32_t REG32(string name)
+/* register value -> low 32-bits */
+uint32_t REG_D(string name)
 {
 	uint32_t result = reg_get_uint32(name);
-	debug("REG32           0x%08X (value of %s)\n", result, name.c_str());
+	debug("REG_D .         0x%08X (value of %s)\n", (uint32_t)result, name.c_str());
 	return result;
 }
 
-uint64_t REG64(string name)
+/* register value -> low 64-bits */
+uint64_t REG_Q(string name)
 {
 	uint64_t result = reg_get_uint64(name);
-	debug("REG64           0x%016llX (value of %s)\n", result, name.c_str());
-	return result;
-}
-
-__uint128_t REG128(string name)
-{
-	__uint128_t result = reg_get_uint128(name);
-	debug("REG128          0x%016llX%016llX (value of %s)\n", (uint64_t)(result>>64), (uint64_t)result, name.c_str());
-	return result;
-}
-
-/* 64-bit register value -> low 32-bits */
-uint32_t REG64_D(string name)
-{
-	uint32_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
-	debug("REG64_D         0x%04X (value of %s)\n", (uint32_t)result, name.c_str());
-	return result;
-}
-
-/* 128-bit register value -> low 32-bits */
-uint32_t REG128_D(string name)
-{
-	__uint128_t result = (reg_get_uint128(name) & 0xFFFFFFFF);
-	debug("REG128_D        0x%04X (value of %s)\n", (uint32_t)result, name.c_str());
-	return result;
-}
-
-/* 128-bit register value -> low 64-bits */
-uint64_t REG128_Q(string name)
-{
-	uint64_t result = (reg_get_uint128(name) & 0xFFFFFFFFFFFFFFFF);
-	debug("REG128_Q        0x%016llX (value of %s)\n", (uint64_t)result, name.c_str());
+	debug("REG_Q           0x%016llX (value of %s)\n", (uint64_t)result, name.c_str());
 	return result;
 }
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG8(string reg_name, uint8_t value)
+void SET_REG_D(string reg_name, uint32_t value)
 {
-	reg_set_uint8(reg_name, value);
-	debug_set("SET_REG8        %s = 0x%02X\n", reg_name.c_str(), value);
-}
-
-void SET_REG16(string reg_name, uint16_t value)
-{
-	reg_set_uint16(reg_name, value);
-	debug_set("SET_REG16       %s = 0x%04X\n", reg_name.c_str(), value);
-}
-
-void SET_REG32(string reg_name, uint32_t value)
-{
-	reg_set_uint32(reg_name, value);
-	debug_set("SET_REG32       %s = 0x%08X\n", reg_name.c_str(), value);
-}
-
-void SET_REG64(string reg_name, uint64_t value)
-{
-	reg_set_uint64(reg_name, value);
-	debug_set("SET_REG64       %s = 0x%016llX\n", reg_name.c_str(), value);
-}
-
-void SET_REG128(string reg_name, __uint128_t value)
-{
-	reg_set_uint128(reg_name, value);
-	debug_set("SET_REG128      %s = 0x%016llX%016llX\n",
-		reg_name.c_str(), (uint64_t)(value >> 64), (uint64_t)value);
-}
-
-void SET_REG64_D(string reg_name, uint32_t value)
-{
-	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 8);
 	reg_set_uint32_nocheck(reg_name, value);
-	debug_set("SET_REG64_D     %s = 0x%08X\n", reg_name.c_str(), value);
+	debug_set("SET_REG_D       %s = 0x%08X\n", reg_name.c_str(), value);
 }
 
-void SET_REG128_D(string reg_name, uint32_t value)
+void SET_REG_Q(string reg_name, uint64_t value)
 {
-	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 16);
-	reg_set_uint32_nocheck(reg_name, value);
-	debug_set("SET_REG128_D    %s = 0x%08X\n", reg_name.c_str(), value);
-}
-
-void SET_REG128_Q(string reg_name, uint64_t value)
-{
-	assert(is_temp_reg(reg_name) || reg_infos[reg_name].size == 16);
 	reg_set_uint64_nocheck(reg_name, value);
-	debug_set("SET_REG128_Q    %s = 0x%016llX\n", reg_name.c_str(), value);
+	debug_set("SET_REG_Q       %s = 0x%016llX\n", reg_name.c_str(), value);
 }
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */

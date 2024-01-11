@@ -85,15 +85,14 @@ typedef enum _RETURN_ACTION
 void NOP(void);
 
 /* LowLevelILOperation.LLIL_SET_REG: [("dest", "reg"), ("src", "expr")] */
-void SET_REG8(string dest, uint8_t src);
-void SET_REG16(string dest, uint16_t src);
-void SET_REG32(string dest, uint32_t src);
-void SET_REG64(string dest, uint64_t src);
-void SET_REG128(string dest, __uint128_t src);
+void SET_REG(string dest, uint8_t src);
+void SET_REG(string dest, uint16_t src);
+void SET_REG(string dest, uint32_t src);
+void SET_REG(string dest, uint64_t src);
+void SET_REG(string dest, __uint128_t src);
 
-void SET_REG64_D(string dest, uint32_t src);
-void SET_REG128_D(string dest, uint32_t src);
-void SET_REG128_Q(string dest, uint64_t src);
+void SET_REG_D(string dest, uint32_t src);
+void SET_REG_Q(string dest, uint64_t src);
 
 /* LowLevelILOperation.LLIL_SET_REG_SPLIT: [("hi", "reg"), ("lo", "reg"), ("src", "expr")] */
 void SET_REG_SPLIT(string hi, string lo, REGTYPE src);
@@ -123,15 +122,8 @@ void PUSH_Q(REGTYPE src);
 REGTYPE POP_Q(void);
 
 /* LowLevelILOperation.LLIL_REG: [("src", "reg")] */
-uint8_t REG8(string src);
-uint16_t REG16(string src);
-uint32_t REG32(string src);
-uint64_t REG64(string src);
-__uint128_t REG128(string src);
-
-uint32_t REG64_D(string src);
-uint32_t REG128_D(string src);
-uint64_t REG128_Q(string src);
+uint32_t REG_D(string src);
+uint64_t REG_Q(string src);
 
 /* LowLevelILOperation.LLIL_REG_SPLIT: [("hi", "reg"), ("lo", "reg")] */
 REGTYPE REG_SPLIT(string hi, string lo);

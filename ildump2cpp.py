@@ -92,7 +92,7 @@ def traverse_IL(il, depth=0):
             input_size = 0
             size_token = ''
         # do not put extra size clue for these opcodes
-        if opname in ['PUSH', 'ZX', 'LOW_PART']:
+        if opname in ['PUSH', 'ZX', 'LOW_PART', 'REG', 'SET_REG']:
             input_size = 0
 
         if opname in ['CALL', 'TAILCALL']:
@@ -126,28 +126,6 @@ def traverse_IL(il, depth=0):
             if not handled:
                 raise Exception('unable to handle CALL: %s and %s' % (str(il), str(il.operands[0].operation)))
 
-            print(')', end='')
-
-        elif opname in ['REG', 'SET_REG']: # LLIL_REG
-            reg = il.operands[0] # ILRegister
-            reg_size = 8 if reg.name.startswith('temp') else reg.info.size
-
-            # simple register access
-            if il.size == reg_size:
-                print('%s%d(' % (opname, il.size * 8), end='')
-            # requested register data is a _PORTION_ of the full register width
-            # eg:
-            #     REG128_d("xmm0") gets 32-bit low dword of 128-bit register xmm0
-            elif il.size < reg_size:
-                print('%s%d_%s(' % (opname, reg_size * 8, sz_toks_int[il.size]), end='')
-            # ERROR: requesting _MORE_ than the register width
-            else:
-                assert False, 'expected il.size:%d <= reg_size:%d' % (il.size, reg_size)
-
-            for (i,o) in enumerate(il.operands):
-                traverse_IL(o, depth+1)
-                if i < len(il.operands)-1:
-                    print(', ', end='')
             print(')', end='')
 
         elif opname == 'CONST':
