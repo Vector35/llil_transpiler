@@ -30,10 +30,9 @@ def shellout(cmd):
 def get_il_size(il):
     if isinstance(il, lowlevelil.ILRegister):
         if il.name.startswith('temp'):
-            # TODO: fix this
-            return 64
+            return 8
         else:
-            return il.info.size * 8
+            return il.info.size
     elif isinstance(il, lowlevelil.ILFlag):
         return 0
     elif type(il) == int:
@@ -41,7 +40,15 @@ def get_il_size(il):
     elif type(il) == float:
         return 0
     else:
-        return il.size * 8
+        return il.size
+
+def get_il_size_token(il, prefix=''):
+    sz = get_il_size(il)
+    if not sz: return ''
+    if il.operation.name in ['LLIL_FLOAT_CONV', 'LLIL_FADD', 'LLIL_FSUB', 'LLIL_FMUL', 'LLIL_FDIV']:
+        return prefix + {2: 'H', 4:'S', 8:'D', 16:'T'}[il.size]
+    else:
+        return prefix + {1:'B', 2:'W', 4:'D', 8:'Q', 10:'T', 16:'O'}[il.size]
 
 def traverse_IL(il, depth=0):
     # il pass thru here will probably be:
@@ -49,51 +56,14 @@ def traverse_IL(il, depth=0):
     # LowLevelILRegister
     # LowLevelILFlag
 
-    sz_toks_int = {1:'B', 2:'H', 4:'D', 8:'Q', 10:'T', 16:'O'}
-    sz_toks_float = {2: 'H', 4:'S', 8:'D', 16:'T'}
-
     global bv
     global init_mem_lines
     semi = True
-
-    # these operations have foo1(), foo2(), foo4(), foo8() versions depending on
-    # their LowLevelILInstruction.size
-    sz_from_output = ['LOAD', 'NEG', 'RLC', 'ROR', 'STORE', 'ADD',
-        'ADD_OVERFLOW', 'CMP_S', 'CMP_SGT', 'CMP_SLE', 'CMP_SGE',
-        'CMP_SLT', 'SBB', 'ROL', 'NOT', 'SUB', 'RRC']
-
-    # these operations have foo1(), foo2(), etc. depending on their operand(s) size(s)
-    sz_from_input = ['ADD_OVERFLOW', 'SX']
 
     if isinstance(il, lowlevelil.LowLevelILInstruction):
         opname = il.operation.name
         if opname.startswith('LLIL_'):
             opname = opname[5:]
-
-        # do size token, if it exists
-        size_token = ''
-        if il.size:
-            if opname in ['FLOAT_CONV']:
-                size_token = sz_toks_float[il.size]
-            else:
-                size_token = sz_toks_int[il.size]
-
-        input_size = 0
-        if il.operands:
-            input_size = get_il_size(il.operands[0])
-            # check that all operands are same size
-            if 0:
-                for oper in il.operands:
-                    if not get_il_size(oper) == input_size:
-                        breakpoint()
-
-        # put no clues for these instructions
-        if opname in ['MUL', 'CMP_E', 'CMP_NE', 'SET_REG_SPLIT', 'REG_SPLIT', 'DIVS_DP', 'MODS_DP', 'AND', 'ASR', 'CMP_UGT', 'LSL', 'FADD', 'FSUB', 'FDIV']:
-            input_size = 0
-            size_token = ''
-        # do not put extra size clue for these opcodes
-        if opname in ['PUSH', 'ZX', 'LOW_PART', 'REG', 'SET_REG']:
-            input_size = 0
 
         if opname in ['CALL', 'TAILCALL']:
             print('%s(' % opname, end='')
@@ -197,19 +167,13 @@ def traverse_IL(il, depth=0):
             print(');\n\treturn', end='')
 
         else:
-            if opname in sz_from_output:
-                print('%s%d(' % (opname, get_il_size(il)), end='')
-            elif opname in sz_from_input:
-                print('%s%d(' % (opname, input_size), end='')
-            else:
-                if size_token and input_size:
-                    print('%s%d_%s(' % (opname, input_size, size_token), end='')
-                elif size_token and not input_size:
-                    print('%s_%s(' % (opname, size_token), end='')
-                elif not size_token and input_size:
-                    print('%s%d(' % (opname, input_size), end='')
-                else:
-                    print('%s(' % (opname), end='')
+            size_token = get_il_size_token(il, '_')
+
+            extra_size_clue = ''
+            if opname in ['SX']:
+                extra_size_clue = get_il_size_token(il.operands[0], '_').lower()
+
+            print(f'{opname}{size_token}{extra_size_clue}(', end='')
 
             for (i,o) in enumerate(il.operands):
                 traverse_IL(o, depth+1)

@@ -739,10 +739,10 @@ int main(int ac, char **av)
 	test_s("fp_single_mul", fp_single_mul,2.5,3.5, 8.75);
 	test_s("fp_single_mul", fp_single_mul,2.5,-3.5, -8.75);
 
-	test_s("fp_single_div", fp_single_div,1.0,2.0, 0.5);
-	test_s("fp_single_div", fp_single_div,1.5,2.5, 0.6);
-	test_s("fp_single_div", fp_single_div,2.5,4.0, 0.625);
-	test_s("fp_single_div", fp_single_div,2.5,-4.0, -0.625);
+	test_s("fp_single_div(1.0, 2.0)", fp_single_div,1.0,2.0, 0.5);
+	test_s("fp_single_div(1.5, 2.5)", fp_single_div,1.5,2.5, 0.6);
+	test_s("fp_single_div(2.5, 4.0)", fp_single_div,2.5,4.0, 0.625);
+	test_s("fp_single_div(2.5, 4.0)", fp_single_div,2.5,-4.0, -0.625);
 
 	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.1, 0.1);
 	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.5, 0.5);
@@ -750,10 +750,10 @@ int main(int ac, char **av)
 	test_s_d("fp_convert_double_to_single", fp_convert_double_to_single, 0.625, 0.625);
 
 	/* 2.0*1.5 = 3.0 */
-	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 2.0, 1.5, 3.0);
-	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 3.0, 3.0, 9.0);
-	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 1.2, 4.0, 4.8);
-	test_s_d_d("fp_convert_double_product_to_single", fp_convert_double_product_to_single, 1.5, 0.5, 0.75);
+	test_s_d_d("fp_convert_double_product_to_single(2.0, 1.5)", fp_convert_double_product_to_single, 2.0, 1.5, 3.0);
+	test_s_d_d("fp_convert_double_product_to_single(3.0, 3.0)", fp_convert_double_product_to_single, 3.0, 3.0, 9.0);
+	test_s_d_d("fp_convert_double_product_to_single(1.2, 4.0)", fp_convert_double_product_to_single, 1.2, 4.0, 4.8);
+	test_s_d_d("fp_convert_double_product_to_single(1.5, 0.5)", fp_convert_double_product_to_single, 1.5, 0.5, 0.75);
 
 	/* switch statements */
 	test("switch_doubler", switch_doubler,0, 0);
